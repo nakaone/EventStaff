@@ -1,0 +1,140 @@
+/* =========================================================
+========================================================= */
+html,body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-size: 5vw;  /* 基本となる文字サイズ */
+  box-sizing: border-box; /* 枠線は要素サイズに含める */
+}
+div {margin:0px;padding:0px;}
+
+.screen {  /* 切り替え用画面の共通部分 */
+  width: 100vw;
+  height: 100%;
+  /*position: relative;*/
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  background-color: white;
+}
+
+/* アイコン
+  Ikonate: https://ikonate.com/ border=5, size=80, colour=#2329d6
+*/
+#home {
+  z-index: 2;
+  background-color: white;
+  display:flex;
+  flex-direction: column;  /* row:横並び */
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: flex-end;
+}
+#home > div {
+  font-size: 1.5rem;
+  padding-right: 1.5rem;
+  text-align: right;
+  vertical-align: bottom;
+  width: 80%;
+  height: 4rem;
+  margin-bottom: 1.5rem;
+  background-color: olivedrab;
+  box-shadow: 0 10px 25px 0 rgba(0, 0, 0, .5);
+  color: rgba(255,255,255,1);
+}
+#camera {
+  background-color: aquamarine;
+}
+#camera .reader {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /*position: relative;*/
+  color: white;
+  background-color: black;
+}
+#camera .cancel {
+  position: absolute;
+  bottom: 10%;
+  right: 0%;
+  width: 80%;
+  height: 4rem;
+  padding: 1rem;
+  text-align: right;
+  vertical-align: middle;
+  font-size: 2rem;
+  background-color: rgba(255,255,255,0.5); /* 背景色は半透明 */
+  color: rgba(0,0,0,255); /* 文字色は完全に透明 */
+}
+#loading img {
+  display: block;
+  margin: auto;
+}
+#js-video {
+  background-color: black;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+}
+#qrcode {
+  margin: 10vw;
+}
+.homeIcon {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+}
+/* Qiita: 【初心者向け】検索窓の中に虫眼鏡アイコンを設置する方法 */
+.search_box {  /* 受付番号または氏名読み入力欄 */
+  display: none;
+  position: absolute;
+  bottom: 2rem;
+  right: 0;
+  width: 80vw;
+  height: 2rem;
+  background-color: rgba(255, 255, 255, 0.7);
+  padding: 0.5rem;
+}
+.search_box input {
+  width: 80%;
+  margin-right: 5px;
+}
+.search_box img {
+  position: absolute;
+  top: calc(0.5rem + 3px);
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+
+/* genChild用のスタイル定義 */
+.table {}
+.tr {
+  display:flex;
+  flex-direction: row;  /* row:横並び */
+  flex-wrap: wrap;
+  width: 100%;
+}
+.th, .td {margin:2px; white-space: nowrap;}
+.th {background-color: aliceblue;}
+.td {}
+
+.summary {margin-bottom: 1rem;}
+.vth {width:6rem;} /* 表上部のラベル列 */
+.entryNo {font-size: 2rem;}
+#img-qr {margin-left:20px;width:200px; height: 200px;}
+.note {  /* 備考欄では折り返して表示 */
+  word-break: break-all;
+  overflow-wrap: break-word;
+  width: calc(100% - 8px - 6rem);
+}
+
+.memNo {width:1.2rem;}
+.name {width:calc(100% - 6.2rem - 12px);}
+.affiliation {width:5rem;}
+
+.status {margin-left:2rem;width:4rem;}
+.fee {margin-left:2rem;width:4rem;}
