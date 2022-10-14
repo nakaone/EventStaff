@@ -14,7 +14,7 @@ const ctx = canvas.getContext('2d');
     video.srcObject = stream;
     video.onloadedmetadata = e => video.play();
   }).catch(err => {
-    // !!本番時はコメント化を解除!! alert('Error'+(err.message.length===0?'':': '+err.message));
+    alert('Error'+(err.message.length===0?'':': '+err.message));
   });
 })();
 

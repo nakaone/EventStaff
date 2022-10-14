@@ -1,6 +1,4 @@
 const config = {
-  GASwebAPId: "AKfycbyihIHDaesO4rgurDQDuMixZo_0Q8gV2iWXZ4YqdNVybNIE_TN0STq4P-JUSiqV6PmYfw", // テスト用
-  formId: "1hnQLsY3lRh0gQMGfXoJJqAL_yBpKR6T0h2RFRc8tUEA",
   qrSize: Math.ceil(document.body.clientWidth * 0.8), // QRコードのサイズ
   editGuestTemplate:  /* 一行分のデータに対する文書構造の定義
     tag string 1 タグ指定(必須)。"text"の場合は文字列と看做し、createTextNodeで追加する
@@ -126,12 +124,12 @@ const initialize = () => {  // 初期設定処理
   flags.checkImage = true;
   const callback = (code) => {
     // configの値を設定してホームに戻る
-    const o = JSON.parse(o);
-    config.GASwebAPId = code.GASwebAPId;
-    config.formId = code.formId;
+    for( let x in code ){
+      config[x] = code[x];
+    }
     changeScreen();
   };
-  // !!本番時はコメント化を解除!! checkImage(callback);
+  checkImage(callback);
 
   alert('初期設定は正常に終了しました');
   console.log("initialize end.",config);
