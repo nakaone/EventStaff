@@ -1,0 +1,749 @@
+<!DOCTYPE html><html lang="ja">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <meta http-equiv="Content-Script-Type" content="text/javascript">
+  <title>r040</title>
+  <style>
+    /* =========================================================
+    ========================================================= */
+    html,body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 5vw;  /* 基本となる文字サイズ */
+      box-sizing: border-box; /* 枠線は要素サイズに含める */
+    }
+    div {margin:0px;padding:0px;}
+
+    .screen {  /* 切り替え用画面の共通部分 */
+      width: 100vw;
+      height: 100%;
+      /*position: relative;*/
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      background-color: white;
+    }
+
+    /* アイコン
+      Ikonate: https://ikonate.com/ border=5, size=80, colour=#2329d6
+    */
+    #home {
+      z-index: 2;
+      background-color: white;
+      display:flex;
+      flex-direction: column;  /* row:横並び */
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: flex-end;
+    }
+    #home > div {
+      font-size: 1.5rem;
+      padding-right: 1.5rem;
+      text-align: right;
+      vertical-align: bottom;
+      width: 80%;
+      height: 4rem;
+      margin-bottom: 1.5rem;
+      background-color: olivedrab;
+      box-shadow: 0 10px 25px 0 rgba(0, 0, 0, .5);
+      color: rgba(255,255,255,1);
+    }
+    #camera {
+      background-color: aquamarine;
+    }
+    #camera .reader {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      /*position: relative;*/
+      color: white;
+      background-color: black;
+    }
+    #camera .cancel {
+      position: absolute;
+      bottom: 10%;
+      right: 0%;
+      width: 80%;
+      height: 4rem;
+      padding: 1rem;
+      text-align: right;
+      vertical-align: middle;
+      font-size: 2rem;
+      background-color: rgba(255,255,255,0.5); /* 背景色は半透明 */
+      color: rgba(0,0,0,255); /* 文字色は完全に透明 */
+    }
+    #loading img {
+      display: block;
+      margin: auto;
+    }
+    #js-video {
+      background-color: black;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+    }
+    #qrcode {
+      margin: 10vw;
+    }
+    .homeIcon {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+    }
+    /* Qiita: 【初心者向け】検索窓の中に虫眼鏡アイコンを設置する方法 */
+    .search_box {  /* 受付番号または氏名読み入力欄 */
+      display: none;
+      position: absolute;
+      bottom: 2rem;
+      right: 0;
+      width: 80vw;
+      height: 2rem;
+      background-color: rgba(255, 255, 255, 0.7);
+      padding: 0.5rem;
+    }
+    .search_box input {
+      width: 80%;
+      margin-right: 5px;
+    }
+    .search_box img {
+      position: absolute;
+      top: calc(0.5rem + 3px);
+      width: 1.5rem;
+      height: 1.5rem;
+    }
+  </style>
+  <style> /* genChild用のスタイル定義 */
+    .table {}
+    .tr {
+      display:flex;
+      flex-direction: row;  /* row:横並び */
+      flex-wrap: wrap;
+      width: 100%;
+    }
+    .th, .td {margin:2px; white-space: nowrap;}
+    .th {background-color: aliceblue;}
+    .td {}
+
+    .summary {margin-bottom: 1rem;}
+    .vth {width:6rem;} /* 表上部のラベル列 */
+    .entryNo {font-size: 2rem;}
+    #img-qr {margin-left:20px;width:200px; height: 200px;}
+    .note {  /* 備考欄では折り返して表示 */
+      word-break: break-all;
+      overflow-wrap: break-word;
+      width: calc(100% - 8px - 6rem);
+    }
+
+    .memNo {width:1.2rem;}
+    .name {width:calc(100% - 6.2rem - 12px);}
+    .affiliation {width:5rem;}
+
+    .status {margin-left:2rem;width:4rem;}
+    .fee {margin-left:2rem;width:4rem;}
+  </style>
+</head>
+
+<body>
+  <div id="home" class="screen"><!-- ホーム画面 -->
+    <div onclick="initialize()">初期設定</div>
+    <div onclick="registerd()">参加登録済</div>
+    <div onclick="">紙申請の登録</div>
+    <div onclick="showFormURL()">参加フォームURL</div>
+    <div onclick="showSummary()">集計表の表示</div>
+  </div>
+
+  <div id="camera" class="screen"><!-- カメラ撮影 -->
+    <video id="js-video" autoplay playsinline></video>
+    <div style="display: none;">
+      <canvas id="js-canvas"></canvas>
+    </div>
+    <div class="search_box">
+      <input type="text" placeholder="受付番号または氏名読み(最初の数文字)" />
+      <img src="lib/search.svg">
+    </div>
+    <img src="lib/home-alt.svg" class="homeIcon" onclick="changeScreen()" />
+  </div>
+
+  <div id="loading" class="screen">
+    <img src="lib/loading.gif" />
+  </div>
+
+  <div id="registerd" class="screen"><!-- フォーム登録済参加者画面 -->
+    <div class="edit"></div><!-- 参加者情報編集用領域 -->
+    <img src="lib/home-alt.svg" class="homeIcon" onclick="changeScreen()" />
+    <img class="editFinish" src="lib/checkbox.svg" onclick="editGuest()" />
+  </div>
+
+  <div id="showFormURL" class="screen"><!-- 参加フォームURLのQRコード表示画面 -->
+    <h1>参加フォームURL</h1>
+    <div id="qrcode"></div>
+    <img src="lib/home-alt.svg" class="homeIcon" onclick="changeScreen()" />
+  </div>
+
+  <div id="showSummary" class="screen"><!-- 集計表の表示画面 -->
+    <h1>現時点での参加登録/来場者数</h1>
+    <div class="cancel" onclick="changeScreen()">ホームに戻る</div>
+  </div>
+</body>
+<script src="./lib/jsQR.js" defer></script>
+<script src="./lib/qrcode.min.js" defer></script>
+<script type="text/javascript">
+/* ===================================================
+  QRスキャン用
+=================================================== */
+
+const video = document.querySelector('#js-video');
+const canvas = document.querySelector('#js-canvas');
+const ctx = canvas.getContext('2d');
+
+(() => {  // QRスキャン用初期化処理
+  navigator.mediaDevices.getUserMedia({
+    audio: false,
+    video: {facingMode:{exact:'environment'}},
+  }).then(stream => {
+    video.srcObject = stream;
+    video.onloadedmetadata = e => video.play();
+  }).catch(err => {
+    // !!本番時はコメント化を解除!! alert('Error'+(err.message.length===0?'':': '+err.message));
+  });
+})();
+
+const checkImage = (callback) => {  // QRコード撮影
+  if( !flags.checkImage )  return;
+  changeScreen('camera');
+  // 取得している動画をcanvasに描画
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  // canvasからデータを取得
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  // jsQRに渡す
+  const code = jsQR(imageData.data, canvas.width, canvas.height);
+  if(code){
+    callback(code.data);
+  } else {
+    setTimeout( () => checkImage(callback), 200);
+  }
+}
+
+/* ===================================================
+  汎用ライブラリ
+=================================================== */
+
+const doGet = (str,callback) => {  // GASのdoGetを呼び出し、結果を表示する
+  console.log("doGet start. str="+str);
+  const endpoint =  //GASのAPIのURL。"https://script.google.com/macros/s/〜/exec"
+    "https://script.google.com/macros/s/〜/exec"
+    .replace("〜",config.GASwebAPId)
+    + str;
+
+  // エラー：CORSに引っかかってGASまで届かない
+  // Access to fetch at 'https://script.google.com/macros/s/〜/exec?key=xxxx'
+  // from origin 'null' has been blocked by CORS policy:
+  // No 'Access-Control-Allow-Origin' header is present on the requested resource.
+  // If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
+
+  // 対応：fetchのパラメータに"mode:'no-cors'"を追加
+  // [備忘録]　GASのdoPost()にJavaScriptからJSONを渡す方法
+  // https://qiita.com/khidaka/items/ebf770591100b1eb0eff
+  fetch(endpoint //,{
+  //  "method"     : "GET",
+  //  "mode"       : "no-cors",}
+  )  //APIを使って非同期データを取得する
+  .then(response => response.json())
+  .then(data => {  // 成功した処理
+    // 撮影関係のDIVは隠す
+    //document.getElementById("web_qrcode").style.display = "none";
+    console.log('l.258',data);
+    callback(data);
+    /*
+    if( data.length === 0 ){
+      alert("該当する参加者は存在しませんでした");
+    } else if( data.length > 1){
+      callback(data);  // 該当が複数件ならまず選択、選択後編集画面へ
+    } else {
+      callback(data[0]);  // 該当が1件のみなら編集画面へ
+    }
+    */
+  });
+  console.log("doGet end.");
+}
+
+const genChild = (template,dObj,pFP) => {  /* テンプレートに差込データをセットした要素を生成
+  引数
+    template [hash]x1 : 生成対象となる要素のテンプレート。書式はtemplateの項参照。
+    dObj [hash]x1 : 差込データ。ラベルを変数名として扱う。階層化は不可
+    pFP [string]x1     : フットプリント文字列(parent foot print)
+  戻り値: ハッシュ。以下はそのメンバ
+    append [boolean]: 追加対象となる子要素ならtrue
+    status: 'skipped' => テンプレートのskip条件を満たすため、生成を見送った子要素
+            'variable' => テンプレートのtextが未指定なので、変数の値をそのままセット
+            'replaced' => テンプレートのtext指定に基づき、プレースホルダ('\t')に変数の値をセット
+            'fixed' => テンプレートのtext指定にプレースホルダがなく、textをそのままセット(固定文字列)
+            'node' => セットする文字列が指定されていない要素(既定値)
+    result: 子要素のオブジェクト。エラー時はエラーオブジェクト
+  使用方法
+    let o = genChild(template,dObj,'root');  // 全体の定義と'root'を渡す
+    if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
+      throw o.result;
+    } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
+      container.appendChild(o.result);
+    }
+  */
+
+  let rv = {append:true, status:'node', result:null};  // catch節でも使用する変数を、try節の前で宣言
+  try {
+
+    /* ========================================
+      1.前処理
+    ======================================== */
+    // 1.1.テンプレートの定義(メンバ)がundefinedにならないよう初期値を設定し、
+    //     'sDef'とする(structure definition)
+    const sDef = {  // template.specにある、文書構造定義に使用される項目
+      tag:'', children:[], text:'', skip:'', variable:'', max:0,
+      class:'', // 生成される要素(タグ)に指定する属性(現在classのみ)
+      ...template  // 既定値を指定値で上書き
+    };
+
+    // 1.2.現在の位置を示すパンくずリスト文字列を生成(current foot print)
+    const cFP = pFP + ' > '
+      + (sDef.tag.length === 0 ? '(no tag)' : sDef.tag)
+      + (sDef.class.length > 0 ? '.'+sDef.class : '');
+    console.log('genChild start: ' + cFP + '\n');
+
+    // 1.3.内部関数の定義
+    const addSeqNo = (cDef,no) => {
+      if( cDef.skip && cDef.skip !== '' ) cDef.skip += '_' + no;
+      if( cDef.variable && cDef.variable !== '' ) cDef.variable += '_' + no;
+      if( cDef.children && cDef.children.length > 0 ){
+        for( let i=0 ; i<cDef.children.length ; i++ )
+          addSeqNo(cDef.children[i],no);
+      }
+    };
+
+    if( sDef.skip.length > 0 && dObj[sDef.skip] && dObj[sDef.skip].length === 0 ){
+      return {append:false, status:'skipped', result:null};
+    }
+
+    /* ========================================
+      2. 自要素の作成
+    ======================================== */
+
+    // 2.1.dObj[skip]が空なら作成不要
+    if( sDef.skip.length > 0 ){
+      console.log('l.176 dObj['+sDef.skip+']='+dObj[sDef.skip]
+      + ', length='+String(dObj[sDef.skip]).length);
+      if( dObj[sDef.skip] !== undefined ){
+        if( String(dObj[sDef.skip]).length === 0 ){
+          console.log('genChild skipped: '+cFP);
+          return {append:false, status:'skipped', result:null};
+        }
+      }
+    }
+
+    // 2.2.中の文字列をstrとして作成
+    let str = '';
+    if( sDef.text.length === 0 ){
+      if( dObj[sDef.variable] !== undefined ){
+        rv.status = 'variable';
+        str = dObj[sDef.variable];
+      }
+    } else {
+      if( sDef.text.match(/\t/) ){
+        if( dObj[sDef.variable] !== undefined ){
+          rv.status = 'replaced';
+          str = sDef.text.replace(/\t/g,dObj[sDef.variable]);
+        }
+      } else {
+        rv.status = 'fixed';
+        str = sDef.text;
+      }
+    }
+
+    // 2.3.自要素(element)の生成
+    if( sDef.tag.length > 0 ){
+      rv.result = document.createElement(sDef.tag);
+      if( str )
+        rv.result.appendChild(document.createTextNode(str));
+    } else {
+      rv.result = document.createTextNode(str);
+    }
+    //console.log('l.216 rv',rv.result);
+
+    // 2.4.自要素に属性を追加
+    if( sDef.class && sDef.class.length > 0 ){
+      /* sDef.classが三項演算子の場合、評価結果をクラスとする。
+        それ以外は文字列としてそのまま適用 */
+      rv.result.className = sDef.class.match(/.+\?.+:.+/)
+        ? eval(sDef.class) : sDef.class;
+    }
+    ['id','type','name','value'].forEach(x => {
+      if( sDef[x] && sDef[x].length > 0 ){
+        rv.result.setAttribute(x,sDef[x]);
+      }
+    });
+    if( sDef.onclick && dObj[sDef.onclick] ){
+      // ボタンクリックで遷移
+      rv.result.setAttribute('onclick',"location.href='_'".replace('_',dObj[sDef.onclick]));
+    }
+    if( sDef.checked && dObj[sDef.checked] ){
+      // dObj[sDef.checked]がtrueならcheckedを追加
+      rv.result.checked = true;
+    }
+    if( sDef.tag === 'select' ){  // select文の場合、子要素としてoptionを作成
+      const options = sDef.opt.split(',');
+      for( let i=0 ; i<options.length ; i++ ){
+        let opt = document.createElement('option');
+        opt.value = options[i];
+        opt.appendChild(document.createTextNode(options[i]));
+        if( options[i] === dObj[sDef.variable] ){
+          opt.selected = true;
+        }
+        rv.result.appendChild(opt);
+      }
+    }
+    //console.log('l.225 rv',rv.result);
+
+    /* ========================================
+      3. 子要素の作成
+    ======================================== */
+    for( let i=0 ; i<(sDef.max === 0 ? 1 : sDef.max) ; i++ ){
+      const cDef = JSON.parse(JSON.stringify(sDef));
+      if( cDef.max > 0 )
+        addSeqNo(cDef,i);  // 不定項目の場合、子孫全部ラベルを書き換え
+      for( let j=0 ; j<cDef.children.length ; j++ ){
+        const o = genChild(cDef.children[j],dObj,cFP);
+        if( o.append ) rv.result.appendChild(o.result);
+      }
+    }
+    //console.log('l.239 rv',rv.result);
+
+    /* ========================================
+      5. 結果表示して作成した要素を返す
+    ======================================== */
+    console.log('genChild end: '+cFP+'\n',rv);
+    return rv;
+
+  } catch(e) {
+    console.error(e);
+    return rv;
+  }
+};
+
+const whichType = (arg = undefined) => {
+  return arg === undefined ? 'undefined'
+   : Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
+}
+
+/* ===================================================
+  reception 独自部分
+=================================================== */
+
+const config = {
+  GASwebAPId: "AKfycbyihIHDaesO4rgurDQDuMixZo_0Q8gV2iWXZ4YqdNVybNIE_TN0STq4P-JUSiqV6PmYfw", // テスト用
+  formId: "1hnQLsY3lRh0gQMGfXoJJqAL_yBpKR6T0h2RFRc8tUEA",
+  qrSize: Math.ceil(document.body.clientWidth * 0.8), // QRコードのサイズ
+  editGuestTemplate:  /* 一行分のデータに対する文書構造の定義
+    tag string 1 タグ指定(必須)。"text"の場合は文字列と看做し、createTextNodeで追加する
+    children [object] 0..1 子要素の定義。childrenとtextは排他
+    text string 0..1 文字列の定義。変数に置換する部分には'\t'を挿入
+    skip string 0..1 変数が空白の場合は出力抑止する場合、判断基準となる変数名を指定
+    variable string 0..1 入力データの変数名。複数の変数は不可
+    max number : 子要素が不定繰返ならその回数、不定繰返ではないなら0(固定、既定値)
+      例：members配下に最大5人のメンバがいる場合 ⇒ max:5(添字は0..4となる)
+    --- 上記以外は全て属性指定(properties)。以下は処理対象となる属性 -------
+    class string 0..1 要素のクラス指定。三項演算子の場合、評価結果をクラスとする
+      例： {.., class:"dObj['申込者']==='参加'?'representative':'representative glay'", ..}
+    */
+    {tag:"div", class:"table", children:[
+      {tag:"div", class:"summary", children:[
+        {tag:"div", class:"tr",children:[
+          {tag:"div", class:"th vth", text:"受付番号"},
+          {tag:"div", class:"td entryNo", variable:"受付番号"},
+          {tag:"div", id:'img-qr'},
+        ]},
+        {tag:"div", class:"tr",children:[
+          {tag:"div", class:"th vth", text:"申込者"},
+          {tag:"div", class:"td name", children:[
+            {tag:"ruby", children:[
+              {tag:"rb", variable:"氏名"},
+              {tag:"rt", variable:"読み"},
+            ]},
+          ]},
+        ]},
+        {tag:"div", class:"tr", children:[
+          {tag:"div", class:"th vth", text:"キャンセル"},
+          {tag:"div", class:"td", children:[
+            {tag:"input", type:"checkbox", name:"cancel", checked:"取消"},
+          ]},
+        ]},
+        {tag:"div", class:"tr", children:[
+          {tag:"div", class:"th vth", text:"受付日時"},
+          {tag:"div", class:"td", variable:"登録日時"},
+        ]},
+        {tag:"div", class:"tr", children:[
+          {tag:"div", class:"th vth", text:"e-mail"},
+          {tag:"div", class:"td", variable:"メール"},
+        ]},
+        {tag:"div", class:"tr", children:[
+          {tag:"div", class:"th vth", text:"緊急連絡先"},
+          {tag:"div", class:"td", variable:"連絡先"},
+        ]},
+        {tag:"div", class:"tr", children:[
+          {tag:"div", class:"th vth", text:"引取者"},
+          {tag:"div", class:"td", variable:"引取者"},
+        ]},
+        {tag:"div", class:"tr", children:[
+          {tag:"div", class:"th vth", text:"備考"},
+          {tag:"div", class:"note", variable:"備考"},
+        ]},
+      ]},
+      {tag:"div", class:"tr",children:[
+        {tag:"div", class:"td memNo", text:"①"},
+        {tag:"div", class:"td name", name:"name01", children:[
+          {tag:"ruby", children:[
+            {tag:"rb", variable:"①氏名"},
+            {tag:"rt", variable:"①読み"},
+          ]},
+        ]},
+        {tag:"div", class:"td affiliation", name:"affiliation01", text:"\t", variable:"①所属"},
+      ]},
+      {tag:"div", class:"tr",children:[
+        {tag:"select", class:"td status", name:"status01", opt:"未入場,入場済,退場済,不参加", variable:"①状態"},
+        {tag:"select", class:"td fee", name:"fee01", opt:"未収,既収,免除", variable:"①参加費"},
+      ]},
+      {tag:"div", class:"tr",children:[
+        {tag:"div", class:"td memNo", text:"②"},
+        {tag:"div", class:"td name", name:"name02", children:[
+          {tag:"ruby", children:[
+            {tag:"rb", variable:"②氏名"},
+            {tag:"rt", variable:"②読み"},
+          ]},
+        ]},
+        {tag:"div", class:"td affiliation", name:"affiliation02", text:"\t", variable:"②所属"},
+      ]},
+      {tag:"div", class:"tr",children:[
+        {tag:"select", class:"td status", name:"status02", opt:"未入場,入場済,退場済,不参加,未登録", variable:"②状態"},
+        {tag:"select", class:"td fee", name:"fee02", opt:"未収,既収,免除,無し", variable:"②参加費"},
+      ]},
+      {tag:"div", class:"tr",children:[
+        {tag:"div", class:"td memNo", text:"③"},
+        {tag:"div", class:"td name", name:"name03", children:[
+          {tag:"ruby", children:[
+            {tag:"rb", variable:"③氏名"},
+            {tag:"rt", variable:"③読み"},
+          ]},
+        ]},
+        {tag:"div", class:"td affiliation", name:"affiliation03", text:"\t", variable:"③所属"},
+      ]},
+      {tag:"div", class:"tr",children:[
+        {tag:"select", class:"td status", name:"status03", opt:"未入場,入場済,退場済,不参加,未登録", variable:"③状態"},
+        {tag:"select", class:"td fee", name:"fee03", opt:"未収,既収,免除,無し", variable:"③参加費"},
+      ]},
+    ]
+  },
+};
+const flags = {  // 各種フラグ
+  checkImage: false,  // checkImage(QRコード撮影)実行可能フラグ。永久ループ防止用
+  //inputKeyWord: false,  // QRコード撮影画面に受付番号・氏名読み入力欄を表示するかどうか
+};
+
+const changeScreen = (scrId='home') => {  // 表示画面の切り替え
+  console.log("changeScreen start. scrId="+scrId);
+  flags.checkImage = false; // 画面遷移の指示がある->QRコード撮影はキャンセル
+  // 一度全部隠す
+  const scrList = document.querySelectorAll('.screen');
+  for( let i=0 ; i<scrList.length ; i++ ){
+    scrList[i].style.zIndex = -1;  // 背後に
+  }
+  document.querySelector('#'+scrId).style.zIndex = 2;
+  console.log("changeScreen end.");
+}
+
+const initialize = () => {  // 初期設定処理
+  console.log("initialize start.");
+
+  // config.GASwebAPId/formIdをQRコードから読み込み
+  flags.checkImage = true;
+  const callback = (code) => {
+    // configの値を設定してホームに戻る
+    const o = JSON.parse(o);
+    config.GASwebAPId = code.GASwebAPId;
+    config.formId = code.formId;
+    changeScreen();
+  };
+  // !!本番時はコメント化を解除!! checkImage(callback);
+
+  alert('初期設定は正常に終了しました');
+  console.log("initialize end.",config);
+}
+
+const registerd = (arg) => {
+  console.log('registerd start.',arg);
+
+  // 本関数は引数の型・個数により処理を分岐させている。
+  // 分岐した後の個々の処理も複雑なので、内部関数として定義する
+  const keyword = () => {  // 初期状態の場合の処理定義
+    // 初期状態(キーワードも入ってないし、doGetも実行されていない)
+    // スキャナを起動
+    changeScreen('camera');
+    // キーワード入力欄を表示
+    document.querySelector("#camera .search_box").style.display = "inline-block";
+    // 虫眼鏡がクリックされたら値を取得するよう設定
+    const f = () => {
+      changeScreen('loading');
+      const keywordElement = document.querySelector("#camera .search_box input");
+      const keyword = keywordElement.value;
+      keywordElement.value = '';
+      registerd(keyword);
+    };
+    document.querySelector("#camera .search_box img").addEventListener('click',f);
+  }
+
+  const unique = (arg) => {  // 検索結果が一つしか無い場合の処理
+    // 該当が1件のみなら編集画面へ
+
+    const editArea = document.querySelector("#registerd .edit");
+    editArea.innerHTML = '';
+
+    // データクレンジング
+    arg['受付番号'] = ('000'+arg['受付番号']).slice(-4);  // 0パディング
+    arg['登録日時'] = new Date(arg['登録日時']).toLocaleString('ja-JP');
+    // 「取消」の文字列が入っていればtrue
+    arg['取消'] = arg['取消'].length === 0 ? false : true;
+    ['①','②','③'].forEach(x => {
+      if( arg[x+'状態'].length === 0 )
+        arg[x+'状態'] = arg[x+'氏名'].length === 0 ? '未登録' : '未入場';
+      if( arg[x+'参加費'].length === 0 )
+        arg[x+'参加費'] = arg[x+'氏名'].length === 0 ? '無し' : '未収';
+    });
+
+    // 要素の作成とセット
+    let o = genChild(config.editGuestTemplate,arg,'root');  // 全体の定義と'root'を渡す
+    if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
+      throw o.result;
+    } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
+      editArea.appendChild(o.result);
+    }
+
+    // 編集用URLをQRコードで表示
+    document.getElementById("img-qr").innerHTML = "";// Clear
+    let qrcode = new QRCode("img-qr", {  // 第一引数のqrcodeはCSSセレクタ
+      text: arg['編集用URL'],
+      width: 200, height: 200,// QRコードの幅と高さ
+      colorDark: "#000000",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.H
+    });
+  }
+
+  const multi = (arg) => {  // 検索結果が複数あった場合の処理
+    // 該当が複数件ならまず選択、選択後編集画面へ
+
+    const editArea = document.querySelector("#registerd .edit");
+    editArea.innerHTML = '<p>検索結果が複数あります。選択してください。</p>';
+    for( let i=0 ; i<arg.length ; i++ ){
+      const o = document.createElement('div');
+      o.innerText = arg[i]['氏名'] + '(' + arg[i]['読み'] + ')';
+      o.addEventListener('click',() => {
+        registerd([arg[i]]);
+      });
+      editArea.appendChild(o);
+    }
+  }
+
+  // 主処理：引数の型・個数により事前に定義した内部関数を呼び出す
+  if( arg === undefined ){  // 初期状態(ホーム画面のボタン)から呼ばれた
+    keyword();
+  } else {
+    const argType = whichType(arg);
+    if( argType === 'String' ){  // 引数が文字列 ⇒ 検索キーワード
+      doGet("?key=" + arg,registerd);
+    } else {  // 配列 ⇒ GASのdoGetからの戻り値(検索結果)
+      if( arg.length === 0 ){  // 検索結果が0
+        alert("該当する参加者は存在しませんでした");
+      } else {  // 検索結果が>0
+        changeScreen('registerd');
+        if( arg.length === 1 ){
+          unique(arg[0]);
+        } else {
+          multi(arg);  // 検索結果が複数あるので選択が必要
+        }
+      }
+    }
+  }
+
+  console.log('registerd end.');
+}
+
+const editGuest = (arg) => {  // 状態・参加費の更新
+  console.log("editGuest start.",arg);
+  // 1:未収,2:既収,3:免除,4:無し
+  // 1:未入場,2:入場済,3:退場済,4:不参加,5:未登録
+  // ^n(\d+)c([0|1])s([1-5]{3})f([1-4]{3})m(.*)$
+  //    1     2       3          4          5
+  const map = {
+    label:['①','②','③'],
+    status:{'未入場':'1','入場済':'2','退場済':'3','不参加':'4','未登録':'5'},
+    fee:{'未収':'1','既収':'2','免除':'3','無し':'4'},
+  }
+  if( arg === undefined ){
+    // 更新のキー文字列を生成
+    const key = "?key=n_1c_2s_3f_4m_5"
+      .replace(/_1/,String(Number(document.querySelector('#registerd .edit .entryNo').innerText)))  // 受付番号
+      .replace(/_2/,(document.querySelector('#registerd .edit .summary input').checked ? '1' : '0')) // 取消
+      .replace(/_3/,() => {  // 状態
+        let rv = '';
+        for( let i=0 ; i<map.label.length ; i++ ){
+          const v = document.querySelector('#registerd .edit [name="status0' + (i+1) + '"]').value
+          rv += map.status[v];
+        }
+        return rv;
+      })
+      .replace(/_4/,() => {
+        let rv = '';
+        for( let i=0 ; i<map.label.length ; i++ ){
+          const v = document.querySelector('#registerd .edit [name="fee0' + (i+1) + '"]').value
+          rv += map.fee[v];
+        }
+        return rv;
+      })
+      .replace(/_5/,document.querySelector('#registerd .edit .note').innerText);
+    console.log('l.693',key);
+    doGet(key,editGuest);
+    //console.log("editGuest end.",v);
+  } else {
+    // argにdoGetの結果となるJSON文字列が入っていた場合
+    //const result = JSON.parse(arg);
+    console.log('l.678',arg);
+  }
+}
+
+const showFormURL = () => { // 参加フォームURLのQRコード表示
+  console.log("showFormURL start.");
+  changeScreen('showFormURL');
+  document.getElementById('showFormURL').style.height = config.qrSize * 2 + 'px';
+
+  // 申請フォームのQRコードを表示
+  const text = "https://docs.google.com/forms/d/" + config.formId + "/edit";
+  console.log('text="'+text+'"');
+  document.getElementById("qrcode").innerHTML = "";// Clear
+  let qrcode = new QRCode("qrcode", {  // 第一引数のqrcodeはCSSセレクタ
+    text: text,
+    width: config.qrSize, height: config.qrSize,// QRコードの幅と高さ
+    colorDark: "#000000",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H
+  });
+  console.log("showFormURL end.");
+}
+
+const showSummary = () => {  // 集計表の表示
+  console.log("showSummary start.");
+  changeScreen('showSummary');
+  console.log("showSummary end.");
+}
+</script>
+</html>
