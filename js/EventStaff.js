@@ -182,8 +182,10 @@ const initialize = () => {  // 初期設定処理
     alert('l.182: '+code);
     const o = JSON.parse(code);
     for( let x in o ){ // configの値を設定
+      alert('l.185: '+x+": "+o[x]);
       config[x] = o[x];
     }
+    alert('l.188: '+JSON.stringify(config));
     config.show();
     alert('初期設定は正常に終了しました');
     console.log("initialize end.",config);
