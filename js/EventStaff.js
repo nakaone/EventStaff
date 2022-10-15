@@ -145,11 +145,17 @@ const initialize = () => {  // 初期設定処理
 
   // QRコード読取時の動作定義
   const callback = (code) => {
-    alert('typeof = ' + typeof code + '\n' + JSON.stringify(code));
     const o = JSON.parse(code);
+    alert('typeof code: ' + whichType(code) + '\n'
+      + 'code: ' + typeof code === 'string' ? code : JSON.stringify(code) + '\n'
+      + 'typeof o: ' + whichType(o) + '\n'
+      + 'o: ' + JSON.stringify(o) + '\n'
+    );
     for( let x in o ){ // configの値を設定
       config[x] = o[x];
+      alert(x + ': ' + o[x]);
     }
+    alert('result: '+JSON.stringify(config));
     config.show();
     alert('初期設定は正常に終了しました');
     console.log("initialize end.",config);
