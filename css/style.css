@@ -12,7 +12,6 @@ html,body {
 }
 div {margin:0px;padding:0px;}
 
-header {margin-bottom: 1rem;}
 .screen {  /* 切り替え用画面の共通部分 */
   padding: 1rem;
   display:flex;
@@ -29,6 +28,51 @@ header {margin-bottom: 1rem;}
   */
 }
 
+/* =========================================================
+  ヘッダ
+========================================================= */
+header {
+  margin-bottom: 1rem;
+}
+.homeIcon {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+/* =========================================================
+  カメラ撮影画面
+========================================================= */
+#camera {
+  width: 100vw;
+  height: 100vw;
+  align-items: center;
+  -webkit-align-items: center;
+  background-color: aquamarine;
+}
+#js-video {
+  background-color: black;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+}
+#js-canvas {
+  width: 100vw;
+  height: 100vw;
+}
+
+/* =========================================================
+  ローディング中表示画面
+========================================================= */
+#loading img {
+  display: block;
+  margin: auto;
+}
+
+
+/* =========================================================
+  ホーム画面
+========================================================= */
 #home {
   height: 100%;
   padding-right: 0;
@@ -54,54 +98,14 @@ header {margin-bottom: 1rem;}
   box-shadow: 0 10px 25px 0 rgba(0, 0, 0, .5);
   color: rgba(255,255,255,1);
 }
-#camera {
-  background-color: aquamarine;
-  align-items: center;
-  -webkit-align-items: center;
-}
-#camera .reader {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  /*position: relative;*/
-  color: white;
-  background-color: black;
-}
-#camera .cancel {
-  position: absolute;
-  bottom: 10%;
-  right: 0%;
-  width: 80%;
-  height: 4rem;
-  padding: 1rem;
-  text-align: right;
-  vertical-align: middle;
-  font-size: 2rem;
-  background-color: rgba(255,255,255,0.5); /* 背景色は半透明 */
-  color: rgba(0,0,0,255); /* 文字色は完全に透明 */
-}
-#loading img {
-  display: block;
-  margin: auto;
-}
-#js-video {
-  width: 80vw;
-  height: 80vw;
-  /*background-color: black;
-  width: 100%;
-  height: 100%;
-  object-fit: fill;*/
-}
-#qrcode {
-  margin: 10vw;
-}
-.homeIcon {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-}
+
+/* =========================================================
+  初期化処理画面
+========================================================= */
+
+/* =========================================================
+  フォーム登録済参加者処理画面
+========================================================= */
 /* Qiita: 【初心者向け】検索窓の中に虫眼鏡アイコンを設置する方法 */
 .search_box {  /* 受付番号または氏名読み入力欄 */
   display: none;
@@ -124,9 +128,21 @@ header {margin-bottom: 1rem;}
   height: 1.5rem;
 }
 
+/* =========================================================
+  参加フォームURLのQRコード表示画面
+========================================================= */
+#qrcode {
+  margin: 10vw;
+}
 
-/* genChild用のスタイル定義 */
-.table {}
+/* =========================================================
+  集計表の表示画面
+========================================================= */
+
+
+/* =========================================================
+  genChild用のスタイル定義
+========================================================= */
 .tr {
   display:flex;
   flex-direction: row;  /* row:横並び */
@@ -135,7 +151,6 @@ header {margin-bottom: 1rem;}
 }
 .th, .td {margin:2px; white-space: nowrap;}
 .th {background-color: aliceblue;}
-.td {}
 
 .summary {margin-bottom: 1rem;}
 .vth {width:6rem;} /* 表上部のラベル列 */

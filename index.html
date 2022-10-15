@@ -18,10 +18,6 @@
     <div style="display: none;">
       <canvas id="js-canvas"></canvas>
     </div>
-    <div class="search_box">
-      <input type="text" placeholder="受付番号または氏名読み(最初の数文字)" />
-      <img src="img/search.svg">
-    </div>
   </div>
 
   <div id="loading" class="screen"><!-- ローディング中 -->
@@ -34,17 +30,20 @@
     <div onclick="">紙申請の登録</div>
     <div onclick="showFormURL()">参加フォームURL</div>
     <div onclick="showSummary()">集計表の表示</div>
-    <p>Oct. 15, 11:05</p>
+    <p>Oct. 15, 11:25</p>
   </div>
 
-  <div id="initialize" class="screen">
+  <div id="initialize" class="screen"><!-- 初期化処理画面 -->
     <div>上のカメラで初期設定用QRコードを読み取ってください。</div>
     <div class="msg"></div>
   </div>
 
   <div id="registerd" class="screen"><!-- フォーム登録済参加者画面 -->
+    <div class="search_box">
+      <input type="text" placeholder="受付番号または氏名読み(最初の数文字)" />
+      <img src="img/search.svg">
+    </div>
     <div class="edit"></div><!-- 参加者情報編集用領域 -->
-    <img src="img/home-alt.svg" class="homeIcon" onclick="changeScreen()" />
     <img class="editFinish" src="img/checkbox.svg" onclick="editGuest()" />
   </div>
 
