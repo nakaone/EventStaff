@@ -158,6 +158,7 @@ const initialize = () => {  // 初期設定処理
   // QRコード読取時の動作定義
   const callback = (code) => {
     console.log('callback start. code='+code);
+    /*
     const o = JSON.parse(code);
     alert('typeof code: ' + whichType(code) + '\n'
       + 'code: ' + code + '\n'
@@ -173,6 +174,7 @@ const initialize = () => {  // 初期設定処理
     alert('初期設定は正常に終了しました');
     console.log("initialize end.",config);
     changeScreen('home');// ホーム画面表示
+    */
   };
   flags.checkImage = true;
   checkImage(callback);
