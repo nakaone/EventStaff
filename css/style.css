@@ -1,8 +1,11 @@
 /* =========================================================
+アイコン制作
+  Ikonate: https://ikonate.com/ border=5, size=80, colour=#2329d6
 ========================================================= */
 html,body {
   margin: 0;
   padding: 0;
+  width: 100vw;
   height: 100%;
   font-size: 5vw;  /* 基本となる文字サイズ */
   box-sizing: border-box; /* 枠線は要素サイズに含める */
@@ -10,26 +13,28 @@ html,body {
 div {margin:0px;padding:0px;}
 
 .screen {  /* 切り替え用画面の共通部分 */
+  padding: 1rem;
+  /*
   width: 100vw;
   height: 100%;
-  /*position: relative;*/
   position: absolute;
   top: 0px;
   left: 0px;
   background-color: white;
+  */
 }
 
-/* アイコン
-  Ikonate: https://ikonate.com/ border=5, size=80, colour=#2329d6
-*/
 #home {
-  z-index: 2;
+  height: 100%;
   background-color: white;
   display:flex;
+  display: -webkit-flex;
   flex-direction: column;  /* row:横並び */
   flex-wrap: wrap;
   justify-content: flex-end;
+  -webkit-justify-content: flex-end;
   align-items: flex-end;
+  -webkit-align-items: flex-end;
 }
 #home > div {
   font-size: 1.5rem;
@@ -45,6 +50,8 @@ div {margin:0px;padding:0px;}
 }
 #camera {
   background-color: aquamarine;
+  align-items: center;
+  -webkit-align-items: center;
 }
 #camera .reader {
   position: absolute;
@@ -74,10 +81,12 @@ div {margin:0px;padding:0px;}
   margin: auto;
 }
 #js-video {
-  background-color: black;
+  width: 80vw;
+  height: 80vw;
+  /*background-color: black;
   width: 100%;
   height: 100%;
-  object-fit: fill;
+  object-fit: fill;*/
 }
 #qrcode {
   margin: 10vw;

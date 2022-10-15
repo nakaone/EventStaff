@@ -20,7 +20,6 @@ const ctx = canvas.getContext('2d');
 
 const checkImage = (callback) => {  // QRコード撮影
   if( !flags.checkImage )  return;
-  changeScreen('camera');
   // 取得している動画をcanvasに描画
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
   // canvasからデータを取得

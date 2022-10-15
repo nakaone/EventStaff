@@ -107,32 +107,45 @@ const flags = {  // 各種フラグ
 
 const changeScreen = (scrId='home') => {  // 表示画面の切り替え
   console.log("changeScreen start. scrId="+scrId);
-  flags.checkImage = false; // 画面遷移の指示がある->QRコード撮影はキャンセル
+
+  // 画面遷移の指示がある->QRコード撮影はキャンセル
+  flags.checkImage = false;
+
   // 一度全部隠す
   const scrList = document.querySelectorAll('.screen');
   for( let i=0 ; i<scrList.length ; i++ ){
-    scrList[i].style.zIndex = -1;  // 背後に
+    scrList[i].style.display = 'none';
   }
-  document.querySelector('#'+scrId).style.zIndex = 2;
+
+  // homeの場合、ヘッダは隠す
+  document.querySelector('header').style.display
+    = scrId === 'home' ? 'none' : 'flex';
+
+  // 指定IDの画面は再表示
+  document.querySelector('#'+scrId).style.display = 'flex';
+
   console.log("changeScreen end.");
 }
 
 const initialize = () => {  // 初期設定処理
   console.log("initialize start.");
 
-  // config.GASwebAPId/formIdをQRコードから読み込み
-  flags.checkImage = true;
+  // 初期設定処理の画面を表示
+  document.querySelector('header h1').innerText = "初期化処理";
+  changeScreen('initialize');
+  document.getElementById('camera').style.display = 'flex';
+
+  // QRコード読取時の動作定義
   const callback = (code) => {
-    // configの値を設定してホームに戻る
-    for( let x in code ){
+    for( let x in code ){ // configの値を設定
       config[x] = code[x];
     }
-    changeScreen();
+    console.log("initialize end.",config);
+    alert('初期設定は正常に終了しました');
+    changeScreen('home');// ホーム画面表示
   };
+  flags.checkImage = true;
   checkImage(callback);
-
-  alert('初期設定は正常に終了しました');
-  console.log("initialize end.",config);
 }
 
 const registerd = (arg) => {
@@ -300,3 +313,8 @@ const showSummary = () => {  // 集計表の表示
   changeScreen('showSummary');
   console.log("showSummary end.");
 }
+
+(() => {
+  console.log("EventStaff start.",config);
+  changeScreen('home');
+})()

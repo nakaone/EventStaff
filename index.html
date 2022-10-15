@@ -8,13 +8,10 @@
 </head>
 
 <body>
-  <div id="home" class="screen"><!-- ホーム画面 -->
-    <div onclick="initialize()">初期設定</div>
-    <div onclick="registerd()">参加登録済</div>
-    <div onclick="">紙申請の登録</div>
-    <div onclick="showFormURL()">参加フォームURL</div>
-    <div onclick="showSummary()">集計表の表示</div>
-  </div>
+  <header>
+    <h1></h1>
+    <img src="img/home-alt.svg" class="homeIcon" onclick="changeScreen()" />
+  </header>
 
   <div id="camera" class="screen"><!-- カメラ撮影 -->
     <video id="js-video" autoplay playsinline></video>
@@ -25,11 +22,22 @@
       <input type="text" placeholder="受付番号または氏名読み(最初の数文字)" />
       <img src="img/search.svg">
     </div>
-    <img src="img/home-alt.svg" class="homeIcon" onclick="changeScreen()" />
   </div>
 
-  <div id="loading" class="screen">
+  <div id="loading" class="screen"><!-- ローディング中 -->
     <img src="img/loading.gif" />
+  </div>
+
+  <div id="home" class="screen"><!-- ホーム画面 -->
+    <div onclick="initialize()">初期設定</div>
+    <div onclick="registerd()">参加登録済</div>
+    <div onclick="">紙申請の登録</div>
+    <div onclick="showFormURL()">参加フォームURL</div>
+    <div onclick="showSummary()">集計表の表示</div>
+  </div>
+
+  <div id="initialize" class="screen">
+    <p>上のカメラで初期設定用QRコードを読み取ってください。</p>
   </div>
 
   <div id="registerd" class="screen"><!-- フォーム登録済参加者画面 -->
@@ -41,13 +49,12 @@
   <div id="showFormURL" class="screen"><!-- 参加フォームURLのQRコード表示画面 -->
     <h1>参加フォームURL</h1>
     <div id="qrcode"></div>
-    <img src="img/home-alt.svg" class="homeIcon" onclick="changeScreen()" />
   </div>
 
   <div id="showSummary" class="screen"><!-- 集計表の表示画面 -->
     <h1>現時点での参加登録/来場者数</h1>
-    <div class="cancel" onclick="changeScreen()">ホームに戻る</div>
   </div>
+
 </body>
 <script src="js/jsQR.js" defer></script>
 <script src="js/qrcode.min.js" defer></script>
