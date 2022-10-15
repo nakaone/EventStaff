@@ -145,6 +145,7 @@ const initialize = () => {  // 初期設定処理
 
   // QRコード読取時の動作定義
   const callback = (code) => {
+    alert(JSON.stringify(code));
     for( let x in code ){ // configの値を設定
       config[x] = code[x];
     }
