@@ -12,6 +12,7 @@ html,body {
 }
 div {margin:0px;padding:0px;}
 
+header {margin-bottom: 1rem;}
 .screen {  /* 切り替え用画面の共通部分 */
   padding: 1rem;
   display:flex;
