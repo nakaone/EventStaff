@@ -28,8 +28,11 @@ const checkImage = (callback) => {  // QRコード撮影
   const code = jsQR(imageData.data, canvas.width, canvas.height);
   if(code){
     alert("qrscan l.30"
+    + "\ncallback typeof: " + whichType(callback)
     + "\ntype: " + whichType(code.data)
-    + "\njson: " + JSON.stringify(code.data));
+    + "\njson: " + JSON.stringify(code.data)
+    );
+    flags.checkImage = false;
     callback(code.data);
   } else {
     setTimeout( () => checkImage(callback), 200);

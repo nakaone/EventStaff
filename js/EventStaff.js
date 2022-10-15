@@ -148,6 +148,7 @@ const initialize = () => {  // 初期設定処理
   const v = document.getElementById("js-video");
   c.width = v.clientWidth;
   c.height = v.clientHeight;
+  alert('l.151\n'+c.width+"x"+c.height);
   /*
   // vodeoのサイズ指定
   const w = document.body.clientWidth;
