@@ -180,6 +180,14 @@ const initialize = () => {  // 初期設定処理
   flags.checkImage = true;
   checkImage((code) => {
     alert('l.182: '+code);
+    const o = JSON.parse(code);
+    for( let x in o ){ // configの値を設定
+      config[x] = o[x];
+    }
+    config.show();
+    alert('初期設定は正常に終了しました');
+    console.log("initialize end.",config);
+    changeScreen('home');// ホーム画面表示
   });
 }
 
