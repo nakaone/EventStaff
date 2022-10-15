@@ -146,7 +146,7 @@ const initialize = () => {  // 初期設定処理
   // vodeoのサイズ指定
   const w = document.body.clientWidth;
   const o = document.getElementById('js-video');
-  o.style.width = o.style.height = w;  
+  o.width = o.height = w;  
 
   // QRコード読取時の動作定義
   const callback = (code) => {
