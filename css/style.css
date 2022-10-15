@@ -13,19 +13,12 @@ html,body {
 div {margin:0px;padding:0px;}
 
 .screen {  /* 切り替え用画面の共通部分 */
+  width: 100%;
   padding: 1rem;
   display:flex;
   display: -webkit-flex;
   flex-direction: column;  /* row:横並び */
   flex-wrap: wrap;
-  /*
-  width: 100vw;
-  height: 100%;
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  background-color: white;
-  */
 }
 
 /* =========================================================
@@ -53,20 +46,6 @@ header {
   align-items: center;
   -webkit-align-items: center;
   background-color: aquamarine;
-  /*
-  width: 100vw;
-  height: 100vw;
-}
-#js-video {
-  background-color: black;
-  width: 100vw;
-  height: 100vw;
-  object-fit: fill;
-}
-#js-canvas {
-  width: 100vw;
-  height: 100vw;
-  */
 }
 
 /* =========================================================
