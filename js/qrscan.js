@@ -30,7 +30,7 @@ const checkImage = (callback) => {  // QRコード撮影
     alert("qrscan l.30"
     + "\ncallback typeof: " + whichType(callback)
     + "\ntype: " + whichType(code.data)
-    + "\njson: " + JSON.stringify(code.data)
+    + "\nvalue: " + code.data
     );
     flags.checkImage = false;
     callback(code.data);

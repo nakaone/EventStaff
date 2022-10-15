@@ -178,7 +178,9 @@ const initialize = () => {  // 初期設定処理
     */
   };
   flags.checkImage = true;
-  checkImage(callback);
+  checkImage((code) => {
+    alert('l.182: '+code);
+  });
 }
 
 const registerd = (arg) => {
