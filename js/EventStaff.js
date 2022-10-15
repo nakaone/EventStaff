@@ -157,9 +157,10 @@ const initialize = () => {  // 初期設定処理
 
   // QRコード読取時の動作定義
   const callback = (code) => {
+    console.log('callback start. code='+code);
     const o = JSON.parse(code);
     alert('typeof code: ' + whichType(code) + '\n'
-      + 'code: ' + typeof code === 'string' ? code : JSON.stringify(code) + '\n'
+      + 'code: ' + code + '\n'
       + 'typeof o: ' + whichType(o) + '\n'
       + 'o: ' + JSON.stringify(o) + '\n'
     );
