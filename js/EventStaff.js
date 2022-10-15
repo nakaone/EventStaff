@@ -148,48 +148,18 @@ const initialize = () => {  // 初期設定処理
   const v = document.getElementById("js-video");
   c.width = v.clientWidth;
   c.height = v.clientHeight;
-  alert('l.151\n'+c.width+"x"+c.height);
-  /*
-  // vodeoのサイズ指定
-  const w = document.body.clientWidth;
-  const o = document.getElementById('js-video');
-  o.width = o.height = w;  
-  */
 
   // QRコード読取時の動作定義
-  const callback = (code) => {
-    console.log('callback start. code='+code);
-    /*
-    const o = JSON.parse(code);
-    alert('typeof code: ' + whichType(code) + '\n'
-      + 'code: ' + code + '\n'
-      + 'typeof o: ' + whichType(o) + '\n'
-      + 'o: ' + JSON.stringify(o) + '\n'
-    );
-    for( let x in o ){ // configの値を設定
-      config[x] = o[x];
-      alert(x + ': ' + o[x]);
-    }
-    alert('result: '+JSON.stringify(config));
-    config.show();
-    alert('初期設定は正常に終了しました');
-    console.log("initialize end.",config);
-    changeScreen('home');// ホーム画面表示
-    */
-  };
   flags.checkImage = true;
   checkImage((code) => {
-    alert('l.182: '+code);
     const o = JSON.parse(code);
     for( let x in o ){ // configの値を設定
-      alert('l.185: '+x+": "+o[x]);
       config[x] = o[x];
     }
-    alert('l.188: '+JSON.stringify(config));
     config.show();
     alert('初期設定は正常に終了しました');
     console.log("initialize end.",config);
-    changeScreen('home');// ホーム画面表示
+    //changeScreen('home');// ホーム画面表示
   });
 }
 
