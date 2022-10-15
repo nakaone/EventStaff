@@ -44,13 +44,18 @@ header {
   カメラ撮影画面
 ========================================================= */
 #camera {
-  width: 100vw;
-  height: 100vw;
   margin: 0%;
   padding: 0%;
+  display:flex;
+  display: -webkit-flex;
+  flex-direction: column;  /* row:横並び */
+  flex-wrap: wrap;
   align-items: center;
   -webkit-align-items: center;
   background-color: aquamarine;
+  /*
+  width: 100vw;
+  height: 100vw;
 }
 #js-video {
   background-color: black;
@@ -61,6 +66,7 @@ header {
 #js-canvas {
   width: 100vw;
   height: 100vw;
+  */
 }
 
 /* =========================================================

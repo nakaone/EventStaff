@@ -143,6 +143,13 @@ const initialize = () => {  // 初期設定処理
   document.getElementById('camera').style.display = 'flex';
   config.show();
 
+  // vodeo/canvasのサイズ指定
+  document.getElementById('js-video').style.width =
+  document.getElementById('js-video').style.height =
+  document.getElementById('js-canvas').style.width =
+  document.getElementById('js-canvas').style.height =
+  document.body.clientWidth;
+
   // QRコード読取時の動作定義
   const callback = (code) => {
     const o = JSON.parse(code);
