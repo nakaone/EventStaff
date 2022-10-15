@@ -27,7 +27,7 @@ const checkImage = (callback) => {  // QRコード撮影
   // jsQRに渡す
   const code = jsQR(imageData.data, canvas.width, canvas.height);
   if(code){
-    alert("qrscan l.30: "+code);
+    alert("qrscan l.30: "+JSON.stringify(code));
     callback(code.data);
   } else {
     setTimeout( () => checkImage(callback), 200);
