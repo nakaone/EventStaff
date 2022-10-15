@@ -134,14 +134,18 @@ const initialize = () => {  // 初期設定処理
   document.querySelector('header h1').innerText = "初期化処理";
   changeScreen('initialize');
   document.getElementById('camera').style.display = 'flex';
+  document.querySelector('#initialize div').innerText
+  = JSON.stringify(config);
 
   // QRコード読取時の動作定義
   const callback = (code) => {
     for( let x in code ){ // configの値を設定
       config[x] = code[x];
     }
-    console.log("initialize end.",config);
+    document.querySelector('#initialize div').innerText
+    = JSON.stringify(config);
     alert('初期設定は正常に終了しました');
+    console.log("initialize end.",config);
     changeScreen('home');// ホーム画面表示
   };
   flags.checkImage = true;
