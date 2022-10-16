@@ -99,12 +99,11 @@ const config = {
       ]},
     ]
   },
-  show: () => {
+  dump: () => {
     const o = JSON.parse(JSON.stringify(config));
-    delete o.editGuestTemplate;
-    delete o.show;
-    document.querySelector("#initialize div.msg").innerText
-      = "config: " + JSON.stringify(o);
+    // 内容が長すぎるメンバは割愛
+    ['editGuestTemplate','show'].forEach(x => delete o[x]);
+    return JSON.stringify(o);
   },
 };
 const flags = {  // 各種フラグ
@@ -341,6 +340,7 @@ const showFormURL = () => { // 参加フォームURLのQRコード表示
 const showSummary = () => {  // 集計表の表示
   console.log("showSummary start.");
   changeScreen('showSummary');
+  alert(config.dump());
   console.log("showSummary end.");
 }
 
