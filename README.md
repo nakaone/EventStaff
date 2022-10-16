@@ -40,6 +40,7 @@
 ## <a name="21"></a>Ⅱ.1.初期設定
 
 ```mermaid
+
 sequenceDiagram
   autonumber
   actor staff as 受付担当
@@ -54,6 +55,7 @@ sequenceDiagram
   master->>staff    : 初期設定情報(QRコード)
   staff->>staff     : 初期設定
   staff->>master    : 設定内容(稼働中のスタッフ識別子＋所属グループ？)
+
 ```
 
 「初期設定」では以下の登録を行う。
@@ -65,6 +67,7 @@ sequenceDiagram
 ## <a name="22"></a>Ⅱ.2.フォームでの参加申込
 
 ```mermaid
+
 sequenceDiagram
   autonumber
   actor guest as 参加者
@@ -79,6 +82,7 @@ sequenceDiagram
   Note right of gas: createQrCode ()
   gas->>-answer    : QRコード
   answer->>-guest  : 返信メール
+
 ```
 
 「回答」はマスタとなるスプレッドシートを指す。
@@ -95,6 +99,7 @@ sequenceDiagram
 ## <a name="23"></a>Ⅱ.3.フォーム登録済参加者の受付
 
 ```mermaid
+
 sequenceDiagram
   autonumber
   actor guest as 参加者
@@ -113,6 +118,7 @@ sequenceDiagram
   guest->>staff    : 参加者名、参加費
   staff->>html     : 登録
   html->>master    : 登録情報
+
 ```
 
 参加者の変更は極力受付前に終了してもらう。無理なら受付後でも可。
@@ -121,6 +127,7 @@ sequenceDiagram
 ## <a name="24"></a>Ⅱ.4.当日参加票での受付
 
 ```mermaid
+
 sequenceDiagram
   autonumber
   actor guest as 参加者
@@ -141,10 +148,12 @@ sequenceDiagram
 
   guest->>staff    : 記入済申込用紙<br>(帰宅時)
 
+```
 
 ## <a name="25"></a>Ⅱ.5.一斉配信
 
 ```mermaid
+
 sequenceDiagram
   autonumber
   actor guest as 参加者
@@ -160,6 +169,7 @@ sequenceDiagram
   gHtml->>json     : 参照(10秒毎)
   json->>gHtml     : 対象情報
   gHtml->>guest    : 該当する追加情報があればアラーム
+  
 ```
 
 フォーム登録の返信メールで参加者用画面へのURLを記載。記載されるURLはクエリ文字列で受付番号＋属性を持たせ、サーバorクライアント側で表示対象の絞り込みを可能にする。
