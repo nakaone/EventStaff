@@ -91,18 +91,25 @@ EOL;
       sequenceDiagram
         autonumber
         actor guest as 参加者
-        participant form as A.申込フォーム
-        participant answer as B.回答
-        participant cdn as X.CDN
+        participant form as 申込フォーム
+        participant answer as 回答
+        participant gas as システム(GAS)
   
         guest->>form    : 必要事項を記入
         form->>+answer   : 記入内容を<br>そのまま保存
         Note right of answer: onFormSubmit()
-        answer->>+cdn    : 受付番号
-        Note right of cdn: createQrCode ()
-        cdn->>-answer    : QRコード
-        answer->>-guest  : 受付番号＋QRコード
+        answer->>+gas    : 受付番号
+        Note right of gas: createQrCode ()
+        gas->>-answer    : QRコード
+        answer->>-guest  : 返信メール
     </div>
+    <p>「回答」はマスタとなるスプレッドシートを指す。</p>
+    <p>返信メールには以下の内容を記載する。<br>
+    - 受付番号<br>
+    - QRコード(受付番号)<br>
+    - フォーム修正サイトへの誘導(URL/ボタン)<br>
+    - 参加者サイトへの誘導(URL/ボタン)<br>
+    なお一斉配信の配信対象に変動がある可能性があるため、フォームで修正の都度、改めて返信メールを送る。</p>
   </div>
 
   <div><a name="23"></a><h2>Ⅱ.3.フォーム登録済参加者の受付</h2>
@@ -117,9 +124,9 @@ EOL;
         participant cdn as X.CDN
 
         Note right of staff: セットアップ
-        html->>staff     : ダウンロード
-        admin->>staff    : マスタURL
-        staff->>staff    : マスタURL登録
+        html->>staff     : スタッフ用画面(html)ダウンロード
+        admin->>staff    : 初期設定情報
+        staff->>staff    : 初期設定
 
         Note right of guest: 受付時
         guest->>staff    : QR/受付番号/名前
@@ -132,6 +139,12 @@ EOL;
         staff->>html     : 登録
         html->>master    : 登録情報
     </div>
+    <p>「初期設定」では以下の登録を行う。
+      - GAS WebAPI ID情報の登録<br>
+      - 識別子(氏名)の登録<br>
+      - 所属するスタッフのグループ設定
+    </p>
+    <p>参加者の変更は極力受付前に終了してもらう。無理なら受付後でも可。</p>
   </div>
 
   <div><a name="24"></a><h2>Ⅱ.4.当日参加票での受付</h2>
