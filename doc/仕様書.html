@@ -46,6 +46,7 @@ EOL;
       <li><a href="#22">Ⅱ.2.フォームでの参加申込</a></li>
       <li><a href="#23">Ⅱ.3.フォーム登録済参加者の受付</a></li>
       <li><a href="#24">Ⅱ.4.当日参加票での受付</a></li>
+      <li><a href="#25">Ⅱ.5.一斉配信</a></li>
     </ul>
     <li><a href="#3">Ⅲ.機能別解説</a></li>
     <ul>
@@ -83,9 +84,9 @@ EOL;
 </div>
 
 <div><h1>Ⅱ.処理手順</h1><a name="2"></a>
-  <div><h2>Ⅱ.1.受付担当登録</h2></div><a name="21"></a>
+  <div><a name="21"></a><h2>Ⅱ.1.受付担当登録</h2></div>
 
-  <div><h2>Ⅱ.2.フォームでの参加申込</h2><a name="22"></a>
+  <div><a name="22"></a><h2>Ⅱ.2.フォームでの参加申込</h2>
     <div class="mermaid">
       sequenceDiagram
         autonumber
@@ -104,14 +105,14 @@ EOL;
     </div>
   </div>
 
-  <div><h2>Ⅱ.3.フォーム登録済参加者の受付</h2><a name="23"></a>
+  <div><a name="23"></a><h2>Ⅱ.3.フォーム登録済参加者の受付</h2>
     <div class="mermaid">
       sequenceDiagram
         autonumber
         actor guest as 参加者
         actor staff as 受付担当
         actor admin as システム管理者
-        participant html as C.受付画面
+        participant html as C.スタッフ用画面
         participant master as D.マスタ
         participant cdn as X.CDN
 
@@ -133,17 +134,69 @@ EOL;
     </div>
   </div>
 
-  <div><h2>Ⅱ.4.当日参加票での受付</h2><a name="24"></a>
+  <div><a name="24"></a><h2>Ⅱ.4.当日参加票での受付</h2>
+    <div class="mermaid">
+      sequenceDiagram
+        autonumber
+        actor guest as 参加者
+        actor staff as 受付担当
+        actor admin as システム管理者
+        participant html as C.スタッフ用画面
+        participant master as D.マスタ
+
+        admin->>guest    : 記入用紙(用紙番号QR付)
+        guest->>staff    : 記入済申込用紙
+        staff->>html     : 紙申請処理起動
+        html->>+master   : 仮登録申請
+        master->>-html   : 受付番号
+        html->>staff     : 申込用紙に受付番号を記入
+        staff->>+master  : 本登録申請(受付番号記入済用紙の写真＋参加者属性)
+        master->>-staff  : 本登録結果
+        staff->>guest    : 記入済申込用紙
+
+        guest->>staff    : 記入済申込用紙<br>(帰宅時)
+    </div>
   </div>
 
-  <div><h2>Ⅱ.5.その他</h2>
+  <div><a name="25"></a><h2>Ⅱ.5.一斉配信</h2>
+    <div class="mermaid">
+      sequenceDiagram
+        autonumber
+        actor guest as 参加者
+        actor staff as スタッフ
+        participant html as C.スタッフ用画面
+        participant gHtml as 参加者用画面
+        participant json as JSONサーバ
+
+        staff->>html    : 文言、対象、予約時刻
+        html->>json     : 登録(CRUD)、予約
+
+        guest->>gHtml   : 参加登録返信メールから誘導、表示
+        gHtml->>json     : 参照(10秒毎)
+        json->>gHtml     : 対象情報
+        gHtml->>guest    : 該当する追加情報があればアラーム
+    </div>
+    <p>フォーム登録の返信メールで参加者用画面へのURLを記載。<br>
+      記載されるURLはクエリ文字列で受付番号＋属性を持たせ、
+      サーバorクライアント側で表示対象の絞り込みを可能にする。
+    </p>
+    <p>GCPの無料枠に収めるため、送受信の情報量・頻度は極力絞る(Max.1GB/日)</p>
+    <p>配信対象のグルーピングは以下を想定<br>
+      - 参加者の属性(ex.未就学児/1〜6年生/卒業生/保護者)<br>
+      - 受付番号の範囲(ex. No.10以上20以下)<br>
+      - スタッフの担当(ex. 受付、射的、お化け屋敷、スタッフ全員)
+    </p>
+  </div>
+
+  <div><h2>Ⅱ.6.その他</h2>
     <p>受付担当の業務終了後の秘密保持(アカウント削除)：
-      <a href="https://support.google.com/android/answer/7664951?hl=ja">Android でアカウントを追加または削除する</a>
+      <a href="https://support.google.com/android/answer/7664951?hl=ja">Android でアカウントを追加または削除する</a><br>
+      ⇒ Web API IDの受け渡しはQRコードで行うため、不要になった
     </p>
   </div>
 </div>
 
-<div><h1>Ⅲ.機能別解説</h1><a name="3"></a>
+<div><a name="3"></a><h1>Ⅲ.機能別解説</h1>
 
   <div><h2>Ⅲ.1.フォーム</h2><a name="31"></a>
 
@@ -728,7 +781,7 @@ shimokitasho_oyaji@wordpress-1-vm:/var/www/html$ sudo chmod 655 static/reception
 </div>
 
 
-<div><h1>Ⅳ.開発履歴</h1><a name="4"></a>
+<div><a name="4"></a><h1>Ⅳ.開発履歴</h1>
   <details><summary>2022/10/06 : 改善しようとして動作不良</summary>
 
     <pre class="hljs" style="display: block; overflow-x: auto; padding: 0.5em; background: rgb(240, 240, 240); color: rgb(68, 68, 68);"><span class="hljs-comment" style="color: rgb(136, 136, 136);">// テストデータ出典</span>
