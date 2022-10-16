@@ -1,3 +1,12 @@
+```mermaid
+  graph TD;
+      A-->B;
+      A-->C;
+      B-->D;
+      C-->D;
+```
+
+
 # 目次
 
 - [Ⅰ.リソース一覧](#1)
@@ -36,14 +45,6 @@
 # Ⅱ.処理手順
 
 ## Ⅱ.1.初期設定
-
-```mermaid
-  graph TD;
-      A-->B;
-      A-->C;
-      B-->D;
-      C-->D;
-```
 
 ```mermaid
 sequenceDiagram
