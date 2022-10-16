@@ -1,6 +1,4 @@
-# <a name=""></a>
-
-# <a name="toc"></a>目次
+# 目次
 
 - [Ⅰ.リソース一覧](#1)
 - [Ⅱ.処理手順](#2)
@@ -23,7 +21,7 @@
     - [(6) 申込フォームへの誘導(QRコード表示)](#336)
     - [(7) 申込/参加者数集計表](#337)
 
-# <a name="1"></a>Ⅰ.リソース一覧
+# Ⅰ.リソース一覧
 
 <table>
   <tr><th>記号</th><th>名称</th><th>格納場所</th><th>種類</th><th>備考</th></tr>
@@ -35,12 +33,19 @@
 </table>
 
 
-# <a name="2"></a>Ⅱ.処理手順
+# Ⅱ.処理手順
 
-## <a name="21"></a>Ⅱ.1.初期設定
+## Ⅱ.1.初期設定
 
 ```mermaid
+  graph TD;
+      A-->B;
+      A-->C;
+      B-->D;
+      C-->D;
+```
 
+```mermaid
 sequenceDiagram
   autonumber
   actor staff as 受付担当
@@ -55,7 +60,6 @@ sequenceDiagram
   master->>staff    : 初期設定情報(QRコード)
   staff->>staff     : 初期設定
   staff->>master    : 設定内容(稼働中のスタッフ識別子＋所属グループ？)
-
 ```
 
 「初期設定」では以下の登録を行う。
@@ -64,7 +68,7 @@ sequenceDiagram
 - 所属するスタッフのグループ設定
 
 
-## <a name="22"></a>Ⅱ.2.フォームでの参加申込
+## Ⅱ.2.フォームでの参加申込
 
 ```mermaid
 
@@ -96,7 +100,7 @@ sequenceDiagram
 なお一斉配信の配信対象に変動がある可能性があるため、フォームで修正の都度、改めて返信メールを送る。
 
 
-## <a name="23"></a>Ⅱ.3.フォーム登録済参加者の受付
+## Ⅱ.3.フォーム登録済参加者の受付
 
 ```mermaid
 
@@ -124,7 +128,7 @@ sequenceDiagram
 参加者の変更は極力受付前に終了してもらう。無理なら受付後でも可。
 
 
-## <a name="24"></a>Ⅱ.4.当日参加票での受付
+## Ⅱ.4.当日参加票での受付
 
 ```mermaid
 
@@ -150,7 +154,7 @@ sequenceDiagram
 
 ```
 
-## <a name="25"></a>Ⅱ.5.一斉配信
+## Ⅱ.5.一斉配信
 
 ```mermaid
 
@@ -169,7 +173,7 @@ sequenceDiagram
   gHtml->>json     : 参照(10秒毎)
   json->>gHtml     : 対象情報
   gHtml->>guest    : 該当する追加情報があればアラーム
-  
+
 ```
 
 フォーム登録の返信メールで参加者用画面へのURLを記載。記載されるURLはクエリ文字列で受付番号＋属性を持たせ、サーバorクライアント側で表示対象の絞り込みを可能にする。
@@ -201,9 +205,9 @@ GCPの無料枠に収めるため、送受信の情報量・頻度は極力絞�
 
 参考：[QR コードを連続で読み取れる Web アプリを作った](https://tech.basicinc.jp/articles/193)
 
-# <a name="3"></a>Ⅲ.機能別解説
+# Ⅲ.機能別解説
 
-## <a name="31"></a>Ⅲ.1.フォーム
+## Ⅲ.1.フォーム
 
 ### 「質問」タグでの設定
 
@@ -224,14 +228,14 @@ GCPの無料枠に収めるため、送受信の情報量・頻度は極力絞�
 - 回答の編集を許可する：ON
 
 
-## <a name="#32"></a>Ⅲ.2.回答(スプレッドシート)
+## Ⅲ.2.回答(スプレッドシート)
 
 QRコード作成時の注意： MDN「[JSON.parse() は末尾のカンマを許容しない](https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse#json.parse_%E3%81%AF%E6%9C%AB%E5%B0%BE%E3%81%AE%E3%82%AB%E3%83%B3%E3%83%9E%E3%82%92%E8%A8%B1%E5%AE%B9%E3%81%97%E3%81%AA%E3%81%84)」
 
 ⇒ d列に"label:'value',"の文字列を作成し、arrayformula(concatenate(d:d))とすると末尾にカンマが入る。
 ついでに単一引用符も許されないので、要注意。
 
-### <a name="321"></a>(1) doGet: 受付画面からの問合せに該当者情報を提供
+### (1) doGet: 受付画面からの問合せに該当者情報を提供
 
 <details><summary>source</summary>
 
@@ -314,7 +318,7 @@ function doGet(e) { // 受付画面からの問合せに該当者情報を提供
 </details>
 
 
-### <a name="322"></a>(2) onFormSubmit: フォーム登録時、参加者にメールを自動返信
+### (2) onFormSubmit: フォーム登録時、参加者にメールを自動返信
 
 <details><summary>source</summary>
 
@@ -595,7 +599,7 @@ getEditResponseUrl()他のメソッドの詳細については、Google公式 [C
 </details>
 
 
-## <a name="33"></a>Ⅲ.3.受付担当者画面(html)
+## Ⅲ.3.受付担当者画面(html)
 
 ### temp
 
@@ -620,24 +624,24 @@ getEditResponseUrl()他のメソッドの詳細については、Google公式 [C
 Zenn [jsQRであっさりQRコードリーダ/メーカ](https://zenn.dev/sdkfz181tiger/articles/096dfb74d485db)
 
 
-### <a name="332"></a>(2) 処理候補選択
+### (2) 処理候補選択
 
 
-### <a name="333"></a>(3) 入力(フォーム登録済分)
+### (3) 入力(フォーム登録済分)
 
 
-### <a name="334"></a>(4) 登録内容詳細
+### (4) 登録内容詳細
 
 
-### <a name="335"></a>(5) 入力(当日紙申請分)
+### (5) 入力(当日紙申請分)
 
 
-### <a name="336"></a>(6) 申込フォームへの誘導(QRコード表示)
+### (6) 申込フォームへの誘導(QRコード表示)
 
 
-### <a name="337"></a>(7) 申込/参加者数集計表
+### (7) 申込/参加者数集計表
 
-# <a name="4"></a>Ⅳ.開発履歴
+# Ⅳ.開発履歴
 
 <details><summary>2022/10/06 : 改善しようとして動作不良</summary>
 
