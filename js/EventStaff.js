@@ -137,11 +137,24 @@ const changeScreen = (scrId='home') => {  // 表示画面の切り替え
 const initialize = () => {  // 初期設定処理
   console.log("initialize start.");
 
-  // 初期設定処理の画面を表示
+  // localStorageにconfigが保存されていたら読み込み
+  let confStr = localStorage.getItem('config');
+  if( confStr ){
+    confObj = JSON.parse(confStr);
+    if( confObj.DateOfExpiry < new Date() ){
+      // 有効期限が切れていたら無効化＋localStorageから削除
+      localStorage.removeItem('config');
+    } else {
+      // 有効期限内ならセットして以後の処理はスキップ
+      config = confObj;
+      return;
+    }
+  }
+
+  // 保存されていなかったら初期設定処理の画面を表示
   document.querySelector('header h1').innerText = "初期化処理";
   changeScreen('initialize');
   document.getElementById('camera').style.display = 'flex';
-  config.show();
 
   // canvasのサイズ指定
   const c = document.getElementById("js-canvas");
@@ -149,17 +162,19 @@ const initialize = () => {  // 初期設定処理
   c.width = v.clientWidth;
   c.height = v.clientHeight;
 
-  // QRコード読取時の動作定義
+  // QRコード読み取り
   flags.checkImage = true;
   checkImage((code) => {
     const o = JSON.parse(code);
     for( let x in o ){ // configの値を設定
       config[x] = o[x];
     }
-    config.show();
+    config.DateOfExpiry  // 有効期限は取得後24H
+    = new Date(new Date().getTime() + 86400000); 
+    localStorage.setItem('config',JSON.stringify(config));
     alert('初期設定は正常に終了しました');
     console.log("initialize end.",config);
-    //changeScreen('home');// ホーム画面表示
+    changeScreen('home');// ホーム画面表示
   });
 }
 
@@ -331,5 +346,6 @@ const showSummary = () => {  // 集計表の表示
 
 (() => {
   console.log("EventStaff start.",config);
+  initialize();
   changeScreen('home');
 })()
