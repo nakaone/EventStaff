@@ -42,7 +42,7 @@ EOL;
     <li><a href="#1">Ⅰ.リソース一覧</a></li>
     <li><a href="#2">Ⅱ.処理手順</a></li>
     <ul>
-      <li><a href="#21">Ⅱ.1.受付担当登録</a></li>
+      <li><a href="#21">Ⅱ.1.初期設定</a></li>
       <li><a href="#22">Ⅱ.2.フォームでの参加申込</a></li>
       <li><a href="#23">Ⅱ.3.フォーム登録済参加者の受付</a></li>
       <li><a href="#24">Ⅱ.4.当日参加票での受付</a></li>
@@ -84,7 +84,30 @@ EOL;
 </div>
 
 <div><h1>Ⅱ.処理手順</h1><a name="2"></a>
-  <div><a name="21"></a><h2>Ⅱ.1.受付担当登録</h2></div>
+  <div><a name="21"></a><h2>Ⅱ.1.初期設定</h2>
+    <div class="mermaid">
+      sequenceDiagram
+        autonumber
+        actor staff as 受付担当
+        actor admin as システム管理者
+        participant git as HTML置き場<br>(GitHub)
+        participant master as マスタ
+
+        admin->>master    : スタッフグループ登録
+        admin->>staff     : スタッフ用画面URL通知
+        staff->>git       : アクセス
+        git->>staff       : スタッフ用画面(html)ダウンロード
+        master->>staff    : 初期設定情報(QRコード)
+        staff->>staff     : 初期設定
+        staff->>master    : 設定内容(稼働中のスタッフ識別子＋所属グループ？)
+
+    </div>
+    <p>「初期設定」では以下の登録を行う。<br>
+      - GAS WebAPI ID情報の登録<br>
+      - 識別子(氏名)の登録<br>
+      - 所属するスタッフのグループ設定
+    </p>
+  </div>
 
   <div><a name="22"></a><h2>Ⅱ.2.フォームでの参加申込</h2>
     <div class="mermaid">
@@ -118,15 +141,8 @@ EOL;
         autonumber
         actor guest as 参加者
         actor staff as 受付担当
-        actor admin as システム管理者
-        participant html as C.スタッフ用画面
-        participant master as D.マスタ
-        participant cdn as X.CDN
-
-        Note right of staff: セットアップ
-        html->>staff     : スタッフ用画面(html)ダウンロード
-        admin->>staff    : 初期設定情報
-        staff->>staff    : 初期設定
+        participant html as スタッフ用画面
+        participant master as マスタ
 
         Note right of guest: 受付時
         guest->>staff    : QR/受付番号/名前
@@ -135,15 +151,11 @@ EOL;
         Note right of master: doGet()
         master->>-html    : 該当者情報
         html->>staff     : 該当者情報
+        staff->>guest    : 該当か確認
         guest->>staff    : 参加者名、参加費
         staff->>html     : 登録
         html->>master    : 登録情報
     </div>
-    <p>「初期設定」では以下の登録を行う。
-      - GAS WebAPI ID情報の登録<br>
-      - 識別子(氏名)の登録<br>
-      - 所属するスタッフのグループ設定
-    </p>
     <p>参加者の変更は極力受付前に終了してもらう。無理なら受付後でも可。</p>
   </div>
 
