@@ -610,7 +610,16 @@ Zenn [jsQRであっさりQRコードリーダ/メーカ](https://zenn.dev/sdkfz1
 
 ### (7) 申込/参加者数集計表
 
-# Ⅳ.開発履歴
+# Ⅳ.開発関係メモ
+
+## Ⅳ.1.Tips
+
+### スマホの開発者画面を参照
+
+- [Android実機で Chrome の開発者ツールを開く＆デバッグする方法](https://pisuke-code.com/android-use-chrome-devtools/)
+- Android側でのUSB接続許可：[Android デバイスで USB デバッグを有効にする](https://www.embarcadero.com/starthere/xe5-2/mobdevsetup/android/ja/enabling_usb_debugging_on_an_android_device.html)
+
+## Ⅳ.2.履歴
 
 <details><summary>2022/10/06 : 改善しようとして動作不良</summary>
 
