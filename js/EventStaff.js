@@ -344,8 +344,11 @@ const showSummary = () => {  // 集計表の表示
   console.log("showSummary end.");
 }
 
-(() => {
+// Err: "Uncaught ReferenceError: jsQR is not defined"
+// -> DOMが構築されたときに初期化処理が行われるように設定
+// https://pisuke-code.com/jquery-is-not-defined-solution/
+window.addEventListener('DOMContentLoaded', function(){
   console.log("EventStaff start.",config);
   initialize();
   changeScreen('home');
-})()
+});
