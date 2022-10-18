@@ -141,31 +141,6 @@ const initialize = () => {  // 初期設定処理
     changeScreen('home');// ホーム画面表示
   }
 
-  /*
-  // QRコード撮影用カメラのモニタ表示/非表示を設定
-  document.getElementById('js_monitor').style.display
-    = config.viewMonitor ? 'flex' : 'none';
-
-  // canvasのサイズ指定
-  const c = document.getElementById("js_canvas");
-  const v = document.getElementById("js_video");
-  c.setAttribute("width",v.clientWidth);
-  c.setAttribute("height",v.clientHeight);
-  const sz = () => {  // debug: 設定値のリストアップ
-    const a = document.getElementById('js_camera');
-    const rv = {
-      js_camera:{w:a.clientWidth,h:a.clientHeight},
-      js_video:{w:v.videoWidth,h:v.videoHeight},
-      js_canvas:{w:c.width,h:c.height},
-    };
-    return JSON.stringify(rv);
-  };
-  console.log('before: '+sz());
-  // 撮影画面は画面サイズ取得後、隠蔽する
-  document.getElementById('js_camera').style.display = 'none';
-  console.log('after: '+sz());
-  */
-
   // localStorageにconfigが保存されていたら読み込み
   let confStr = localStorage.getItem('config');
   if( confStr ){
@@ -187,19 +162,6 @@ const initialize = () => {  // 初期設定処理
   //document.getElementById('js_camera').style.display = 'flex';
 
   // QRコード読み取り
-  /*
-  config.checkImage = true;
-  checkImage((code) => {
-    const o = JSON.parse(code);
-    for( let x in o ){ // configの値を設定
-      config[x] = o[x];
-    }
-    config.DateOfExpiry  // 有効期限は取得後24H
-    = new Date(new Date().getTime() + 86400000); 
-    localStorage.setItem('config',JSON.stringify(config));
-    terminate();
-  });
-  */
   config.scanCode = true;
   scanCode('scanner',(code) => {
     const o = JSON.parse(code);
