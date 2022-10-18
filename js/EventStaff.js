@@ -142,7 +142,7 @@ const initialize = () => {  // 初期設定処理
   }
 
   // QRコード撮影用カメラのモニタ表示/非表示を設定
-  document.getElementById('js-monitor').style.display
+  document.getElementById('js_monitor').style.display
     = config.viewMonitor ? 'flex' : 'none';
 
   // canvasのサイズ指定
@@ -151,7 +151,7 @@ const initialize = () => {  // 初期設定処理
   c.width = v.clientWidth;
   c.height = v.clientHeight;
   const sz = () => {  // debug: 設定値のリストアップ
-    const a = document.getElementById('js-camera');
+    const a = document.getElementById('js_camera');
     const rv = {
       js_camera:{w:a.width,h:a.height},
       js_video:{w:v.width,h:v.height},
@@ -161,7 +161,7 @@ const initialize = () => {  // 初期設定処理
   };
   console.log('before: '+sz());
   // 撮影画面は画面サイズ取得後、隠蔽する
-  document.getElementById('js-camera').style.display = 'none';
+  document.getElementById('js_camera').style.display = 'none';
   console.log('after: '+sz());
 
   // localStorageにconfigが保存されていたら読み込み
@@ -182,7 +182,7 @@ const initialize = () => {  // 初期設定処理
   // 保存されていなかったら初期設定処理の画面を表示
   document.querySelector('header h1').innerText = "初期化処理";
   changeScreen('initialize');
-  document.getElementById('js-camera').style.display = 'flex';
+  document.getElementById('js_camera').style.display = 'flex';
 
   // QRコード読み取り
   config.checkImage = true;
@@ -206,18 +206,18 @@ const registerd = (arg) => {
   const initRegi = () => {  // 初期状態の場合の処理定義
     // 初期状態(キーワードも入ってないし、doGetも実行されていない)
     // スキャナを起動
-    changeScreen('js-camera');
+    changeScreen('js_camera');
     // キーワード入力欄を表示
     document.querySelector("#registerd .search_box").style.display = "inline-block";
     // 虫眼鏡がクリックされたら値を取得するよう設定
     const f = () => {
       changeScreen('loading');
-      const keywordElement = document.querySelector("#js-camera .search_box input");
+      const keywordElement = document.querySelector("#js_camera .search_box input");
       const keyword = keywordElement.value;
       keywordElement.value = '';
       registerd(keyword);
     };
-    document.querySelector("#js-camera .search_box img").addEventListener('click',f);
+    document.querySelector("#js_camera .search_box img").addEventListener('click',f);
   }
 
   const unique = (arg) => {  // 検索結果が一つしか無い場合の処理
