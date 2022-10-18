@@ -158,7 +158,7 @@ const initialize = () => {  // 初期設定処理
       localStorage.removeItem('config');
     } else {
       // 有効期限内ならセットして以後の処理はスキップ
-      config = confObj;
+      Object.assign(config,confObj);
       terminate();
       return;
     }
