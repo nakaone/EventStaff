@@ -1,5 +1,7 @@
 const config = {
   qrSize: Math.ceil(document.body.clientWidth * 0.8), // QRコードのサイズ
+  checkImage: false,  // checkImage(QRコード撮影)実行可能フラグ。永久ループ防止用
+  viewMonitor: false,  // checkImage実行時、モニタ画面を表示するかどうか
   editGuestTemplate:  /* 一行分のデータに対する文書構造の定義
     tag string 1 タグ指定(必須)。"text"の場合は文字列と看做し、createTextNodeで追加する
     children [object] 0..1 子要素の定義。childrenとtextは排他
@@ -106,16 +108,12 @@ const config = {
     return JSON.stringify(o);
   },
 };
-const flags = {  // 各種フラグ
-  checkImage: false,  // checkImage(QRコード撮影)実行可能フラグ。永久ループ防止用
-  //inputKeyWord: false,  // QRコード撮影画面に受付番号・氏名読み入力欄を表示するかどうか
-};
 
 const changeScreen = (scrId='home') => {  // 表示画面の切り替え
   console.log("changeScreen start. scrId="+scrId);
 
   // 画面遷移の指示がある->QRコード撮影はキャンセル
-  flags.checkImage = false;
+  config.checkImage = false;
 
   // 一度全部隠す
   const scrList = document.querySelectorAll('.screen');
@@ -142,6 +140,10 @@ const initialize = () => {  // 初期設定処理
     console.log("initialize end.",config);
     changeScreen('home');// ホーム画面表示
   }
+
+  // QRコード撮影用カメラのモニタ表示/非表示を設定
+  document.getElementById('js-monitor').style.display
+    = config.viewMonitor ? 'flex' : 'none';
 
   // canvasのサイズ指定
   const c = document.getElementById("js-canvas");
@@ -170,7 +172,7 @@ const initialize = () => {  // 初期設定処理
   document.getElementById('camera').style.display = 'flex';
 
   // QRコード読み取り
-  flags.checkImage = true;
+  config.checkImage = true;
   checkImage((code) => {
     const o = JSON.parse(code);
     for( let x in o ){ // configの値を設定
