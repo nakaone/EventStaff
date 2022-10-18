@@ -262,7 +262,7 @@ const scanCode = (selectorId='scanner', callback) => { /* QRコードのスキ�
         console.log(code.data,callback);
         callback(code.data);
         config.scanCode = false;
-        document.getElementById(selectorId).remove(); // 作業用DIVを除去
+        document.getElementById(selectorId).innerHTML = ''; // 作業用DIVを除去
 			}
     }
     setTimeout(drawFinder, 250);
