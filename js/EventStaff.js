@@ -150,6 +150,8 @@ const initialize = () => {  // 初期設定処理
   const v = document.getElementById("js-video");
   c.width = v.clientWidth;
   c.height = v.clientHeight;
+  // 撮影画面は画面サイズ取得後、隠蔽する
+  document.getElementById('camera').style.display = 'none';
 
   // localStorageにconfigが保存されていたら読み込み
   let confStr = localStorage.getItem('config');
