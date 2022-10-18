@@ -149,7 +149,7 @@ const genChild = (template,dObj,pFP) => {  /* テンプレートに差込デー�
       rv.result.className = sDef.class.match(/.+\?.+:.+/)
         ? eval(sDef.class) : sDef.class;
     }
-    ['id','type','name','value','accept','capture'].forEach(x => {
+    ['id','type','name','value','accept','capture','width','height','style'].forEach(x => {
       if( sDef[x] && sDef[x].length > 0 ){
         rv.result.setAttribute(x,sDef[x]);
       }
@@ -212,11 +212,12 @@ const scanCode = (selectorId='scanner', callback) => { /* QRコードのスキ�
 
   // 初期処理：カメラやファインダ等の作業用DIVを追加
   const template = [
-    {tag:'div', class:'video', children:[{tag:'video'}]},
+    {tag:'div', class:'video', style:'width:80vw;', children:[
+      {tag:'video', style:'width:100%;'}]},
     {tag:'div', class:'camera', children:[
       {tag:'input', type:'file', accept:"image/*", capture:"camera", name:"file"}]},
-    {tag:'div', class:'finder', children:[{tag:'canvas'},
-    ]},
+    {tag:'div', class:'finder', style:'width:80vw;', children:[
+      {tag:'canvas', style:'width:100%'},]},
   ]
   for( let i=0 ; i<template.length ; i++ ){
     let o = genChild(template[i],{},'root');  // 全体の定義と'root'を渡す
@@ -226,6 +227,7 @@ const scanCode = (selectorId='scanner', callback) => { /* QRコードのスキ�
       scanner.appendChild(o.result);
     }
   }
+
 
   const video = document.querySelector('#'+selectorId+' .video video');
   const camera = document.querySelector('#'+selectorId+' .camera input');
