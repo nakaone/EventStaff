@@ -141,6 +141,7 @@ const initialize = () => {  // 初期設定処理
     changeScreen('home');// ホーム画面表示
   }
 
+  /*
   // QRコード撮影用カメラのモニタ表示/非表示を設定
   document.getElementById('js_monitor').style.display
     = config.viewMonitor ? 'flex' : 'none';
@@ -163,6 +164,7 @@ const initialize = () => {  // 初期設定処理
   // 撮影画面は画面サイズ取得後、隠蔽する
   document.getElementById('js_camera').style.display = 'none';
   console.log('after: '+sz());
+  */
 
   // localStorageにconfigが保存されていたら読み込み
   let confStr = localStorage.getItem('config');
@@ -182,11 +184,24 @@ const initialize = () => {  // 初期設定処理
   // 保存されていなかったら初期設定処理の画面を表示
   document.querySelector('header h1').innerText = "初期化処理";
   changeScreen('initialize');
-  document.getElementById('js_camera').style.display = 'flex';
+  //document.getElementById('js_camera').style.display = 'flex';
 
   // QRコード読み取り
+  /*
   config.checkImage = true;
   checkImage((code) => {
+    const o = JSON.parse(code);
+    for( let x in o ){ // configの値を設定
+      config[x] = o[x];
+    }
+    config.DateOfExpiry  // 有効期限は取得後24H
+    = new Date(new Date().getTime() + 86400000); 
+    localStorage.setItem('config',JSON.stringify(config));
+    terminate();
+  });
+  */
+  config.scanCode = true;
+  scanCode('scanner',(code) => {
     const o = JSON.parse(code);
     for( let x in o ){ // configの値を設定
       config[x] = o[x];
@@ -365,10 +380,10 @@ const showSummary = () => {  // 集計表の表示
   console.log("showSummary end.");
 }
 
-// Err: "Uncaught ReferenceError: jsQR is not defined"
-// -> DOMが構築されたときに初期化処理が行われるように設定
-// https://pisuke-code.com/jquery-is-not-defined-solution/
-window.addEventListener('DOMContentLoaded', function(){
+window.addEventListener('DOMContentLoaded', function(){ // 主処理
+  // Err: "Uncaught ReferenceError: jsQR is not defined"
+  // -> DOMが構築されたときに初期化処理が行われるように設定
+  // https://pisuke-code.com/jquery-is-not-defined-solution/
   console.log("EventStaff start.",config);
   initialize();
   changeScreen('home');

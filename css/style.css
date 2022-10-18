@@ -36,6 +36,7 @@ header {
 /* =========================================================
   カメラ撮影画面
 ========================================================= */
+/*
 #js_camera {
   margin: 0%;
   padding: 0%;
@@ -43,7 +44,7 @@ header {
   height: 80vh;
   display:flex;
   display: -webkit-flex;
-  flex-direction: column;  /* row:横並び */
+  flex-direction: column;
   flex-wrap: wrap;
   align-items: center;
   -webkit-align-items: center;
@@ -53,6 +54,7 @@ header {
   min-width: 80%;
   min-height: 80%;
 }
+*/
 
 /* =========================================================
   ローディング中表示画面

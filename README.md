@@ -594,9 +594,12 @@ getEditResponseUrl()他のメソッドの詳細については、Google公式 [C
 
 参考：[Google Apps ScriptでQRコードを生成してみる](https://note.com/himajin_no_asobi/n/n51de21bf73e5)
 
-#### <details><summary>デプロイ履歴</summary>
+#### デプロイ履歴
 
-  ※タイトルは「スマホ受付 rev.x」とする。
+※タイトルは適宜、gitと同様に命名
+
+<details><summary>history</summary>
+
   <pre>
     バージョン 3（10月9日 18:00）
     デプロイ ID
@@ -621,6 +624,7 @@ getEditResponseUrl()他のメソッドの詳細については、Google公式 [C
     URL
     https://script.google.com/macros/s/AKfycbx_lxQmFxZ20dfK7TqdbE0WSnIfBcNRgVEM9l_V9-8r-nb3mzlmLS6HS4-1EJxUVHS1jA/exec
     </pre>
+
 </details>
 
 
@@ -642,11 +646,62 @@ getEditResponseUrl()他のメソッドの詳細については、Google公式 [C
 
 #### 参考
 
-[HTML と JavaScript だけで QR コード読み取り](http://dotnsf.blog.jp/archives/1078584611.html)
-以下はボタン操作が不要になるが、https通信が必要になるので、次期開発で対応
-[Webの技術だけで作るQRコードリーダー](https://qiita.com/kan_dai/items/4331aae12f5f2d3ad18d)
-[続・Webの技術だけで作るQRコードリーダ](https://qiita.com/kan_dai/items/3486880236a2fcd9b527)
-Zenn [jsQRであっさりQRコードリーダ/メーカ](https://zenn.dev/sdkfz181tiger/articles/096dfb74d485db)
+- [HTML と JavaScript だけで QR コード読み取り](http://dotnsf.blog.jp/archives/1078584611.html)
+- [Webの技術だけで作るQRコードリーダー](https://qiita.com/kan_dai/items/4331aae12f5f2d3ad18d)
+- [続・Webの技術だけで作るQRコードリーダ](https://qiita.com/kan_dai/items/3486880236a2fcd9b527)
+- Zenn [jsQRであっさりQRコードリーダ/メーカ](https://zenn.dev/sdkfz181tiger/articles/096dfb74d485db)
+
+#### 参考：ロード時点で不在の要素でも、事前に設定してあるCSSは適用される
+
+<details><summary>検証したソース</summary>
+
+```html
+<!DOCTYPE html><html lang="ja">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <meta http-equiv="Content-Script-Type" content="text/javascript">
+  <title>CSS適用テスト</title>
+  <style>
+    #scanner {
+      background-color: aqua;
+      width: 80vw;
+      height: 80vw;
+      padding: 10vw;
+    }
+    #scanner .video {
+      background-color: brown;
+      width: 80%;
+      height: 80%;
+    }
+  </style>
+</head>
+
+<body>
+  <button onclick="addDiv()">add</button>
+  <button onclick="delDiv()">del</button>
+  <div id="test"></div>
+</body>
+<script>
+const addDiv = () => {
+  const e1 = document.createElement('div');
+  e1.id = 'scanner';
+
+  const e2 = document.createElement('div');
+  e2.className = 'video';
+
+  e1.appendChild(e2);
+  document.getElementById('test').appendChild(e1);
+}
+
+const delDiv = () => {
+  document.getElementById('scanner').remove();
+}
+</script>
+</html>
+```
+
+</details>
 
 
 ### (2) 処理候補選択

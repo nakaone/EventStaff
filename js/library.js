@@ -149,7 +149,7 @@ const genChild = (template,dObj,pFP) => {  /* テンプレートに差込デー�
       rv.result.className = sDef.class.match(/.+\?.+:.+/)
         ? eval(sDef.class) : sDef.class;
     }
-    ['id','type','name','value'].forEach(x => {
+    ['id','type','name','value','accept','capture'].forEach(x => {
       if( sDef[x] && sDef[x].length > 0 ){
         rv.result.setAttribute(x,sDef[x]);
       }
@@ -201,6 +201,88 @@ const genChild = (template,dObj,pFP) => {  /* テンプレートに差込デー�
     return rv;
   }
 };
+
+const scanCode = (selectorId='scanner', callback) => { /* QRコードのスキャン
+  呼び出す前に`config.scanCode = true`を実行しておくこと。
+  参考：jsQRであっさりQRコードリーダ/メーカ
+  https://zenn.dev/sdkfz181tiger/articles/096dfb74d485db
+*/
+  // スキャン実行フラグが立っていなかったら終了
+  if( !config.scanCode )  return;
+
+  // 初期処理：カメラやファインダ等の作業用DIVを追加
+  const template = [
+    {tag:'div', class:'video', children:[{tag:'video'}]},
+    {tag:'div', class:'camera', children:[
+      {tag:'input', type:'file', accept:"image/*", capture:"camera", name:"file"}]},
+    {tag:'div', class:'finder', children:[{tag:'canvas'},
+    ]},
+  ]
+  for( let i=0 ; i<template.length ; i++ ){
+    let o = genChild(template[i],{},'root');  // 全体の定義と'root'を渡す
+    if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
+      throw o.result;
+    } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
+      scanner.appendChild(o.result);
+    }
+  }
+
+  const video = document.querySelector('#'+selectorId+' .video video');
+  const camera = document.querySelector('#'+selectorId+' .camera input');
+  const canvas = document.querySelector('#'+selectorId+' .finder canvas');
+  const ctx = canvas.getContext('2d');
+
+  document.querySelector('#'+selectorId+' .camera')
+    .style.display = 'none';  // 静止画用カメラは未定義なので隠蔽
+
+  // 動画撮影用Webカメラを起動
+  const userMedia = {video: {facingMode: "environment"}};
+  navigator.mediaDevices.getUserMedia(userMedia).then((stream)=>{
+    video.srcObject = stream;
+    video.setAttribute("playsinline", true);
+    video.play();
+    drawFinder(callback);  // 起動が成功したらdrawFinderを呼び出す
+  });
+
+  const drawFinder = () => {  // キャンバスに描画する
+    // スキャン実行フラグが立っていなかったら終了
+    if( !config.scanCode )  return;
+    if(video.readyState === video.HAVE_ENOUGH_DATA){
+      canvas.height = video.videoHeight;
+      canvas.width = video.videoWidth;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      let img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      // このタイミングでQRコードを判定
+      let code = jsQR(img.data, img.width, img.height, {inversionAttempts: "dontInvert"});
+			if(code){
+        // QRコード読み取り成功
+				drawRect(code.location);// ファインダ上のQRコードに枠を表示
+        console.log(code.data,callback);
+        callback(code.data);
+        config.scanCode = false;
+        document.getElementById(selectorId).remove(); // 作業用DIVを除去
+			}
+    }
+    setTimeout(drawFinder, 250);
+  }
+
+  const drawRect = (location) => {  // ファインダ上のQRコードに枠を表示
+    drawLine(location.topLeftCorner,     location.topRightCorner);
+		drawLine(location.topRightCorner,    location.bottomRightCorner);
+		drawLine(location.bottomRightCorner, location.bottomLeftCorner);
+		drawLine(location.bottomLeftCorner,  location.topLeftCorner);
+  }
+
+  const drawLine = (begin, end) => {  // ファインダ上に線を描画
+		ctx.lineWidth = 4;
+		ctx.strokeStyle = "#FF3B58";
+		ctx.beginPath();
+		ctx.moveTo(begin.x, begin.y);
+		ctx.lineTo(end.x, end.y);
+		ctx.stroke();
+	}
+
+}
 
 const whichType = (arg = undefined) => {
   return arg === undefined ? 'undefined'
