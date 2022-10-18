@@ -152,6 +152,7 @@ const initialize = () => {  // 初期設定処理
   c.height = v.clientHeight;
   // 撮影画面は画面サイズ取得後、隠蔽する
   document.getElementById('camera').style.display = 'none';
+  console.log('{c:{w,h},v:{w,h}='+JSON.stringify({c:{w:c.width,h:c.height},v:{w:v.width,h:v.height}}));
 
   // localStorageにconfigが保存されていたら読み込み
   let confStr = localStorage.getItem('config');
