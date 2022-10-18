@@ -150,9 +150,19 @@ const initialize = () => {  // 初期設定処理
   const v = document.getElementById("js-video");
   c.width = v.clientWidth;
   c.height = v.clientHeight;
+  const sz = () => {  // debug: 設定値のリストアップ
+    const a = document.getElementById('js-camera');
+    const rv = {
+      js_camera:{w:a.width,h:a.height},
+      js_video:{w:v.width,h:v.height},
+      js_canvas:{w:c.width,h:c.height},
+    };
+    return JSON.stringify(rv);
+  };
+  console.log('before: '+sz());
   // 撮影画面は画面サイズ取得後、隠蔽する
   document.getElementById('js-camera').style.display = 'none';
-  console.log(JSON.stringify({c:{w:c.width,h:c.height},v:{w:v.width,h:v.height}}));
+  console.log('after: '+sz());
 
   // localStorageにconfigが保存されていたら読み込み
   let confStr = localStorage.getItem('config');
