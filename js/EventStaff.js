@@ -146,8 +146,8 @@ const initialize = () => {  // 初期設定処理
     = config.viewMonitor ? 'flex' : 'none';
 
   // canvasのサイズ指定
-  const c = document.getElementById("js-canvas");
-  const v = document.getElementById("js-video");
+  const c = document.getElementById(js_canvas");
+  const v = document.getElementById(js_video");
   c.width = v.clientWidth;
   c.height = v.clientHeight;
   const sz = () => {  // debug: 設定値のリストアップ
