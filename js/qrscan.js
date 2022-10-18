@@ -1,7 +1,7 @@
 /* ===================================================
   QRスキャン用
 =================================================== */
-
+const camera = document.querySelector('#camera');
 const video = document.querySelector('#js-video');
 const canvas = document.querySelector('#js-canvas');
 const ctx = canvas.getContext('2d');
@@ -20,6 +20,7 @@ const ctx = canvas.getContext('2d');
 
 const checkImage = (callback) => {  // QRコード撮影
   if( !flags.checkImage )  return;
+  camera.style.display = 'flex'; // カメラ画面を表示
   // 取得している動画をcanvasに描画
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
   // canvasからデータを取得
@@ -28,6 +29,7 @@ const checkImage = (callback) => {  // QRコード撮影
   const code = jsQR(imageData.data, canvas.width, canvas.height);
   if(code){
     flags.checkImage = false;
+    camera.style.display = 'none'; // カメラ画面を非表示
     callback(code.data);
   } else {
     setTimeout( () => checkImage(callback), 200);

@@ -187,7 +187,7 @@ const registerd = (arg) => {
     // スキャナを起動
     changeScreen('camera');
     // キーワード入力欄を表示
-    document.querySelector("#camera .search_box").style.display = "inline-block";
+    document.querySelector("#registerd .search_box").style.display = "inline-block";
     // 虫眼鏡がクリックされたら値を取得するよう設定
     const f = () => {
       changeScreen('loading');
