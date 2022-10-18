@@ -182,7 +182,7 @@ const registerd = (arg) => {
 
   // 本関数は引数の型・個数により処理を分岐させている。
   // 分岐した後の個々の処理も複雑なので、内部関数として定義する
-  const keyword = () => {  // 初期状態の場合の処理定義
+  const initRegi = () => {  // 初期状態の場合の処理定義
     // 初期状態(キーワードも入ってないし、doGetも実行されていない)
     // スキャナを起動
     changeScreen('camera');
@@ -253,7 +253,7 @@ const registerd = (arg) => {
 
   // 主処理：引数の型・個数により事前に定義した内部関数を呼び出す
   if( arg === undefined ){  // 初期状態(ホーム画面のボタン)から呼ばれた
-    keyword();
+    initRegi();
   } else {
     const argType = whichType(arg);
     if( argType === 'String' ){  // 引数が文字列 ⇒ 検索キーワード
