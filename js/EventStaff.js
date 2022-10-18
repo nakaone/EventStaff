@@ -1,7 +1,7 @@
 const config = {
   qrSize: Math.ceil(document.body.clientWidth * 0.8), // QRコードのサイズ
   checkImage: false,  // checkImage(QRコード撮影)実行可能フラグ。永久ループ防止用
-  viewMonitor: false,  // checkImage実行時、モニタ画面を表示するかどうか
+  viewMonitor: true,  // checkImage実行時、モニタ画面を表示するかどうか
   editGuestTemplate:  /* 一行分のデータに対する文書構造の定義
     tag string 1 タグ指定(必須)。"text"の場合は文字列と看做し、createTextNodeで追加する
     children [object] 0..1 子要素の定義。childrenとtextは排他
@@ -148,13 +148,13 @@ const initialize = () => {  // 初期設定処理
   // canvasのサイズ指定
   const c = document.getElementById("js_canvas");
   const v = document.getElementById("js_video");
-  c.width = v.clientWidth;
-  c.height = v.clientHeight;
+  c.setAttribute("width",v.clientWidth);
+  c.setAttribute("height",v.clientHeight);
   const sz = () => {  // debug: 設定値のリストアップ
     const a = document.getElementById('js_camera');
     const rv = {
-      js_camera:{w:a.width,h:a.height},
-      js_video:{w:v.width,h:v.height},
+      js_camera:{w:a.clientWidth,h:a.clientHeight},
+      js_video:{w:v.videoWidth,h:v.videoHeight},
       js_canvas:{w:c.width,h:c.height},
     };
     return JSON.stringify(rv);
