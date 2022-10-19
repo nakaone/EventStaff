@@ -274,7 +274,7 @@ GCPの無料枠に収めるため、送受信の情報量・頻度は極力絞�
 - 回答の編集を許可する：ON
 
 
-## Ⅲ.2.回答(スプレッドシート)
+## Ⅲ.2.回答(スプレッドシートGAS)
 
 QRコード作成時の注意： MDN「[JSON.parse() は末尾のカンマを許容しない](https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse#json.parse_%E3%81%AF%E6%9C%AB%E5%B0%BE%E3%81%AE%E3%82%AB%E3%83%B3%E3%83%9E%E3%82%92%E8%A8%B1%E5%AE%B9%E3%81%97%E3%81%AA%E3%81%84)」
 
@@ -287,17 +287,18 @@ QRコード作成時の注意： MDN「[JSON.parse() は末尾のカンマを許
 
 ```javascript
 function doGet(e) { // 受付画面からの問合せに該当者情報を提供
+  console.log(JSON.stringify(e));
   // GASでSpreadSheetにあっさりアクセス
   // https://zenn.dev/sdkfz181tiger/articles/82a91f8bbcc734
-
+  
   // スプレッドシートにアクセス、「マスタ」からデータ取得
-  const sheet = SpreadsheetApp.getActive().getSheetByName(&quot;マスタ&quot;);
+  const sheet = SpreadsheetApp.getActive().getSheetByName("マスタ");
   // JSONオブジェクトに変換する
   const rows = sheet.getDataRange().getValues();
-  const keys = rows.splice(0, 1)[0];
-  const data = rows.map(row =&gt; {
+  const keys = rows.splice(0, 1)[0];  // ヘッダを一次元配列で取得
+  const data = rows.map(row => {  // [{ラベル1:値, ラベル2:値, ..},{..},..]形式
     const obj = {};
-    row.map((item, index) =&gt; {
+    row.map((item, index) => {
       obj[String(keys[index])] = String(item);
     });
     return obj;
@@ -305,29 +306,52 @@ function doGet(e) { // 受付画面からの問合せに該当者情報を提供
 
   // 条件に合うレコードを抽出
   const dObj = [];
-  if( e.parameter.key ){
+  const m = e.parameter.key.match(/^n(\d+)c([0|1])s([1-5]{3})f([1-4]{3})m(.*)$/);
+  console.log('l.161',m);
+  //if( e.parameter.key ){  // 受付番号or氏名読みが指定された場合
+  if( !m ){  // 受付番号or氏名読みが指定された場合
     const matchKana = e.parameter.key.match(/^[ァ-ヾ　]+$/);
     const matchNum  = e.parameter.key.match(/^[0-9]+$/);
     if( matchKana || matchNum ){
-      console.log(&#039;key = &#039;+e.parameter.key);
-      for( let i=0 ; i&lt;data.length ; i++ ){
+      console.log('key = '+e.parameter.key);
+      for( let i=0 ; i<data.length ; i++ ){
         console.log(i,
-          Number(data[i][&#039;受付番号&#039;]),
+          Number(data[i]['受付番号']),
           Number(e.parameter.key),
-          data[i][&#039;読み&#039;].indexOf(e.parameter.key)
+          data[i]['読み'].indexOf(e.parameter.key)
         );
-        if( Number(data[i][&#039;受付番号&#039;]) === Number(e.parameter.key)
-          || data[i][&#039;読み&#039;].indexOf(e.parameter.key) === 0 ){
+        if( Number(data[i]['受付番号']) === Number(e.parameter.key)
+          || data[i]['読み'].indexOf(e.parameter.key) === 0 ){
           dObj.push(data[i]);
-          console.log(&#039;pushed!&#039;,data[i]);
+          console.log('pushed!',data[i]);
         }
       }
-      console.log(&#039;dObj&#039;,dObj);
+      console.log('dObj',dObj);
     }
+  } else {  // 状態・参加費情報が指定された場合
+    // n:受付番号(no), c:取消(cancel), m:備考(memo),
+    // s1/s2/s3:状態(status), f1/f2/f3:参加費(fee)
+    const map = {
+      label:['①','②','③'],
+      status:{'1':'未入場','2':'入場済','3':'退場済','4':'不参加','5':'未登録'},
+      fee:{'1':'未収','2':'既収','3':'免除','4':'無し'},
+    }
+    const o = {
+      '受付番号': Number(m[1]),
+      '取消': m[2] === '1' ? '全員キャンセル' : '',
+      '備考': m[5],
+    };
+    for( let i=0 ; i<map.label.length ; i++ ){
+      o[map.label[i]+'状態'] = map.status[m[3].substr(i,1)];
+      o[map.label[i]+'参加費'] = map.fee[m[4].substr(i,1)];
+    }
+    dObj.push(o);
+    console.log('l.199 dObj',dObj);
   }
 
   // JSON文字列に変換して出力する
   const json = JSON.stringify(dObj, null, 2);
+  console.log('l.205',json)
   const type = ContentService.MimeType.JSON;
   return ContentService.createTextOutput(json).setMimeType(type);
 }
