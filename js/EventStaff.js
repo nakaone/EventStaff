@@ -134,6 +134,10 @@ const changeScreen = (scrId='home') => {  // 表示画面の切り替え
 const initialize = () => {  // 初期設定処理
   console.log("initialize start.");
 
+  // 初期設定処理の画面を表示
+  document.querySelector('header h1').innerText = "初期化処理";
+  changeScreen('initialize');
+
   // 初期設定終了時の処理を定義
   const terminate = () => {
     alert('初期設定は正常に終了しました');
@@ -155,11 +159,6 @@ const initialize = () => {  // 初期設定処理
       return;
     }
   }
-
-  // 保存されていなかったら初期設定処理の画面を表示
-  document.querySelector('header h1').innerText = "初期化処理";
-  changeScreen('initialize');
-  //document.getElementById('js_camera').style.display = 'flex';
 
   // QRコード読み取り
   config.scanCode = true;
@@ -183,7 +182,7 @@ const registerd = (arg) => {
   const initRegi = () => {  // 初期状態の場合の処理定義
     // 初期状態(キーワードも入ってないし、doGetも実行されていない)
     // スキャナを起動
-    changeScreen('js_camera');
+    //changeScreen('js_camera');
     // キーワード入力欄を表示
     document.querySelector("#registerd .search_box").style.display = "inline-block";
     // 虫眼鏡がクリックされたら値を取得するよう設定
@@ -348,5 +347,4 @@ window.addEventListener('DOMContentLoaded', function(){ // 主処理
   // https://pisuke-code.com/jquery-is-not-defined-solution/
   console.log("EventStaff start.",config);
   initialize();
-  changeScreen('home');
 });
