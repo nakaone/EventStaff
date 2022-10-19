@@ -212,11 +212,12 @@ const scanCode = (callback, arg={}) => { /* QRコードのスキャン
 
   const opt = {   // 未指定設定値に既定値を設定
     selector: arg.selector || '#scanCode',  // 親要素のCSSセレクタ文字列
-    width   : arg.width || '80vw',   // 表示幅
     video   : arg.video || false,    // 動画枠の表示/非表示
     camera  : arg.camera || false,   // 静止画の表示/非表示
     finder  : arg.finder || true,    // 撮像結果の表示/非表示
     interval: arg.interval || 0.25,  // 動画状態で撮像、読み込めなかった場合の時間間隔
+    regExp  : arg.regExp || new RegExp('.+'), // RegExpオブジェクトとして指定
+    alert   : arg.alert || false,    // 読み込み完了時に内容をalert表示するか
   }
 
   // 初期処理：カメラやファインダ等の作業用DIVを追加
@@ -272,12 +273,19 @@ const scanCode = (callback, arg={}) => { /* QRコードのスキャン
         // QRコード読み取り成功
 				drawRect(code.location);// ファインダ上のQRコードに枠を表示
         console.log(code.data,callback);
-        callback(code.data);
-        config.scanCode = false;
-        scanner.innerHTML = ''; // 作業用DIVを除去
+        if( opt.alert ) alert(code.data);  // alert出力指定があれば出力
+        if( code.data.match(opt.regExp) ){
+          // 正しい内容が読み込まれた場合
+          callback(code.data);
+          config.scanCode = false;
+          scanner.innerHTML = ''; // 作業用DIVを除去
+        } else {
+          // 不適切な、別のQRコードが読み込まれた場合
+          setTimeout(drawFinder, opt.interval);
+        }
 			}
     }
-    setTimeout(drawFinder, 250);
+    setTimeout(drawFinder, opt.interval);
   }
 
   const drawRect = (location) => {  // ファインダ上のQRコードに枠を表示

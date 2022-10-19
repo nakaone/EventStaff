@@ -171,7 +171,11 @@ const initialize = () => {  // 初期設定処理
     = new Date(new Date().getTime() + 86400000); 
     localStorage.setItem('config',JSON.stringify(config));
     terminate();
-  },{selector:'#initialize .scanner'});
+  },{
+    selector:'#initialize .scanner',
+    RegExp:new RegExp('^{.+}$'),  // JSON文字列であること
+    alert: true,  // 読み込み時、内容をalert表示する
+  });
 }
 
 const registerd = (arg) => {
