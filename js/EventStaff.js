@@ -171,7 +171,7 @@ const initialize = () => {  // 初期設定処理
     = new Date(new Date().getTime() + 86400000); 
     localStorage.setItem('config',JSON.stringify(config));
     terminate();
-  });
+  },{selector:'#initialize .scanner'});
 }
 
 const registerd = (arg) => {
