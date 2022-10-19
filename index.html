@@ -13,8 +13,6 @@
     <img src="img/home-alt.svg" class="homeIcon" onclick="changeScreen()" />
   </header>
 
-  <div id="scanCode"></div><!-- QRコードスキャナ -->
-
   <div id="loading" class="screen"><!-- ローディング中 -->
     <img src="img/loading.gif" />
   </div>
@@ -27,7 +25,8 @@
   </div>
 
   <div id="initialize" class="screen"><!-- 初期化処理画面 -->
-    <div>上のカメラで初期設定用QRコードを読み取ってください。</div>
+    <div>下のカメラで初期設定用QRコードを読み取ってください。</div>
+    <div id="scanCode"></div><!-- QRコードスキャナ -->
     <div class="msg"></div>
   </div>
 
