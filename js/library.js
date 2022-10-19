@@ -202,7 +202,7 @@ const genChild = (template,dObj,pFP) => {  /* テンプレートに差込デー�
   }
 };
 
-const scanCode = (selectorId='scanner', callback) => { /* QRコードのスキャン
+const scanCode = (callback, arg={}) => { /* QRコードのスキャン
   呼び出す前に`config.scanCode = true`を実行しておくこと。
   参考：jsQRであっさりQRコードリーダ/メーカ
   https://zenn.dev/sdkfz181tiger/articles/096dfb74d485db
@@ -210,13 +210,29 @@ const scanCode = (selectorId='scanner', callback) => { /* QRコードのスキ�
   // スキャン実行フラグが立っていなかったら終了
   if( !config.scanCode )  return;
 
+  const opt = {   // 未指定設定値に既定値を設定
+    selector: arg.selector || '#scanCode',  // 親要素のCSSセレクタ文字列
+    width   : arg.width || '80vw',   // 表示幅
+    video   : arg.video || false,    // 動画枠の表示/非表示
+    camera  : arg.camera || false,   // 静止画の表示/非表示
+    finder  : arg.finder || true,    // 撮像結果の表示/非表示
+    interval: arg.interval || 0.25,  // 動画状態で撮像、読み込めなかった場合の時間間隔
+  }
+
   // 初期処理：カメラやファインダ等の作業用DIVを追加
+  // 親要素の取得、幅を指定
+  const scanner = document.querySelector(opt.selector);
+  //scanner.style.width = opt.width;
+  // 作業用DIVのスタイル指定
+  ['video','camera','finder'].forEach(x => {
+    opt[x] = 'width:100%; display:' + ( opt[x] ? 'flex' : 'none' );
+  })
   const template = [
-    {tag:'div', class:'video', style:'width:80vw;', children:[
+    {tag:'div', class:'video', style:opt.video, children:[
       {tag:'video', style:'width:100%;'}]},
-    {tag:'div', class:'camera', children:[
+    {tag:'div', class:'camera', style:opt.camera, children:[
       {tag:'input', type:'file', accept:"image/*", capture:"camera", name:"file"}]},
-    {tag:'div', class:'finder', style:'width:80vw;', children:[
+    {tag:'div', class:'finder', style:opt.finder , children:[
       {tag:'canvas', style:'width:100%'},]},
   ]
   for( let i=0 ; i<template.length ; i++ ){
@@ -228,14 +244,10 @@ const scanCode = (selectorId='scanner', callback) => { /* QRコードのスキ�
     }
   }
 
-
-  const video = document.querySelector('#'+selectorId+' .video video');
-  const camera = document.querySelector('#'+selectorId+' .camera input');
-  const canvas = document.querySelector('#'+selectorId+' .finder canvas');
+  const video = document.querySelector(opt.selector+' .video video');
+  const camera = document.querySelector(opt.selector+' .camera input');
+  const canvas = document.querySelector(opt.selector+' .finder canvas');
   const ctx = canvas.getContext('2d');
-
-  document.querySelector('#'+selectorId+' .camera')
-    .style.display = 'none';  // 静止画用カメラは未定義なので隠蔽
 
   // 動画撮影用Webカメラを起動
   const userMedia = {video: {facingMode: "environment"}};
@@ -262,7 +274,7 @@ const scanCode = (selectorId='scanner', callback) => { /* QRコードのスキ�
         console.log(code.data,callback);
         callback(code.data);
         config.scanCode = false;
-        document.getElementById(selectorId).innerHTML = ''; // 作業用DIVを除去
+        scanner.innerHTML = ''; // 作業用DIVを除去
 			}
     }
     setTimeout(drawFinder, 250);

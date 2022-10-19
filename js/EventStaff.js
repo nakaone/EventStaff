@@ -163,7 +163,7 @@ const initialize = () => {  // 初期設定処理
 
   // QRコード読み取り
   config.scanCode = true;
-  scanCode('scanner',(code) => {
+  scanCode((code) => {
     const o = JSON.parse(code);
     for( let x in o ){ // configの値を設定
       config[x] = o[x];
