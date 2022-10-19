@@ -19,7 +19,8 @@
 
   <div id="home" class="screen"><!-- ホーム画面 -->
     <div onclick="registerd()">参加登録済</div>
-    <div onclick="localStorage.removeItem('config')">紙申請の登録</div>
+    <div onclick="localStorage.removeItem('config');alert('clear!')">clear localStorage</div>
+    <div onclick="alert(localStorage.getItem('config'))">show localStorage</div>
     <div onclick="showFormURL()">参加フォームURL</div>
     <div onclick="showSummary()">集計表の表示</div>
   </div>

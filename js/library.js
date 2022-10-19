@@ -216,7 +216,7 @@ const scanCode = (callback, arg={}) => { /* QRコードのスキャン
     camera  : arg.camera || false,   // 静止画の表示/非表示
     finder  : arg.finder || true,    // 撮像結果の表示/非表示
     interval: arg.interval || 0.25,  // 動画状態で撮像、読み込めなかった場合の時間間隔
-    regExp  : arg.regExp || new RegExp('.+'), // RegExpオブジェクトとして指定
+    RegExp  : arg.RegExp || new RegExp('.+'), // RegExpオブジェクトとして指定
     alert   : arg.alert || false,    // 読み込み完了時に内容をalert表示するか
   }
 
@@ -274,13 +274,14 @@ const scanCode = (callback, arg={}) => { /* QRコードのスキャン
 				drawRect(code.location);// ファインダ上のQRコードに枠を表示
         console.log(code.data,callback);
         if( opt.alert ) alert(code.data);  // alert出力指定があれば出力
-        if( code.data.match(opt.regExp) ){
+        if( code.data.match(opt.RegExp) ){
           // 正しい内容が読み込まれた場合
           callback(code.data);
           config.scanCode = false;
           scanner.innerHTML = ''; // 作業用DIVを除去
         } else {
           // 不適切な、別のQRコードが読み込まれた場合
+          alert('不適切なQRコードです。再読込してください。');
           setTimeout(drawFinder, opt.interval);
         }
 			}
