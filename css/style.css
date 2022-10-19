@@ -13,13 +13,14 @@ html,body {
 div {margin:0px;padding:0px;}
 
 .screen {  /* 切り替え用画面の共通部分 */
-  width: 100%;
+  width: calc(100% - 2rem);
   padding: 1rem;
-  display:flex;
+  display: flex;
   display: -webkit-flex;
   flex-direction: column;  /* row:横並び */
   flex-wrap: wrap;
 }
+
 
 /* =========================================================
   ヘッダ
