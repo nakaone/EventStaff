@@ -32,9 +32,12 @@
   </div>
 
   <div id="registerd" class="screen"><!-- フォーム登録済参加者画面 -->
-    <div class="search_box">
-      <input type="text" placeholder="受付番号または氏名読み(最初の数文字)" />
-      <img src="img/search.svg">
+    <div class="getKey">
+      <div class="scanner"></div><!-- QRコードスキャナ -->
+      <div class="search_box">
+        <input type="text" placeholder="&#x1F50D受付番号または氏名読み(最初の数文字)" />
+        <!-- img src="img/search.svg" -->
+      </div>
     </div>
     <div class="edit"></div><!-- 参加者情報編集用領域 -->
     <img class="editFinish" src="img/checkbox.svg" onclick="editGuest()" />

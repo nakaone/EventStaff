@@ -183,21 +183,31 @@ const registerd = (arg) => {
 
   // 本関数は引数の型・個数により処理を分岐させている。
   // 分岐した後の個々の処理も複雑なので、内部関数として定義する
-  const initRegi = () => {  // 初期状態の場合の処理定義
+  const getKey = () => {  // 初期状態の場合の処理定義
     // 初期状態(キーワードも入ってないし、doGetも実行されていない)
-    // スキャナを起動
-    //changeScreen('js_camera');
-    // キーワード入力欄を表示
-    document.querySelector("#registerd .search_box").style.display = "inline-block";
-    // 虫眼鏡がクリックされたら値を取得するよう設定
-    const f = () => {
+    document.querySelector('header h1').innerText = "登録済参加者処理";
+
+    // スキャンまたは値入力時の動作を定義
+    const strEl = document.querySelector('#registerd input');
+    const callback = (arg) => {
+      console.log('registerd.callback start.',arg);
       changeScreen('loading');
-      const keywordElement = document.querySelector("#js_camera .search_box input");
-      const keyword = keywordElement.value;
-      keywordElement.value = '';
-      registerd(keyword);
+      registerd(strEl.value || arg);
+      //strEl.value = '';
     };
-    document.querySelector("#js_camera .search_box img").addEventListener('click',f);
+
+    // スキャナを起動
+    config.scanCode = true;
+    scanCode((code) => {
+      callback(code);
+    },{
+      selector:'#registerd .scanner',  // 設置位置指定
+      RegExp:/^[0-9]{4}$/,  // 数字4桁
+      alert: true,  // 読み込み時、内容をalert表示する
+    });
+
+    // キーワード入力欄の値が変わったら検索するよう設定
+    strEl.addEventListener('change',callback);
   }
 
   const unique = (arg) => {  // 検索結果が一つしか無い場合の処理
@@ -253,13 +263,19 @@ const registerd = (arg) => {
   }
 
   // 主処理：引数の型・個数により事前に定義した内部関数を呼び出す
+  document.querySelectorAll('#registerd > div')  // 直下の要素を全て非表示に
+    .forEach(x => x.style.display = 'none');
   if( arg === undefined ){  // 初期状態(ホーム画面のボタン)から呼ばれた
-    initRegi();
+    changeScreen('registerd');
+    document.querySelector('#registerd .getKey').style.display = 'block';
+    getKey();
   } else {
     const argType = whichType(arg);
     if( argType === 'String' ){  // 引数が文字列 ⇒ 検索キーワード
+      changeScreen('registerd');
       doGet("?key=" + arg,registerd);
     } else {  // 配列 ⇒ GASのdoGetからの戻り値(検索結果)
+      changeScreen('registerd');
       if( arg.length === 0 ){  // 検索結果が0
         alert("該当する参加者は存在しませんでした");
       } else {  // 検索結果が>0
