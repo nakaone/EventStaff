@@ -101,8 +101,9 @@ sequenceDiagram
   autonumber
   actor guest as 参加者
   participant form as 申込フォーム
-  participant answer as 回答
+  participant answer as 回答(Sheet)
   participant gas as システム(GAS)
+  participant git as HTML置き場<br>(GitHub)
 
   guest->>form    : 必要事項を記入
   form->>+answer   : 記入内容を<br>そのまま保存
@@ -111,7 +112,18 @@ sequenceDiagram
   Note right of gas: createQrCode ()
   gas->>-answer    : QRコード
   answer->>-guest  : 返信メール
-
+  answer->>guest   : リマインドメール(GitHub URL)
+  guest->>git      : リクエスト
+  git->>guest      : ダウンロード
+  guest->>gas      : 氏名(＋緊急連絡先)
+  gas->>guest     : 二段階認証用確認メール(暗号鍵)
+  guest->>gas      : 認証確認(暗号鍵)
+  gas->>+guest      : 受付番号
+  Note right of guest: LocalStorageに<br>受付番号格納
+  guest->>-gas     : 一斉通知送信要求
+  gas->>guest      : 滞留分一斉通知
+  guest->>form     : 登録内容確認・メンバ変更
+  form->>answer    : メンバ変更情報
 ```
 
 「回答」はマスタとなるスプレッドシートを指す。
