@@ -111,15 +111,10 @@ sequenceDiagram
   answer->>+gas    : 受付番号
   Note right of gas: createQrCode ()
   gas->>-answer    : QRコード
-  answer->>-guest  : 返信メール
-  answer->>guest   : リマインドメール(GitHub URL)
+  answer->>guest  : 返信メール
   guest->>git      : リクエスト
-  git->>guest      : ダウンロード
-  guest->>gas      : 氏名(＋緊急連絡先)
-  gas->>guest     : 二段階認証用確認メール(暗号鍵)
-  guest->>gas      : 認証確認(暗号鍵)
-  gas->>+guest      : 受付番号
-  Note right of guest: LocalStorageに<br>受付番号格納
+  git->>+guest      : ダウンロード
+  Note right of guest: 初期化(暗号鍵入力)
   guest->>-gas     : 一斉通知送信要求
   gas->>guest      : 滞留分一斉通知
   guest->>form     : 登録内容確認・メンバ変更
@@ -133,6 +128,12 @@ sequenceDiagram
 - QRコード(受付番号)
 - フォーム修正サイトへの誘導(URL/ボタン)
 - 参加者サイトへの誘導(URL/ボタン)
+- GitHub URL
+- 暗号鍵
+
+リマインドメールはGASのメール100通/日の制限を回避するため、手動で送る。このため文面を同じにせざるを得ず、二段階認証用の鍵は変則的に返信メールで先に通知する。
+
+EventGuest.html初期処理として暗号鍵の入力を行い、受付番号をlocalStorageに保存する。
 
 なお一斉配信の配信対象に変動がある可能性があるため、フォームで修正の都度、改めて返信メールを送る。
 
