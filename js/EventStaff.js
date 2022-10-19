@@ -172,7 +172,7 @@ const initialize = () => {  // 初期設定処理
     localStorage.setItem('config',JSON.stringify(config));
     terminate();
   },{
-    selector:'#initialize .scanner',
+    selector:'#initialize .scanner',  // 設置位置指定
     RegExp:new RegExp('^{.+}$'),  // JSON文字列であること
     alert: true,  // 読み込み時、内容をalert表示する
   });
