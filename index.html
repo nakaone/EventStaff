@@ -18,7 +18,8 @@
   </div>
 
   <div id="home" class="screen"><!-- ホーム画面 -->
-    <div onclick="registerd()">参加登録済</div>
+    <div onclick="inputSearchKey()">参加登録済</div>
+    <!-- div onclick="registerd()">参加登録済</div -->
     <div onclick="localStorage.removeItem('config');alert('clear!')">clear localStorage</div>
     <div onclick="alert(localStorage.getItem('config'))">show localStorage</div>
     <div onclick="showFormURL()">参加フォームURL</div>
@@ -29,6 +30,23 @@
     <div>下のカメラで初期設定用QRコードを読み取ってください。</div>
     <div class="scanner"></div><!-- QRコードスキャナ -->
     <div class="msg"></div>
+  </div>
+
+  <div id="selectParticipant" class="screen">
+  </div>
+
+  <div id="editParticipant" class="screen">
+    <div class="action">
+      <button onclick="updateParticipant()">更新</button>
+      <button onclick="changeScreen()">破棄</button>
+    </div>
+    <div class="edit"></div>
+    <div class="qrcode"></div>
+  </div>
+
+  <div id="inputSearchKey" class="screen">
+    <div class="scanner"></div><!-- QRコードスキャナ -->
+    <input type="text" placeholder="&#x1F50D受付番号または氏名読み(最初の数文字)" />
   </div>
 
   <div id="registerd" class="screen"><!-- フォーム登録済参加者画面 -->

@@ -121,9 +121,9 @@ const changeScreen = (scrId='home') => {  // 表示画面の切り替え
     scrList[i].style.display = 'none';
   }
 
-  // homeの場合、ヘッダは隠す
+  // home,loadingの場合、ヘッダは隠す
   document.querySelector('header').style.display
-    = scrId === 'home' ? 'none' : 'flex';
+    = (scrId === 'home' || scrId === 'loading') ? 'none' : 'flex';
 
   // 指定IDの画面は再表示
   document.querySelector('#'+scrId).style.display = 'flex';
@@ -177,6 +177,133 @@ const initialize = () => {  // 初期設定処理
     alert: true,  // 読み込み時、内容をalert表示する
   });
 }
+
+const inputSearchKey = () => {  // 参加者の検索キーを入力
+  console.log('inputSearchKey start.');
+
+  document.querySelector('header h1').innerText = "登録済参加者処理";
+  changeScreen('inputSearchKey');
+
+  // スキャンまたは値入力時の動作を定義
+  const strEl = document.querySelector('#inputSearchKey input');
+  const callback = (arg) => {
+    console.log('inputSearchKey.callback start.',arg);
+    changeScreen('loading');
+    document.querySelector('#inputSearchKey .scanner')
+      .innerHTML = ''; // 作業用DIVを除去してカメラでのスキャンを停止
+    doGet("?key=" + (strEl.value || arg),(data) => {
+      if( data.length === 0 ){
+        alert("該当する参加者は存在しませんでした");
+      } else if( data.length > 1){
+        selectParticipant(data);  // 該当が複数件なら選択画面へ
+      } else {
+        editParticipant(data[0]);  // 該当が1件のみなら編集画面へ
+      }  
+    });
+  };
+
+  // スキャナを起動
+  config.scanCode = true;
+  scanCode((code) => {
+    callback(code);
+  },{
+    selector:'#inputSearchKey .scanner',  // 設置位置指定
+    RegExp:/^[0-9]{4}$/,  // 数字4桁
+    alert: true,  // 読み込み時、内容をalert表示する
+  });
+
+  // キーワード入力欄の値が変わったら検索するよう設定
+  strEl.addEventListener('change',callback);
+
+  console.log('inputSearchKey end.');
+}
+
+const selectParticipant = (arg) => {  // 複数検索結果からの選択
+  console.log('selectParticipant start.',arg);
+  changeScreen('selectParticipant');
+
+  const editArea = document.querySelector("#selectParticipant");
+  editArea.innerHTML = '<p>検索結果が複数あります。選択してください。</p>';
+  for( let i=0 ; i<arg.length ; i++ ){
+    const o = document.createElement('div');
+    o.innerText = arg[i]['氏名'] + '(' + arg[i]['読み'] + ')';
+    o.addEventListener('click',() => {
+      editParticipant(arg[i]);  // 選択後編集画面へ
+    });
+    editArea.appendChild(o);
+  }
+
+  console.log('selectParticipant end.');
+}
+
+const editParticipant = (arg) => {  // 検索結果の内容編集
+  console.log('editParticipant start.',arg);
+  changeScreen('editParticipant');
+
+    // 該当が1件のみなら編集画面へ
+
+    const editArea = document.querySelector('#editParticipant .edit');
+    editArea.innerHTML = '';
+
+    // データクレンジング
+    arg['受付番号'] = ('000'+arg['受付番号']).slice(-4);  // 0パディング
+    arg['登録日時'] = new Date(arg['登録日時']).toLocaleString('ja-JP');
+    // 「取消」の文字列が入っていればtrue
+    arg['取消'] = arg['取消'].length === 0 ? false : true;
+    ['①','②','③'].forEach(x => {
+      if( arg[x+'状態'].length === 0 )
+        arg[x+'状態'] = arg[x+'氏名'].length === 0 ? '未登録' : '未入場';
+      if( arg[x+'参加費'].length === 0 )
+        arg[x+'参加費'] = arg[x+'氏名'].length === 0 ? '無し' : '未収';
+    });
+
+    // 要素の作成とセット
+    let o = genChild(config.editGuestTemplate,arg,'root');  // 全体の定義と'root'を渡す
+    if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
+      throw o.result;
+    } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
+      editArea.appendChild(o.result);
+    }
+
+    // 編集用URLをQRコードで表示
+    // https://saitodev.co/article/QRCode.js%E3%82%92%E8%A9%A6%E3%81%97%E3%81%A6%E3%81%BF%E3%81%9F/
+    const qrDiv = document.querySelector('#editParticipant .qrcode');
+    qrDiv.innerHTML = ""; // Clear
+    new QRCode(qrDiv,{  // 第一引数のqrcodeはCSSセレクタ
+      text: arg['編集用URL'],
+      width: 200, height: 200,// QRコードの幅と高さ
+      colorDark: "#000000",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.H
+    });
+
+  console.log('editParticipant end.');
+}
+
+const updateParticipant = () => {
+  console.log('updateParticipant start.');
+
+  const sList = {
+    name: '#editParticipant [name="name0_"] rb',
+    status:'#editParticipant [name="status0_"]',
+    fee:'#editParticipant [name="fee0_"]',
+  };
+
+  const rv = [];
+  for( let i=1 ; i<4 ; i++ ){
+    let r = {};
+    r.name = document.querySelector(sList.name.replace('_',i)).innerText;
+    let s = document.querySelector(sList.status.replace('_',i));
+    r.status = s.options[s.selectedIndex].value;
+    let f = document.querySelector(sList.fee.replace('_',i));
+    r.fee = f.options[f.selectedIndex].value;
+    rv.push(r);
+  }
+
+  console.log('updateParticipant end.',rv);
+}
+
+// =============================================================
 
 const registerd = (arg) => {
   console.log('registerd start.',arg);

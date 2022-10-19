@@ -24,19 +24,8 @@ const doGet = (str,callback) => {  // GASのdoGetを呼び出し、結果を表�
   )  //APIを使って非同期データを取得する
   .then(response => response.json())
   .then(data => {  // 成功した処理
-    // 撮影関係のDIVは隠す
-    //document.getElementById("web_qrcode").style.display = "none";
-    console.log('l.258',data);
+    console.log('doGet data: type='+whichType(data)+', length='+data.length+'\n'+JSON.stringify(data));
     callback(data);
-    /*
-    if( data.length === 0 ){
-      alert("該当する参加者は存在しませんでした");
-    } else if( data.length > 1){
-      callback(data);  // 該当が複数件ならまず選択、選択後編集画面へ
-    } else {
-      callback(data[0]);  // 該当が1件のみなら編集画面へ
-    }
-    */
   });
   console.log("doGet end.");
 }
