@@ -21,15 +21,20 @@
   <nav class="menu">
     <ul>
       <li>お知らせ</li>
-      <li onclick="inputSearchKey()">参加登録済</li>
-      <li onclick="localStorage.removeItem('config');alert('clear!')">設定のクリア</li>
-      <li onclick="alert(localStorage.getItem('config'))">設定の参照</li>
-      <li onclick="showFormURL()">新規参加登録</li>
-      <li onclick="changeScreen('shimokitaMap','校内案内図')">校内マップ</li>
+
+      <li>一斉配信</li>
+      <li onclick="inputSearchKey()">参加者検索</li>
+      <li onclick="showFormURL()">申請フォームURL</li>
+      <li>紙申請登録</li>
+      <li onclick="showSummary()">参加状況</li>
+
       <li>進行予定</li>
+      <li onclick="changeScreen('shimokitaMap','校内案内図')">校内マップ</li>
       <li>募集要項</li>
-      <li onclick="showSummary()">集計表</li>
       <li>アンケート</li>
+
+      <li onclick="alert(localStorage.getItem('config'))">設定の参照</li>
+      <li onclick="localStorage.removeItem('config');alert('clear!')">設定のクリア</li>
     </ul>
   </nav>
   <div id="loading" class="screen"><!-- ローディング中 -->
