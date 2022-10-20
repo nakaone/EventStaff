@@ -300,3 +300,10 @@ const whichType = (arg = undefined) => {
   return arg === undefined ? 'undefined'
    : Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
 }
+
+const toggleMenu = () => {
+  document.querySelector('header .open').classList.toggle('active');
+  document.querySelector('header .close').classList.toggle('active');
+  const nav = document.querySelector('nav');
+  nav.style.display = nav.style.display === 'grid' ? 'none' : 'grid';
+}

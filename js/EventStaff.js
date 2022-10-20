@@ -122,8 +122,8 @@ const changeScreen = (scrId='home') => {  // 表示画面の切り替え
   }
 
   // home,loadingの場合、ヘッダは隠す
-  document.querySelector('header').style.display
-    = (scrId === 'home' || scrId === 'loading') ? 'none' : 'flex';
+  /*document.querySelector('header').style.display
+    = (scrId === 'home' || scrId === 'loading') ? 'none' : 'flex';*/
 
   // 指定IDの画面は再表示
   document.querySelector('#'+scrId).style.display = 'flex';
@@ -135,7 +135,7 @@ const initialize = () => {  // 初期設定処理
   console.log("initialize start.");
 
   // 初期設定処理の画面を表示
-  document.querySelector('header h1').innerText = "初期化処理";
+  document.querySelector('header .title').innerText = "初期化処理";
   changeScreen('initialize');
 
   // 初期設定終了時の処理を定義

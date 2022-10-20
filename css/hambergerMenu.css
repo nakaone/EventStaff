@@ -1,0 +1,46 @@
+/*
+  https://web-de-asobo.net/2022/06/22/hamburger-menu/
+*/
+
+header {
+	position: relative;
+	background-color: black;
+	color: white;
+	z-index: 1;
+	height: 80px;
+	display: flex;
+	align-items: center;
+	padding-left: 20px;  
+}
+
+header div {
+  height: fit-content;
+}
+
+header h1 {
+  font-size: 1rem;
+}
+
+.sample_sp_menu {
+	background-color: rgba(0,0,0,.5);
+	position: absolute;
+	top: 0;
+	left: -100vw;
+	width: 100%;
+	height: 100%;
+	display: grid;
+	justify-content: center;
+	align-content: center;
+	color: white;
+	text-align: center;
+	transition: .5s;
+}
+
+.sample_sp_menu ul {
+	padding-inline: 0;
+}
+.sample_sp_menu li {
+	list-style: none;
+	margin-top: 1.5rem;
+	cursor: pointer;
+}

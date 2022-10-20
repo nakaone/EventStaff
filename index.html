@@ -5,14 +5,31 @@
   <meta http-equiv="Content-Script-Type" content="text/javascript">
   <title>EventStaff</title>
   <link rel="stylesheet" href="css/style.css">
+  <!-- link rel="stylesheet" href="css/hambergerMenu.css" -->
 </head>
 
 <body>
   <header>
-    <h1></h1>
-    <img src="img/home-alt.svg" class="homeIcon" onclick="changeScreen()" />
+    <div class="icon"><img src="img/stamp.png" /></div>
+    <div class="title">タイトル</div>
+    <div class="menu" onclick="toggleMenu()">
+      <img src="img/menu1.svg" class="open" />
+      <img src="img/menu2.svg" class="close" />
+    </div>
+    <!--img src="img/home-alt.svg" class="homeIcon" onclick="changeScreen()" / -->
   </header>
-
+  <nav class="menu">
+    <ul>
+      <li>お知らせ</li>
+      <li onclick="inputSearchKey()">参加登録済</li>
+      <li onclick="localStorage.removeItem('config');alert('clear!')">設定のクリア</li>
+      <li onclick="alert(localStorage.getItem('config'))">設定の参照</li>
+      <li onclick="showFormURL()">新規参加登録</li>
+      <li>校内マップ</li>
+      <li>スケジュール</li>
+      <li onclick="showSummary()">集計表</li>
+    </ul>
+  </nav>
   <div id="loading" class="screen"><!-- ローディング中 -->
     <img src="img/loading.gif" />
   </div>
@@ -24,12 +41,11 @@
   </div>
 
   <div id="home" class="screen"><!-- ホーム画面 -->
-    <div onclick="inputSearchKey()">参加登録済</div>
-    <!-- div onclick="registerd()">参加登録済</div -->
-    <div onclick="localStorage.removeItem('config');alert('clear!')">clear localStorage</div>
-    <div onclick="alert(localStorage.getItem('config'))">show localStorage</div>
-    <div onclick="showFormURL()">参加フォームURL</div>
-    <div onclick="showSummary()">集計表の表示</div>
+    <!-- div>参加登録済</div>
+    <div>clear localStorage</div>
+    <div>show localStorage</div>
+    <div>参加フォームURL</div>
+    <div>集計表の表示</div -->
   </div>
 
   <div id="inputSearchKey" class="screen">
