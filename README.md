@@ -281,6 +281,125 @@ QRコード作成時の注意： MDN「[JSON.parse() は末尾のカンマを許
 ⇒ d列に"label:'value',"の文字列を作成し、arrayformula(concatenate(d:d))とすると末尾にカンマが入る。
 ついでに単一引用符も許されないので、要注意。
 
+### doPost: パラメータにより処理を分岐
+
+```
+function doPost(arg) {
+  Logger.log('doPost start.',arg);
+
+  // == 内部関数定義 =====================================
+
+  // getData: 指定シートからデータ取得し、ハッシュにして変換して返す
+  const getData = (sheetName='マスタ') => {
+    const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
+    // JSONオブジェクトに変換する
+    const rows = sheet.getDataRange().getValues()
+      .filter(row => row[0]);  // 空白行は削除
+    const keys = rows.splice(0, 1)[0];  // ヘッダを一次元配列で取得
+    const data = rows.map(row => {  // [{ラベル1:値, ラベル2:値, ..},{..},..]形式
+      const obj = {};
+      row.map((item, index) => {
+        obj[String(keys[index])] = String(item);
+      });
+      return obj;
+    });
+    const rv = {rows:rows, keys:keys, data:data, sheet:sheet};
+    Logger.log(JSON.stringify(rv));
+    return rv;
+  };
+
+  // makeResultJSON: 返値オブジェクトから返却用JSONを生成
+  const makeResultJSON = (arg) => {  // 
+    return ContentService
+    .createTextOutput(JSON.stringify(arg, null, 2))
+    .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // == 主処理 ==========================================
+
+  let result = {fuga:'hoge'}; // 返値の初期値
+  const dObj = getData(); // データをシートから取得
+
+  if( arg.parameter.key ){  // 該当者リストの作成
+    result = candidates(dObj,arg.parameter.key);
+  } else if( arg.parameter.id ){  // 状態・参加費の更新
+    result = updateParticipant(dObj,arg.parameter);
+  }
+
+  // 結果確認
+  Logger.log(JSON.stringify(result));
+
+  // JSON文字列に変換して出力する
+  Logger.log('doPost end.');
+  return makeResultJSON(result);
+}
+```
+
+### candidates: 該当者リストの作成
+
+```
+const candidates = (dObj,key) => {  // 該当者リストの作成
+  Logger.log('candidates start. key='+key);
+
+  let result = [];
+  const sKey = String(key);
+  if( sKey.match(/^[0-9]+$/) ){
+    Logger.log('number='+Number(sKey));
+    result = dObj.data.filter(x => {return Number(x['受付番号']) === Number(sKey)});
+  } else if( sKey.match(/^[ァ-ヾ　]+$/) ){
+    Logger.log('kana='+sKey);
+    result = dObj.data.filter(x => {return x['読み'].indexOf(sKey) === 0});
+  }
+
+  Logger.log('candidates end. result='+JSON.stringify(result));
+  return result;
+}
+```
+
+### updateParticipant: 状態・参加費の更新
+
+```
+const updateParticipant = (dObj,v) => {   // 状態・参加費の更新
+  Logger.log('updateParticipant start. v='+JSON.stringify(v));
+
+  const map = dObj.data.map(x => x['受付番号']);
+  const rowNum = map.indexOf(String(v.id)) + 2;
+  const a1 = "AB_:AI_".replace(new RegExp('_','g'),rowNum);
+  Logger.log('map = '+JSON.stringify(map)+'\nrowNum = '+rowNum+'\na1 = '+a1);
+
+  const dArr = [  // 設定する値の配列を作成
+    v.f0 || '', v.s0 || '',
+    v.f1 || '', v.s1 || '',
+    v.f2 || '', v.s2 || '',
+    v.f3 || '', v.s3 || '',
+  ];
+
+  dObj.sheet.getRange(a1).setValues([dArr]);
+  Logger.log('updateParticipant end');
+}
+```
+
+### doPostTest: テスト用スクリプト
+
+```
+const doPostTest = () => {
+  doPost({parameter:{
+//    key:12,
+//    key:'ナ',
+    id: 12,
+    f0: '無し',
+    s0: '不参加',
+    f1: '免除',
+    s1: '入場済',
+    f2: '既収',
+    s2: '退場済',
+//    f3: '無し',
+//    s3: '未登録',
+  }});
+}
+```
+
+
 ### (1) doGet: 受付画面からの問合せに該当者情報を提供
 
 <details><summary>source</summary>
@@ -774,6 +893,16 @@ const delDiv = () => {
 
 - [Android実機で Chrome の開発者ツールを開く＆デバッグする方法](https://pisuke-code.com/android-use-chrome-devtools/)
 - Android側でのUSB接続許可：[Android デバイスで USB デバッグを有効にする](https://www.embarcadero.com/starthere/xe5-2/mobdevsetup/android/ja/enabling_usb_debugging_on_an_android_device.html)
+
+### スプレッドシート上でQRコード作成時の注意
+
+JSONのQRコードを作成する場合、最後のメンバの後ろには','を付けてはならない。
+
+MDN「[JSON.parse() は末尾のカンマを許容しない](https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse#json.parse_%E3%81%AF%E6%9C%AB%E5%B0%BE%E3%81%AE%E3%82%AB%E3%83%B3%E3%83%9E%E3%82%92%E8%A8%B1%E5%AE%B9%E3%81%97%E3%81%AA%E3%81%84)」
+
+⇒ d列に"label:'value',"の文字列を作成し、arrayformula(concatenate(d:d))とすると末尾にカンマが入る。
+ついでに単一引用符も許されないので、要注意。
+
 
 ## Ⅳ.2.履歴
 
