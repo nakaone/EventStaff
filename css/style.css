@@ -13,10 +13,11 @@ html,body {
 div {margin:0px;padding:0px;}
 
 .screen {  /* 切り替え用画面の共通部分 */
+  margin-top: 2rem;
   width: calc(100% - 2rem);
+  height: calc(100% - 2remß);
   padding: 1rem;
-  display: flex;
-  display: -webkit-flex;
+  display: none;
   flex-direction: column;  /* row:横並び */
   flex-wrap: wrap;
 }
@@ -133,41 +134,38 @@ nav li {
   color: rgba(255,255,255,1);
 }
 
-/* =========================================================
-  初期化処理画面
-========================================================= */
 
 /* =========================================================
-  フォーム登録済参加者処理画面
+  参加フォームURL
 ========================================================= */
-/* Qiita: 【初心者向け】検索窓の中に虫眼鏡アイコンを設置する方法 */
-/* 受付番号または氏名読み入力欄 */
-/*
-.search_box {
-  position: absolute;
-  bottom: 2rem;
-  right: 0;
-  width: 80vw;
-  height: 2rem;
-  background-color: rgba(255, 255, 255, 0.7);
-  padding: 0.5rem;
-}
-.search_box input {
+#showFormURL {
   width: 80%;
-  margin-right: 5px;
+  padding: 0 10%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
 }
-.search_box img {
-  position: absolute;
-  top: calc(0.5rem + 3px);
-  width: 1.5rem;
-  height: 1.5rem;
+#showFormURL div {
+  padding-top: 2rem;
+  display: block;
+  margin: auto;
+  width: 100%;
 }
-*/
+
 /* =========================================================
-  参加フォームURLのQRコード表示画面
+  校内案内図
 ========================================================= */
-#qrcode {
-  margin: 10vw;
+#shimokitaMap {
+  width: 80%;
+  padding: 0 10%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+#shimokitaMap img {
+  display: block;
+  margin: auto;
+  width: 100%;
 }
 
 /* =========================================================

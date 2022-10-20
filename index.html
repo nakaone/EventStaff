@@ -25,7 +25,7 @@
       <li onclick="localStorage.removeItem('config');alert('clear!')">設定のクリア</li>
       <li onclick="alert(localStorage.getItem('config'))">設定の参照</li>
       <li onclick="showFormURL()">新規参加登録</li>
-      <li>校内マップ</li>
+      <li onclick="changeScreen('shimokitaMap','校内案内図')">校内マップ</li>
       <li>スケジュール</li>
       <li onclick="showSummary()">集計表</li>
     </ul>
@@ -40,23 +40,19 @@
     <div class="msg"></div>
   </div>
 
-  <div id="home" class="screen"><!-- ホーム画面 -->
-    <!-- div>参加登録済</div>
-    <div>clear localStorage</div>
-    <div>show localStorage</div>
-    <div>参加フォームURL</div>
-    <div>集計表の表示</div -->
+  <div id="home" class="screen"><!-- ホーム画面
+    将来的に一斉通知の表示画面に -->
   </div>
 
-  <div id="inputSearchKey" class="screen">
+  <div id="inputSearchKey" class="screen"><!-- 該当者検索 -->
     <div class="scanner"></div><!-- QRコードスキャナ -->
     <input type="text" placeholder="&#x1F50D受付番号または氏名読み(最初の数文字)" />
   </div>
 
-  <div id="selectParticipant" class="screen">
+  <div id="selectParticipant" class="screen"><!-- 該当者選択 -->
   </div>
 
-  <div id="editParticipant" class="screen">
+  <div id="editParticipant" class="screen"><!-- 参加者情報編集 -->
     <div class="action">
       <button onclick="updateParticipant()">更新</button>
       <button onclick="changeScreen()">破棄</button>
@@ -66,12 +62,16 @@
   </div>
 
   <div id="showFormURL" class="screen"><!-- 参加フォームURLのQRコード表示画面 -->
-    <h1>参加フォームURL</h1>
-    <div id="qrcode"></div>
+    <div></div>
+    <p>QRコードのリンク先のフォームで新規参加登録してください。</p>
+  </div>
+
+  <div id="shimokitaMap" class="screen">
+    <img src="img/shimokita.svg" />
+    <img src="img/shimokita.png" />
   </div>
 
   <div id="showSummary" class="screen"><!-- 集計表の表示画面 -->
-    <h1>現時点での参加登録/来場者数</h1>
   </div>
 
 </body>

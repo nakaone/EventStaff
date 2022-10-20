@@ -296,14 +296,38 @@ const scanCode = (callback, arg={}) => { /* QRコードのスキャン
 
 }
 
+const setQRcode = (selector,opt) => {  // QRコードを指定位置にセット
+  // https://saitodev.co/article/QRCode.js%E3%82%92%E8%A9%A6%E3%81%97%E3%81%A6%E3%81%BF%E3%81%9F/
+  
+  const qrDiv = document.querySelector(selector);
+  qrDiv.innerHTML = ""; // Clear
+  new QRCode(qrDiv,{  // 第一引数のqrcodeはCSSセレクタ
+    text: opt.text,
+    width: opt.width || 200,  // QRコードの幅と高さ
+    height: opt.height || 200,
+    colorDark: opt.colorDark || "#000000",
+    colorLight: opt.colorLight || "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H
+  });
+}
+
 const whichType = (arg = undefined) => {
   return arg === undefined ? 'undefined'
    : Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
 }
 
-const toggleMenu = () => {
-  document.querySelector('header .open').classList.toggle('active');
-  document.querySelector('header .close').classList.toggle('active');
+const toggleMenu = (arg) => {  // メニューの開閉
+  // 引数は指定無し(単純開閉切換)またはtrue(強制オープン)
+
+  // 現状をisActiveに取得
   const nav = document.querySelector('nav');
-  nav.style.display = nav.style.display === 'grid' ? 'none' : 'grid';
+  const isActive = nav.style.display === 'grid';
+
+  // 指定無しまたは現状が指定(arg)と異なる場合、開閉切換
+  if( arg !== undefined || arg !== isActive ){
+    document.querySelector('header .open').classList.toggle('active');
+    document.querySelector('header .close').classList.toggle('active');
+    nav.style.display = nav.style.display === 'grid' ? 'none' : 'grid';
+  }
+
 }

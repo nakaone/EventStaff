@@ -109,23 +109,21 @@ const config = {
   },
 };
 
-const changeScreen = (scrId='home') => {  // 表示画面の切り替え
+const changeScreen = (scrId='home',titleStr='お知らせ') => {  // 表示画面の切り替え
   console.log("changeScreen start. scrId="+scrId);
 
   // 画面遷移の指示がある->QRコード撮影はキャンセル
   config.checkImage = false;
 
   // 一度全部隠す
+  toggleMenu(false);
   const scrList = document.querySelectorAll('.screen');
   for( let i=0 ; i<scrList.length ; i++ ){
     scrList[i].style.display = 'none';
   }
 
-  // home,loadingの場合、ヘッダは隠す
-  /*document.querySelector('header').style.display
-    = (scrId === 'home' || scrId === 'loading') ? 'none' : 'flex';*/
-
   // 指定IDの画面は再表示
+  document.querySelector('header .title').innerText = titleStr;
   document.querySelector('#'+scrId).style.display = 'flex';
 
   console.log("changeScreen end.");
@@ -135,14 +133,13 @@ const initialize = () => {  // 初期設定処理
   console.log("initialize start.");
 
   // 初期設定処理の画面を表示
-  document.querySelector('header .title').innerText = "初期化処理";
-  changeScreen('initialize');
+  changeScreen('initialize',"初期化処理");
 
   // 初期設定終了時の処理を定義
   const terminate = () => {
     alert('初期設定は正常に終了しました');
     console.log("initialize end.",config);
-    changeScreen('home');// ホーム画面表示
+    changeScreen();// ホーム画面表示
   }
 
   // localStorageにconfigが保存されていたら読み込み
@@ -181,8 +178,8 @@ const initialize = () => {  // 初期設定処理
 const inputSearchKey = () => {  // 参加者の検索キーを入力
   console.log('inputSearchKey start.');
 
-  document.querySelector('header h1').innerText = "登録済参加者処理";
-  changeScreen('inputSearchKey');
+  document.querySelector('header .title').innerText = "登録済参加者処理";
+  changeScreen('inputSearchKey','該当者の検索');
 
   // スキャンまたは値入力時の動作を定義
   const strEl = document.querySelector('#inputSearchKey input');
@@ -220,7 +217,7 @@ const inputSearchKey = () => {  // 参加者の検索キーを入力
 
 const selectParticipant = (arg) => {  // 複数検索結果からの選択
   console.log('selectParticipant start.',arg);
-  changeScreen('selectParticipant');
+  changeScreen('selectParticipant','該当者リスト');
 
   const editArea = document.querySelector("#selectParticipant");
   editArea.innerHTML = '<p>検索結果が複数あります。選択してください。</p>';
@@ -238,7 +235,7 @@ const selectParticipant = (arg) => {  // 複数検索結果からの選択
 
 const editParticipant = (arg) => {  // 検索結果の内容編集
   console.log('editParticipant start.',arg);
-  changeScreen('editParticipant');
+  changeScreen('editParticipant','参加者情報入力');
 
     // 該当が1件のみなら編集画面へ
 
@@ -267,15 +264,7 @@ const editParticipant = (arg) => {  // 検索結果の内容編集
 
     // 編集用URLをQRコードで表示
     // https://saitodev.co/article/QRCode.js%E3%82%92%E8%A9%A6%E3%81%97%E3%81%A6%E3%81%BF%E3%81%9F/
-    const qrDiv = document.querySelector('#editParticipant .qrcode');
-    qrDiv.innerHTML = ""; // Clear
-    new QRCode(qrDiv,{  // 第一引数のqrcodeはCSSセレクタ
-      text: arg['編集用URL'],
-      width: 200, height: 200,// QRコードの幅と高さ
-      colorDark: "#000000",
-      colorLight: "#ffffff",
-      correctLevel: QRCode.CorrectLevel.H
-    });
+    setQRcode('#editParticipant div',arg['編集用URL']);
 
   console.log('editParticipant end.');
 }
@@ -305,26 +294,21 @@ const updateParticipant = () => {
 
 const showFormURL = () => { // 参加フォームURLのQRコード表示
   console.log("showFormURL start.");
-  changeScreen('showFormURL');
-  document.getElementById('showFormURL').style.height = config.qrSize * 2 + 'px';
+  changeScreen('showFormURL','参加フォームURL');
+  //document.getElementById('showFormURL').style.height = config.qrSize * 2 + 'px';
 
   // 申請フォームのQRコードを表示
-  const text = "https://docs.google.com/forms/d/" + config.formId + "/edit";
-  console.log('text="'+text+'"');
-  document.getElementById("qrcode").innerHTML = "";// Clear
-  let qrcode = new QRCode("qrcode", {  // 第一引数のqrcodeはCSSセレクタ
-    text: text,
-    width: config.qrSize, height: config.qrSize,// QRコードの幅と高さ
-    colorDark: "#000000",
-    colorLight: "#ffffff",
-    correctLevel: QRCode.CorrectLevel.H
+  setQRcode('#showFormURL div',{
+    text: "https://docs.google.com/forms/d/" + config.formId + "/edit",
+    width: config.qrSize,
+    height: config.qrSize,
   });
   console.log("showFormURL end.");
 }
 
 const showSummary = () => {  // 集計表の表示
   console.log("showSummary start.");
-  changeScreen('showSummary');
+  changeScreen('showSummary','参加状況集計');
   alert(config.dump());
   console.log("showSummary end.");
 }
