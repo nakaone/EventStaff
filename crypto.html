@@ -43,7 +43,7 @@
 <script type="text/javascript">
 const doGet = (str) => {
   const url = "https://script.google.com/macros/s/AKfycbw4s6e7G2g5AFkA7fWHAxGWAWCYIImyryLbnbnVkS7Kayp3i0_3esYF0uXP6JgrMOTRLA/exec";
-  fetch(url,{
+  fetch(url+'?v='+str,{
     "method": "GET",
     "mode": "no-cors",
     //"Accept": "application/json",
