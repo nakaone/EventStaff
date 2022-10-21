@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<!-- GAS
+function doPost(e) {
+  Logger.log(e);
+  var name = e.parameter.name;
+  var hobby = e.parameter.hobby;
+  return ContentService.createTextOutput('私の名前は'+name+'、趣味は'+hobby);
+}
+-->
+<head>
+  <meta charset="UTF-8">
+  <title>doPostのテスト</title>
+</head>
+<body>
+  <h1>doPostのテスト（Form送信）</h1>
+  <form method="post" action="https://script.google.com/macros/s/AKfycbyRgrBJUDQjJqbr-kymxtFYV70eKE4tPAurzCpjIa6yEQ4l6X2OXBEsFiun09mYeW7-Rw/exec">
+    <p>
+      <label>名前 <input type="text" name="name"></label>
+    </p>
+    <p>
+      <label>趣味 <input type="text" name="hobby"></label>
+    </p>
+    <p>
+      <input type="submit" value="送信">
+    </p>
+  </form>
+</body>
+</html>
