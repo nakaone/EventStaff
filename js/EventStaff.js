@@ -29,6 +29,11 @@ const definition = {
           ]},
         ]},
         {tag:"div", class:"tr", children:[
+          {tag:"div",class:"td", variable:"参加"},
+          {tag:"select", class:"td status", name:"status00", opt:"未入場,入場済,退場済,不参加", variable:"状態"},
+          {tag:"select", class:"td fee", name:"fee00", opt:"未収,既収,免除", variable:"参加費"},
+        ]},
+        {tag:"div", class:"tr", children:[
           {tag:"div", class:"th vth", text:"キャンセル"},
           {tag:"div", class:"td", children:[
             {tag:"input", type:"checkbox", name:"cancel", checked:"取消"},
