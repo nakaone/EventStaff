@@ -194,15 +194,6 @@ const inputSearchKey = () => {  // 参加者の検索キーを入力
       func: 'search',
       key: strEl.value || arg,
     };
-    /*doPost(postData, (data) => {
-      if( data.length === 0 ){
-        alert("該当する参加者は存在しませんでした");
-      } else if( data.length > 1){
-        selectParticipant(data);  // 該当が複数件なら選択画面へ
-      } else {
-        editParticipant(data[0]);  // 該当が1件のみなら編集画面へ
-      }  
-    });*/
     doGet("?func=search&key=" + (strEl.value || arg),(data) => {
       if( data.length === 0 ){
         alert("該当する参加者は存在しませんでした");
@@ -262,7 +253,7 @@ const editParticipant = (arg) => {  // 検索結果の内容編集
     arg['登録日時'] = new Date(arg['登録日時']).toLocaleString('ja-JP');
     // 「取消」の文字列が入っていればtrue
     arg['取消'] = arg['取消'].length === 0 ? false : true;
-    ['①','②','③'].forEach(x => {
+    ['','①','②','③'].forEach(x => {
       if( arg[x+'状態'].length === 0 )
         arg[x+'状態'] = arg[x+'氏名'].length === 0 ? '未登録' : '未入場';
       if( arg[x+'参加費'].length === 0 )
@@ -279,7 +270,7 @@ const editParticipant = (arg) => {  // 検索結果の内容編集
 
     // 編集用URLをQRコードで表示
     // https://saitodev.co/article/QRCode.js%E3%82%92%E8%A9%A6%E3%81%97%E3%81%A6%E3%81%BF%E3%81%9F/
-    setQRcode('#editParticipant div',arg['編集用URL']);
+    setQRcode('#editParticipant .qrcode',arg['編集用URL']);
 
   console.log('editParticipant end.');
 }
@@ -288,29 +279,26 @@ const updateParticipant = () => {  // 参加者情報更新
   console.log('updateParticipant start.');
 
   const sList = {
-    name: '#editParticipant [name="name0_"] rb',
     status:'#editParticipant [name="status0_"]',
     fee:'#editParticipant [name="fee0_"]',
   };
 
-  let query = "?func=update&data=";
-
-  const data = {
-    "氏名":''
-  };
-
-  const rv = [];
-  for( let i=1 ; i<4 ; i++ ){
-    let r = {};
-    r.name = document.querySelector(sList.name.replace('_',i)).innerText;
-    let s = document.querySelector(sList.status.replace('_',i));
-    r.status = s.options[s.selectedIndex].value;
-    let f = document.querySelector(sList.fee.replace('_',i));
-    r.fee = f.options[f.selectedIndex].value;
-    rv.push(r);
+  const prefix = ['','①','②','③'];
+  let query = "?func=update&key=受付番号&value="
+    + Number(document.querySelector("#editParticipant .entryNo").innerText);
+  for( let i=0 ; i<4 ; i++ ){
+    const s = document.querySelector(sList.status.replace('_',i));
+    query += '&' + prefix[i] + '状態='
+      + s.options[s.selectedIndex].value;
+    const f = document.querySelector(sList.fee.replace('_',i));
+    query += '&' + prefix[i] + '参加費='
+      + f.options[f.selectedIndex].value;
   }
+  console.log(query);
 
-  console.log('updateParticipant end.',rv);
+  doGet(query,(result) => {
+    console.log('updateParticipant end.',JSON.stringify(result));
+  });
 }
 
 const showFormURL = () => { // 参加フォームURLのQRコード表示

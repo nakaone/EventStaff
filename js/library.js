@@ -7,13 +7,15 @@ const doGet = (query,callback) => {  // GASのdoGetを呼び出し、結果を�
   const endpoint =  //GASのAPIのURL。"https://script.google.com/macros/s/〜/exec"
     "https://script.google.com/macros/s/〜/exec"
     //.replace("〜",config.GASwebAPId)
-    .replace("〜","AKfycbx9wfFviwrj5vMtA1vmgjMUoSVwdyGpUukFB9PI_66HFQnZRC1rGaYxMWVJ91TZeW4vUQ")
+    .replace("〜","AKfycbwOniHTTXL9Ilq55csskVm2XXYlr0m0xYIlbjtw_qosH0-CxO7jRyIg3T4oFxIgJn_-eA")
     + query;
 
-  fetch(endpoint //,{
-  //  "method"     : "GET",
-  //  "mode"       : "no-cors",}
-  )  //APIを使って非同期データを取得する
+  fetch(endpoint,{
+    "method": "GET",
+    "mode": "no-cors",
+    //"Accept": "application/json",
+    "Content-Type": "application/x-www-form-urlencoded",
+  })
   .then(response => response.json())
   .then(data => {  // 成功した処理
     console.log('doGet data: type='+whichType(data)+', length='+data.length+'\n'+JSON.stringify(data));
