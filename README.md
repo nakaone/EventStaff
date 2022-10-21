@@ -284,46 +284,18 @@ QRコード作成時の注意： MDN「[JSON.parse() は末尾のカンマを許
 ### doPost: パラメータにより処理を分岐
 
 ```
-function doPost(arg) {
-  Logger.log('doPost start.',arg);
-
-  // == 内部関数定義 =====================================
-
-  // getData: 指定シートからデータ取得し、ハッシュにして変換して返す
-  const getData = (sheetName='マスタ') => {
-    const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
-    // JSONオブジェクトに変換する
-    const rows = sheet.getDataRange().getValues()
-      .filter(row => row[0]);  // 空白行は削除
-    const keys = rows.splice(0, 1)[0];  // ヘッダを一次元配列で取得
-    const data = rows.map(row => {  // [{ラベル1:値, ラベル2:値, ..},{..},..]形式
-      const obj = {};
-      row.map((item, index) => {
-        obj[String(keys[index])] = String(item);
-      });
-      return obj;
-    });
-    const rv = {rows:rows, keys:keys, data:data, sheet:sheet};
-    Logger.log(JSON.stringify(rv));
-    return rv;
-  };
-
-  // makeResultJSON: 返値オブジェクトから返却用JSONを生成
-  const makeResultJSON = (arg) => {  // 
-    return ContentService
-    .createTextOutput(JSON.stringify(arg, null, 2))
-    .setMimeType(ContentService.MimeType.JSON);
-  }
-
-  // == 主処理 ==========================================
+function doPost(e) {
+  Logger.log('doPost start.'+JSON.stringify(e));
 
   let result = {fuga:'hoge'}; // 返値の初期値
-  const dObj = getData(); // データをシートから取得
+  const dObj = getSheetData(); // データをシートから取得
+  //dObj.post = JSON.parse(e.postData.getDataAsString());
 
-  if( arg.parameter.key ){  // 該当者リストの作成
-    result = candidates(dObj,arg.parameter.key);
-  } else if( arg.parameter.id ){  // 状態・参加費の更新
-    result = updateParticipant(dObj,arg.parameter);
+  if( e.parameter.func === 'search' ){  // 該当者リストの作成
+    result = candidates(dObj,e.parameter.key);
+  } else if( e.parameter.func === 'update' ){  // 状態・参加費の更新
+    //result = updateParticipant(dObj);
+    result = updateSheetData(dObj,e.parameter);
   }
 
   // 結果確認
@@ -332,6 +304,110 @@ function doPost(arg) {
   // JSON文字列に変換して出力する
   Logger.log('doPost end.');
   return makeResultJSON(result);
+}
+```
+
+### getSheetData: 指定シートからデータ取得
+
+```
+const getSheetData = (sheetName='マスタ') => {  /* getSheetData: 指定シートからデータ取得
+  返値 = {
+    rows: 取得した生データ(二次元配列)
+    keys: ヘッダ行(1行目固定)の一次元配列
+    data: データ行を[{ラベル1:値, ラベル2:値, ..},{..},..]形式にした配列
+    sheet: getSheetで取得したシートのオブジェクト
+  };
+  */
+  Logger.log('getSheetData start. sheetName='+sheetName);
+
+  const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
+  // JSONオブジェクトに変換する
+  const rows = sheet.getDataRange().getValues()
+    .filter(row => row[0]);  // 空白行は削除
+  const keys = rows.splice(0, 1)[0];  // ヘッダを一次元配列で取得
+  const data = rows.map(row => {  // [{ラベル1:値, ラベル2:値, ..},{..},..]形式
+    const obj = {};
+    row.map((item, index) => {
+      obj[String(keys[index])] = String(item);
+    });
+    return obj;
+  });
+  const rv = {rows:rows, keys:keys, data:data, sheet:sheet};
+  Logger.log('getSheetData end.\n'+JSON.stringify(rv));
+  return rv;
+};
+```
+
+### updateSheetData: 状態・参加費の更新
+
+```
+const updateSheetData = (dObj,data) => {  /* シートを更新する
+  data = {
+    target:{
+      key: 更新対象のレコードを特定する為の項目名
+      value: キーの値
+    } ,
+    revice: [{
+      key: 更新対象の項目名
+      value: 更新後の値
+    },{},...]
+  }
+  result = [{
+    column: 更新対象項目
+    before: 更新前の値
+    after: 更新後の値
+  },{},..]
+  */
+  Logger.log('updateSheetData start. data='+JSON.stringify(data));
+
+  // 1.何行目のデータを更新するか特定する
+  const map = dObj.data.map(x => x[data.target.key]);
+  const rowNum = map.indexOf(String(data.target.value)) + 2;
+
+  // 2.更新対象行のデータをuArrに保存する
+  const uArr = dObj.rows[rowNum-2];
+  Logger.log('uArr = '+JSON.stringify(uArr));
+
+  // 3.uArrのデータを順次更新しながらログに記録、更新範囲をメモ
+  let maxColumn = 0;
+  let minColumn = 99999;
+  const log = [];
+  for( let i=0 ; i<data.revice.length ; i++ ){
+    // (1) 更新対象項目の列番号を特定、columnに保存
+    const column = dObj.keys.indexOf(data.revice[i].key);
+    // (2) >maxColumn or <minColumn ならmax/minを更新
+    maxColumn = column > maxColumn ? column : maxColumn;
+    minColumn = column < minColumn ? column : minColumn;
+    // (3) logに更新対象項目/更新前の値/更新後の値を保存
+    log.push({
+      column: data.revice[i].key,
+      before: uArr[column],
+      after: data.revice[i].value,
+    });
+    // (4) uArr[column]の値を更新
+    uArr[column] = data.revice[i].value;
+  }
+  Logger.log('uArr = '+JSON.stringify(uArr));
+
+  // uArrから更新範囲のデータを切り出して更新
+  const range = dObj.sheet.getRange(rowNum, minColumn+1, 1, maxColumn-minColumn+1);
+  const sv = uArr.splice(minColumn, maxColumn-minColumn+1);
+  Logger.log('sv = '+JSON.stringify(sv));
+  range.setValues([sv]);
+
+  Logger.log('updateSheetData end.'+JSON.stringify(log));
+  return log;
+}
+```
+
+### makeResultJSON: 返値オブジェクトから返却用JSONを生成
+
+```
+// makeResultJSON: 返値オブジェクトから返却用JSONを生成
+const makeResultJSON = (arg) => {
+  return ContentService
+  .createTextOutput(JSON.stringify(arg, null, 2))
+  .setMimeType(ContentService.MimeType.JSON);
 }
 ```
 
@@ -356,158 +432,20 @@ const candidates = (dObj,key) => {  // 該当者リストの作成
 }
 ```
 
-### updateParticipant: 状態・参加費の更新
-
-```
-const updateParticipant = (dObj,v) => {   // 状態・参加費の更新
-  Logger.log('updateParticipant start. v='+JSON.stringify(v));
-
-  const map = dObj.data.map(x => x['受付番号']);
-  const rowNum = map.indexOf(String(v.id)) + 2;
-  const a1 = "AB_:AI_".replace(new RegExp('_','g'),rowNum);
-  Logger.log('map = '+JSON.stringify(map)+'\nrowNum = '+rowNum+'\na1 = '+a1);
-
-  const dArr = [  // 設定する値の配列を作成
-    v.f0 || '', v.s0 || '',
-    v.f1 || '', v.s1 || '',
-    v.f2 || '', v.s2 || '',
-    v.f3 || '', v.s3 || '',
-  ];
-
-  dObj.sheet.getRange(a1).setValues([dArr]);
-  Logger.log('updateParticipant end');
-}
-```
-
 ### doPostTest: テスト用スクリプト
 
 ```
 const doPostTest = () => {
-  doPost({parameter:{
-//    key:12,
-//    key:'ナ',
-    id: 12,
-    f0: '無し',
-    s0: '不参加',
-    f1: '免除',
-    s1: '入場済',
-    f2: '既収',
-    s2: '退場済',
-//    f3: '無し',
-//    s3: '未登録',
-  }});
+  const e = {
+    //parameter: {func: "search",key: "12",},
+    //parameter: {func: "search",key: "ナ",},
+    parameter: {func: "update", target:{key:"受付番号",value:"12"},revice:[{key:"参加費",value:"ほげ"},{key:"③状態",value:"ふが"}]},
+  };
+ doPost(e);
 }
 ```
 
-
-### (1) doGet: 受付画面からの問合せに該当者情報を提供
-
-<details><summary>source</summary>
-
-```javascript
-function doGet(e) { // 受付画面からの問合せに該当者情報を提供
-  console.log(JSON.stringify(e));
-  // GASでSpreadSheetにあっさりアクセス
-  // https://zenn.dev/sdkfz181tiger/articles/82a91f8bbcc734
-  
-  // スプレッドシートにアクセス、「マスタ」からデータ取得
-  const sheet = SpreadsheetApp.getActive().getSheetByName("マスタ");
-  // JSONオブジェクトに変換する
-  const rows = sheet.getDataRange().getValues();
-  const keys = rows.splice(0, 1)[0];  // ヘッダを一次元配列で取得
-  const data = rows.map(row => {  // [{ラベル1:値, ラベル2:値, ..},{..},..]形式
-    const obj = {};
-    row.map((item, index) => {
-      obj[String(keys[index])] = String(item);
-    });
-    return obj;
-  });
-
-  // 条件に合うレコードを抽出
-  const dObj = [];
-  const m = e.parameter.key.match(/^n(\d+)c([0|1])s([1-5]{3})f([1-4]{3})m(.*)$/);
-  console.log('l.161',m);
-  //if( e.parameter.key ){  // 受付番号or氏名読みが指定された場合
-  if( !m ){  // 受付番号or氏名読みが指定された場合
-    const matchKana = e.parameter.key.match(/^[ァ-ヾ　]+$/);
-    const matchNum  = e.parameter.key.match(/^[0-9]+$/);
-    if( matchKana || matchNum ){
-      console.log('key = '+e.parameter.key);
-      for( let i=0 ; i<data.length ; i++ ){
-        console.log(i,
-          Number(data[i]['受付番号']),
-          Number(e.parameter.key),
-          data[i]['読み'].indexOf(e.parameter.key)
-        );
-        if( Number(data[i]['受付番号']) === Number(e.parameter.key)
-          || data[i]['読み'].indexOf(e.parameter.key) === 0 ){
-          dObj.push(data[i]);
-          console.log('pushed!',data[i]);
-        }
-      }
-      console.log('dObj',dObj);
-    }
-  } else {  // 状態・参加費情報が指定された場合
-    // n:受付番号(no), c:取消(cancel), m:備考(memo),
-    // s1/s2/s3:状態(status), f1/f2/f3:参加費(fee)
-    const map = {
-      label:['①','②','③'],
-      status:{'1':'未入場','2':'入場済','3':'退場済','4':'不参加','5':'未登録'},
-      fee:{'1':'未収','2':'既収','3':'免除','4':'無し'},
-    }
-    const o = {
-      '受付番号': Number(m[1]),
-      '取消': m[2] === '1' ? '全員キャンセル' : '',
-      '備考': m[5],
-    };
-    for( let i=0 ; i<map.label.length ; i++ ){
-      o[map.label[i]+'状態'] = map.status[m[3].substr(i,1)];
-      o[map.label[i]+'参加費'] = map.fee[m[4].substr(i,1)];
-    }
-    dObj.push(o);
-    console.log('l.199 dObj',dObj);
-  }
-
-  // JSON文字列に変換して出力する
-  const json = JSON.stringify(dObj, null, 2);
-  console.log('l.205',json)
-  const type = ContentService.MimeType.JSON;
-  return ContentService.createTextOutput(json).setMimeType(type);
-}
-```
-
-</details>
-
-参考：[GASでSpreadSheetにあっさりアクセス](https://zenn.dev/sdkfz181tiger/articles/82a91f8bbcc734)
-
-以下のウェブアプリURLの末尾に"?key=xxxx"を付加。xxxxは受付番号または氏名読み(前方一致)。
-[例] ウェブアプリ : https://script.google.com/macros/s/〜/exec?key=わたなべ</p>
-
-<details><summary>結果として渡されるJSONサンプル</summary>
-
-```
-[
-  {
-    '登録日時': 'Sun Oct 09 2022 14:09:19 GMT+0900 (日本標準時)',
-    'メール': 'nakaone.kunihiro@gmail.com',
-    '氏名': '国生　さゆり','読み': 'コクショウ　サユリ','参加': '参加する',
-    '①氏名': '','①読み': '','①所属': '',
-    '②氏名': '','②読み': '','②所属': '',
-    '③氏名': '','③読み': '','③所属': '',
-    '連絡先': '','引取者': '','備考': '','取消': '',
-    '受付番号': '10','編集用URL': 'https://〜',
-    '担当': '','課金': '','非課金': '','免除': '','用紙番号': '',
-    '申請数(小学生以上)': '1','申請数(未就学児)': '0',
-    '参加費': '','状態': '','①参加費': '','①状態': '','②参加費': '','②状態': '','③参加費': '','③状態': '',
-    '参加数(小学生以上)': '','参加数(未就学児)': ''
-  }
-]
-```
-
-</details>
-
-
-### (2) onFormSubmit: フォーム登録時、参加者にメールを自動返信
+### onFormSubmit: フォーム登録時、参加者にメールを自動返信
 
 <details><summary>source</summary>
 
@@ -752,45 +690,20 @@ getEditResponseUrl()他のメソッドの詳細については、Google公式 [C
 
 
 
-### (3) createQrCode: 渡された文字列からQRコード(Blob)を生成
+### createQrCode: 渡された文字列からQRコード(Blob)を生成
 
 #### 引数・戻り値
 
 参考：[Google Apps ScriptでQRコードを生成してみる](https://note.com/himajin_no_asobi/n/n51de21bf73e5)
 
-#### デプロイ履歴
+### whichType: 渡された変数の型を判定
 
-※タイトルは適宜、gitと同様に命名
-
-<details><summary>history</summary>
-
-  <pre>
-    バージョン 3（10月9日 18:00）
-    デプロイ ID
-    AKfycbwLUU_XxDtn9sDjTZccuIfM9Od6DdjYEX7m2QkgWi73d7fjNEcCVGIjD7OmDkBDv4ihog
-    ウェブアプリ
-    URL
-    https://script.google.com/macros/s/AKfycbwLUU_XxDtn9sDjTZccuIfM9Od6DdjYEX7m2QkgWi73d7fjNEcCVGIjD7OmDkBDv4ihog/exec
-  </pre>
-  <pre>
-    バージョン 2（10月9日 13:44）
-    デプロイ ID
-    AKfycbzvJ76fOmgoB70kpkm4-TXUCJNfS7G1j_JTev-inCLe4kxEYzQ33sHhQvBZLmzOYpFT
-    ウェブアプリ
-    URL
-    https://script.google.com/macros/s/AKfycbzvJ76fOmgoB70kpkm4-TXUCJNfS7G1j_JTev-inCLe4kxEYzQ33sHhQvBZLmzOYpFT/exec
-  </pre>
-  <pre>
-    バージョン 1（10月9日 13:37）
-    デプロイ ID
-    AKfycbx_lxQmFxZ20dfK7TqdbE0WSnIfBcNRgVEM9l_V9-8r-nb3mzlmLS6HS4-1EJxUVHS1jA
-    ウェブアプリ
-    URL
-    https://script.google.com/macros/s/AKfycbx_lxQmFxZ20dfK7TqdbE0WSnIfBcNRgVEM9l_V9-8r-nb3mzlmLS6HS4-1EJxUVHS1jA/exec
-    </pre>
-
-</details>
-
+```
+const whichType = (arg = undefined) => {
+  return arg === undefined ? 'undefined'
+   : Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
+}
+```
 
 ## Ⅲ.3.受付担当者画面(html)
 
