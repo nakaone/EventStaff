@@ -2,22 +2,14 @@
   汎用ライブラリ
 =================================================== */
 
-const doGet = (str,callback) => {  // GASのdoGetを呼び出し、結果を表示する
-  console.log("doGet start. str="+str);
+const doGet = (query,callback) => {  // GASのdoGetを呼び出し、結果を表示する
+  console.log("doGet start. query="+query);
   const endpoint =  //GASのAPIのURL。"https://script.google.com/macros/s/〜/exec"
     "https://script.google.com/macros/s/〜/exec"
-    .replace("〜",config.GASwebAPId)
-    + str;
+    //.replace("〜",config.GASwebAPId)
+    .replace("〜","AKfycbx9wfFviwrj5vMtA1vmgjMUoSVwdyGpUukFB9PI_66HFQnZRC1rGaYxMWVJ91TZeW4vUQ")
+    + query;
 
-  // エラー：CORSに引っかかってGASまで届かない
-  // Access to fetch at 'https://script.google.com/macros/s/〜/exec?key=xxxx'
-  // from origin 'null' has been blocked by CORS policy:
-  // No 'Access-Control-Allow-Origin' header is present on the requested resource.
-  // If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
-
-  // 対応：fetchのパラメータに"mode:'no-cors'"を追加
-  // [備忘録]　GASのdoPost()にJavaScriptからJSONを渡す方法
-  // https://qiita.com/khidaka/items/ebf770591100b1eb0eff
   fetch(endpoint //,{
   //  "method"     : "GET",
   //  "mode"       : "no-cors",}
@@ -28,6 +20,34 @@ const doGet = (str,callback) => {  // GASのdoGetを呼び出し、結果を表�
     callback(data);
   });
   console.log("doGet end.");
+}
+
+const doPost = (obj,callback) => {
+  // [備忘録]　GASのdoPost()にJavaScriptからJSONを渡す方法
+  // https://qiita.com/khidaka/items/ebf770591100b1eb0eff
+  //const URL = config.GASwebAPId;
+  const URL = "https://script.google.com/macros/s/AKfycbx9wfFviwrj5vMtA1vmgjMUoSVwdyGpUukFB9PI_66HFQnZRC1rGaYxMWVJ91TZeW4vUQ/exec";
+  const postData = {
+    "method"     : "POST",
+    "mode"       : "no-cors",
+    "Content-Type" : "application/x-www-form-urlencoded",
+    "body" : JSON.stringify(obj)
+  };
+
+  fetch(URL,postData)
+  .then(response => response.json)  //  JavaScript のオブジェクトを生成
+  .then(data => {  // 成功した処理
+    console.log('doPost success.\n'
+      + 'type=' + whichType(data)
+      + '\nlength=' + data.length
+      + '\n' + JSON.stringify(data)
+      , data
+    );
+    callback(data);
+  })
+  .finally(() => {
+    console.log('doPost end.');    
+  })
 }
 
 const genChild = (template,dObj,pFP) => {  /* テンプレートに差込データをセットした要素を生成

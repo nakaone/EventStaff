@@ -281,6 +281,21 @@ QRコード作成時の注意： MDN「[JSON.parse() は末尾のカンマを許
 ⇒ d列に"label:'value',"の文字列を作成し、arrayformula(concatenate(d:d))とすると末尾にカンマが入る。
 ついでに単一引用符も許されないので、要注意。
 
+### doGet
+
+```
+  // エラー：CORSに引っかかってGASまで届かない
+  // Access to fetch at 'https://script.google.com/macros/s/〜/exec?key=xxxx'
+  // from origin 'null' has been blocked by CORS policy:
+  // No 'Access-Control-Allow-Origin' header is present on the requested resource.
+  // If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
+
+  // 対応：fetchのパラメータに"mode:'no-cors'"を追加
+  // [備忘録]　GASのdoPost()にJavaScriptからJSONを渡す方法
+  // https://qiita.com/khidaka/items/ebf770591100b1eb0eff
+```
+
+
 ### doPost: パラメータにより処理を分岐
 
 ```

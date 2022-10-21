@@ -1,7 +1,5 @@
-const config = {
-  qrSize: Math.ceil(document.body.clientWidth * 0.8), // QRコードのサイズ
-  checkImage: false,  // checkImage(QRコード撮影)実行可能フラグ。永久ループ防止用
-  viewMonitor: true,  // checkImage実行時、モニタ画面を表示するかどうか
+const config = {}
+const definition = {
   editGuestTemplate:  /* 一行分のデータに対する文書構造の定義
     tag string 1 タグ指定(必須)。"text"の場合は文字列と看做し、createTextNodeで追加する
     children [object] 0..1 子要素の定義。childrenとtextは排他
@@ -112,9 +110,6 @@ const config = {
 const changeScreen = (scrId='home',titleStr='お知らせ') => {  // 表示画面の切り替え
   console.log("changeScreen start. scrId="+scrId);
 
-  // 画面遷移の指示がある->QRコード撮影はキャンセル
-  config.checkImage = false;
-
   // 一度全部隠す
   toggleMenu(false);
   const scrList = document.querySelectorAll('.screen');
@@ -183,12 +178,27 @@ const inputSearchKey = () => {  // 参加者の検索キーを入力
 
   // スキャンまたは値入力時の動作を定義
   const strEl = document.querySelector('#inputSearchKey input');
+
+  // スキャナから呼ばれる場合はargが存在、input欄の入力から呼ばれる場合は不存在
   const callback = (arg) => {
     console.log('inputSearchKey.callback start.',arg);
     changeScreen('loading');
     document.querySelector('#inputSearchKey .scanner')
       .innerHTML = ''; // 作業用DIVを除去してカメラでのスキャンを停止
-    doGet("?key=" + (strEl.value || arg),(data) => {
+    const postData = {
+      func: 'search',
+      key: strEl.value || arg,
+    };
+    /*doPost(postData, (data) => {
+      if( data.length === 0 ){
+        alert("該当する参加者は存在しませんでした");
+      } else if( data.length > 1){
+        selectParticipant(data);  // 該当が複数件なら選択画面へ
+      } else {
+        editParticipant(data[0]);  // 該当が1件のみなら編集画面へ
+      }  
+    });*/
+    doGet("?func=search&key=" + (strEl.value || arg),(data) => {
       if( data.length === 0 ){
         alert("該当する参加者は存在しませんでした");
       } else if( data.length > 1){
@@ -255,7 +265,7 @@ const editParticipant = (arg) => {  // 検索結果の内容編集
     });
 
     // 要素の作成とセット
-    let o = genChild(config.editGuestTemplate,arg,'root');  // 全体の定義と'root'を渡す
+    let o = genChild(definition.editGuestTemplate,arg,'root');  // 全体の定義と'root'を渡す
     if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
       throw o.result;
     } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
@@ -269,13 +279,19 @@ const editParticipant = (arg) => {  // 検索結果の内容編集
   console.log('editParticipant end.');
 }
 
-const updateParticipant = () => {
+const updateParticipant = () => {  // 参加者情報更新
   console.log('updateParticipant start.');
 
   const sList = {
     name: '#editParticipant [name="name0_"] rb',
     status:'#editParticipant [name="status0_"]',
     fee:'#editParticipant [name="fee0_"]',
+  };
+
+  let query = "?func=update&data=";
+
+  const data = {
+    "氏名":''
   };
 
   const rv = [];
@@ -300,8 +316,6 @@ const showFormURL = () => { // 参加フォームURLのQRコード表示
   // 申請フォームのQRコードを表示
   setQRcode('#showFormURL div',{
     text: "https://docs.google.com/forms/d/" + config.formId + "/edit",
-    width: config.qrSize,
-    height: config.qrSize,
   });
   console.log("showFormURL end.");
 }
