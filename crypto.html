@@ -70,14 +70,13 @@ const upload = () => {
   //const decrypted = CryptoJS.AES.decrypt(encrypted,passPhrase);
   //const txt_dexrypted = decrypted.toString(CryptoJS.enc.Utf8);
 
-  doGet(encrypted);
-
-  // 表示
-  /*document.getElementById("output").innerHTML = 
+  doGet(encrypted,(retult) => {
+    document.getElementById("output").innerHTML = 
     "key : " + passPhrase +"<br />" +
     "data : " + data + "<br />" +
     "encrypted : " + encrypted + "<br />" +
-    "decrypted : " + txt_dexrypted;*/
+    "decrypted : " + JSON.stringify(result);
+  });
 
 }
 
