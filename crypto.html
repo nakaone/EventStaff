@@ -23,31 +23,6 @@
     <div class="encrypted">暗号化：<p></p></div>
     <div class="decrypted">復号化：<p></p></div>
   </div>
-  <!--
-  <div id="esTest">
-    <p>
-      <label>受付番号</label>
-      <input type="text" name="受付番号" placeholder="hoge" />
-    </p>
-    <p>
-      <label>氏名</label>
-      <input type="text" name="氏名" placeholder="fuga" />
-    </p>
-    <button onclick="upload()">upload</button>
-  </div>
-  <p>
-    <input type="text" name="data" id="data" placeholder="" value="Hello World!">
-    <label for="">データ / Data</label>
-  </p>
-  <p>
-    <input type="text" name="pass_phrase" id="pass_phrase" value="0123456789ABCDEF0123456789ABCDEF">
-    <label for="">パスフレーズ / Path Phrase</label>
-  </p>
-  <p>
-    <input type="submit" id="execute" value="実行">
-  </p>
-  <div id="output"></div>
-  -->
 </body>
 <script type="text/javascript">
 const convert = () => {
@@ -78,88 +53,5 @@ const convert = () => {
   document.querySelector('#crypto .encrypted p').innerText = encrypted;
   document.querySelector('#crypto .decrypted p').innerText = txt_dexrypted;
 }
-
-
-
-function execute () {
-
-// パスフレーズ（暗号鍵）
-let passPhrase = document.getElementById('pass_phrase').value;
-// 暗号化したい元のデータ
-let data = document.getElementById('data').value;
-let utf8_plain = CryptoJS.enc.Utf8.parse(data);
-// 暗号化
-let encrypted = CryptoJS.AES.encrypt( utf8_plain, passPhrase );
-// 復号化
-let decrypted = CryptoJS.AES.decrypt( encrypted , passPhrase );
-let txt_dexrypted = decrypted.toString(CryptoJS.enc.Utf8);
-
-// 表示
-document.getElementById("output").innerHTML = 
-  "key : " + passPhrase +"<br />" +
-  "data : " + data + "<br />" +
-  "encrypted : " + encrypted + "<br />" +
-  "decrypted : " + txt_dexrypted;
-}
-
-/*
-const doGet = (str) => {
-  const url = "https://script.google.com/macros/s/AKfycbzuVUrnF-tsXpr9zSBmkiQ7t0oi8liUPGSA8Q7d0IvCQSBe_5bt1vFQaRbsXGlM7r6suQ/exec"
-    + '?v=' + str;
-  console.log('url='+url);
-  //var response = UrlFetchApp.fetch(url);
-  //Logger.log(response.getContentText());
-  fetch(url, {
-    //"method": "GET",
-    "mode": "no-cors",
-    //"Accept": "application/json",
-    //"Content-Type": "application/x-www-form-urlencoded",
-  })
-  .then(response => response.json())
-  .then(data => {  // 成功した処理
-    console.log('doGet data: type='+whichType(data)+', length='+data.length+'\n'+JSON.stringify(data));
-    //callback(data);
-  });
-}
-
-const upload = () => {
-  const obj = {
-    "受付番号": document.querySelector('[name="受付番号"]').value,
-    "氏名": document.querySelector('[name="氏名"]').value,
-  }
-  console.log(obj);
-
-  const passPhrase = "Ku2H!r0k0";
-  const data = JSON.stringify(obj);
-  const utf8_plain = CryptoJS.enc.Utf8.parse(data);
-  const encrypted = CryptoJS.AES.encrypt(utf8_plain,passPhrase);
-  const query = encodeURI(encrypted);
-  //const decrypted = CryptoJS.AES.decrypt(encrypted,passPhrase);
-  //const txt_dexrypted = decrypted.toString(CryptoJS.enc.Utf8);
-  document.getElementById('output').innerHTML
-    = 'data: ' + data + '<br>'
-    + 'encrypted: ' + encrypted + '<br>'
-    + 'query: ' + query;
-
-  doGet(query,(retult) => {
-    document.getElementById("output").innerHTML = 
-    "key : " + passPhrase +"<br />" +
-    "data : " + data + "<br />" +
-    "encrypted : " + encrypted + "<br />" +
-    "query : " + query + "<br />" +
-    "decrypted : " + JSON.stringify(result);
-  });
-
-}
-
-
-
-window.onload = () => {
-  let buttonExecute = document.getElementById('execute')
-  buttonExecute.addEventListener('click', () => {
-    execute()
-  });
-}
-*/
 </script>
 </html>
