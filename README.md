@@ -333,7 +333,7 @@ function doGet(e) {
   console.log(e);
 
   const cObj = new cipher(passPhrase);
-  arg = JSON.parse(cObj.decrypt(e.parameter.v));
+  arg = cObj.decrypt(e.parameter.v);
   console.log(arg+', '+whichType(arg));
 
   let rv = null;
@@ -373,21 +373,48 @@ const doGetTest = () => {
   }
 }
 
-class cipher {
+class cipher {  // 変数をAES暗号化文字列に変換
+
   constructor(passPhrase){
     this.passPhrase = passPhrase;
   }
+
   encrypt(arg){
     const str = JSON.stringify(arg);
-    const utf8_plain = CryptoJS.enc.Utf8.parse(str);
-    const encrypted = CryptoJS.AES.encrypt( utf8_plain, this.passPhrase );  // Obj
-    const encryptResult = encrypted.toString();
+    console.log('cipher.encript start.\ntype='+whichType(arg)+'\n'+str);
+
+    //const utf8_plain = CryptoJS.enc.Utf8.parse(str);
+    const encrypted = CryptoJS.AES.encrypt( str, this.passPhrase );  // Obj
+    // crypto-jsで複合化するとMalformed UTF-8 data になった件
+    // https://zenn.dev/naonao70/articles/a2f7df87f9f736
+    const encryptResult = CryptoJS.enc.Base64
+      .stringify(CryptoJS.enc.Latin1.parse(encrypted.toString()));
+
+    console.log("cipher.encript end.\n"+encryptResult);
     return encryptResult;
   }
+
   decrypt(arg){
-    const decrypted = CryptoJS.AES.decrypt( arg , this.passPhrase );
+    console.log('cipher.decrypt start.\n'+arg);
+    const decodePath = decodeURIComponent(arg);
+    const data = CryptoJS.enc.Base64
+      .parse(decodePath.toString()).toString(CryptoJS.enc.Latin1);
+    const bytes = CryptoJS.AES.decrypt(data, this.passPhrase)
+      .toString(CryptoJS.enc.Utf8)
+
+    let rv = null;
+    try {
+      rv = JSON.parse(bytes);
+    } catch(e) {
+      rv = bytes;
+    } finally {
+      console.log('cipher.decrypt end.\ntype='+whichType(rv)+'\n',rv);
+      return rv;
+    }
+
+    /*const decrypted = CryptoJS.AES.decrypt( arg , this.passPhrase );
     const txt_dexrypted = decrypted.toString(CryptoJS.enc.Utf8);
-    return txt_dexrypted;
+    return txt_dexrypted;*/
   }
 }
 
