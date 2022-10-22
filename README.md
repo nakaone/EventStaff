@@ -285,6 +285,37 @@ QRコード作成時の注意： MDN「[JSON.parse() は末尾のカンマを許
 
 - URLのクエリ文字列はCriptoJSで暗号化する。暗号化はHTML(crypto.html, index.html)とGAS双方で使える必要があるが、CriptoJS 4.0.0以上はGASで使えないため、[3.3.0のソース](https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.3.0/crypto-js.min.js)をGASに貼り付ける。
 
+```
+class cipher {
+  constructor(passPhrase){
+    this.passPhrase = passPhrase;
+  }
+  encrypt = (arg) => {
+    const str = JSON.stringify(arg);
+    const utf8_plain = CryptoJS.enc.Utf8.parse(str);
+    const encrypted = CryptoJS.AES.encrypt( utf8_plain, this.passPhrase );  // Obj
+    const encryptResult = encrypted.toString();
+    return encryptResult;
+  }
+  decrypt = (arg) => {
+    const decrypted = CryptoJS.AES.decrypt( arg , this.passPhrase );
+    const txt_dexrypted = decrypted.toString(CryptoJS.enc.Utf8);
+    return txt_dexrypted;
+  }
+}
+
+// 以下 cipher 用テスト
+const testData = [0,'abc',true,[1,2,3],{a:10,b:20},new Date()];
+const passPhrase = 'Oct.22,2022';
+for( let x in testData ){
+  const o = new cipher(passPhrase);
+  const e = o.encrypt(testData[x]);
+  const d = o.decrypt(e);
+  const j = JSON.parse(d);
+  console.log(testData[x],e,whichType(e),d,whichType(d),j,whichType(j));
+}
+```
+
 <details><summary>着手初日(10/21)夜、四苦八苦して諦めた段階のGASソース</summary>
 
 ```
