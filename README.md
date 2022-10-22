@@ -281,6 +281,61 @@ QRコード作成時の注意： MDN「[JSON.parse() は末尾のカンマを許
 ⇒ d列に"label:'value',"の文字列を作成し、arrayformula(concatenate(d:d))とすると末尾にカンマが入る。
 ついでに単一引用符も許されないので、要注意。
 
+### crypto
+
+- URLのクエリ文字列はCriptoJSで暗号化する。暗号化はHTML(crypto.html, index.html)とGAS双方で使える必要があるが、CriptoJS 4.0.0以上はGASで使えないため、[3.3.0のソース](https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.3.0/crypto-js.min.js)をGASに貼り付ける。
+
+<details><summary>着手初日(10/21)夜、四苦八苦して諦めた段階のGASソース</summary>
+
+```
+function doGet(e) {
+  console.log(e);
+
+  const passPhrase = "Ku2H!r0k0";
+  const data = e.parameter.v;
+  const decrypted = CryptoJS.AES.decrypt(data,passPhrase);
+  const txt_dexrypted = decrypted.toString(CryptoJS.enc.Utf8);
+  const decoded = decodeURI(txt_dexrypted);
+  const dObj = JSON.parse(decoded);
+  dObj['受付番号'] += 'fuga';
+  dObj['氏名'] += 'hoge';
+  Logger.log('dObj='+JSON.stringify(dObj));
+
+  return ContentService
+  .createTextOutput(JSON.stringify(dObj, null, 2))
+  .setMimeType(ContentService.MimeType.JSON);
+}
+
+const test = () => {
+  //crypto-jsで複合化するとMalformed UTF-8 data になった件
+  //https://zenn.dev/naonao70/articles/a2f7df87f9f736
+  const e = {parameter:{v:"U2FsdGVkX186sBdfV2zo+cXkBX22SwdVxWTVNLwq6gPYSKvzjagfxJJJBYxC8N4Q/pWZRSC/O6soaKDhQ9NEjbhsHD8K5cesc4Cxtxtcsko="}};
+  const rv = doGet(e);
+  Logger.log(JSON.parse(rv.getContent()));
+}
+
+
+const cryptTest = () => {
+  const passPhrase = "Ku2H!r0k0";
+  const data = JSON.stringify({a:10,b:20});
+  Logger.log(data);
+  const utf8_plain = CryptoJS.enc.Utf8.parse(data);
+  Logger.log(utf8_plain);
+  const encrypted = CryptoJS.AES.encrypt(utf8_plain,passPhrase);
+  Logger.log(encrypted);
+  const decrypted = CryptoJS.AES.decrypt(encrypted,passPhrase);
+  Logger.log(decrypted);
+  const txt_dexrypted = decrypted.toString(CryptoJS.enc.Utf8);
+  Logger.log(txt_dexrypted);
+
+}
+
+//== https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.3.0/crypto-js.min.js
+(後略)
+```
+
+</details>
+
 ### doGet
 
 ```
@@ -819,8 +874,49 @@ const delDiv = () => {
 
 ### スマホの開発者画面を参照
 
+[chrome://inspect/#devices](chrome://inspect/#devices)を開く
+
 - [Android実機で Chrome の開発者ツールを開く＆デバッグする方法](https://pisuke-code.com/android-use-chrome-devtools/)
 - Android側でのUSB接続許可：[Android デバイスで USB デバッグを有効にする](https://www.embarcadero.com/starthere/xe5-2/mobdevsetup/android/ja/enabling_usb_debugging_on_an_android_device.html)
+
+### GASでのログ参照方法
+
+GASのdoPostはなぜかconsole.logを入れたとしてもGASのExecutions上でログが取得できない。これを参照する方法。
+
+参考：[Google Apps Scriptでトリガー実行（doGet,doPost）のログを表示するにはGCPプロジェクトに紐付ける必要があるらしい](https://ryjkmr.com/google-apps-script-console-log/)
+
+- ログの設定
+  - GCPでの作業
+    - 新規プロジェクトの作成
+      - GCPコンソールのプロジェクト選択欄で「新しいプロジェクト」を選択
+      - 「プロジェクトの選択」画面で「新しいプロジェクト」を選択
+      - 「新しいプロジェクト」画面でプロジェクト名を付けて「作成」をクリック  
+        `プロジェクト名：EventStaff  場所：組織なし`
+    - 0Auth同意
+      - APIとサービス > 0Auth同意画面
+      - 0Auth同意画面で「User Type : 外部」を設定して「作成」
+      - アプリ登録の編集①0Auth同意画面  
+        以下の3項目だけ設定
+        ```
+        アプリ名：EventStaff
+        ユーザーサポートメール：shimokitasho.oyaji@gmail.com
+        デベロッパーの連絡先：同上
+        ```
+      - アプリ登録の編集②スコープ：特に設定なし
+      - アプリ登録の編集③テストユーザ：特に設定なし
+      - アプリ登録の編集④概要：特に設定なし
+    - コンソール他で表示されるプロジェクト番号をコピー
+  - GASでの作業
+    - Apps Scriptコンソール > プロジェクトの設定(歯車) > プロジェクトを変更
+    - 拡張機能 > Apps Script
+    - GASのプロジェクト設定で「プロジェクト番号」をペースト、「プロジェクトの変更」をクリック
+    - GCPプロジェクト画面で「プロジェクトを変更」をクリック
+    - 改めてデプロイ(新規)を実行
+- ログの参照
+  - https://console.cloud.google.com/logs/
+  - GCPダッシュボード > モニタリング > 「→[モニタリング]に移動」 > 画面右上のLOGGING  
+    GASコンソール「実行数」から「Cloudのログ」を選択しても表示されない
+
 
 ### スプレッドシート上でQRコード作成時の注意
 
