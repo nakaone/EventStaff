@@ -95,12 +95,18 @@ class cipher {
 // 以下 cipher 用テスト
 const testData = [0,'abc',true,[1,2,3],{a:10,b:20},new Date()];
 const passPhrase = 'Oct.22,2022';
-for( let x in testData ){
-  const o = new cipher(passPhrase);
-  const e = o.encrypt(testData[x]);
-  const d = o.decrypt(e);
-  const j = JSON.parse(d);
-  console.log(testData[x],e,whichType(e),d,whichType(d),j,whichType(j));
+const cipherTest = () => {
+  for( let x in testData ){
+    const o = new cipher(passPhrase);
+    const e = o.encrypt(testData[x]);
+    const d = o.decrypt(e);
+    const j = JSON.parse(d);
+    console.log(testData[x],e,whichType(e),d,whichType(d),j,whichType(j));
+  }
 }
+
+cipherTest();
+
+
 </script>
 </html>
