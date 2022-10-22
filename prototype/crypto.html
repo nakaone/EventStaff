@@ -151,28 +151,40 @@ const doGet = (func='post',data,callback) => {
     console.log('endpoint='+endpoint);
 
   // fetchのオプション指定
+  // MDN fetch() : https://developer.mozilla.org/en-US/docs/Web/API/fetch
+  // GoogleスプレッドシートをGASとJavaScriptで取得してサイトに表示する方法
+  // https://ayumitk.com/ja/blog/fetch-and-display-google-sheets-data-on-your-website-with-gas-and-javascript/
   const opt = {
     "method": "GET",
-    "mode": "no-cors",
+    //"mode": "no-cors",
     //"Accept": "application/json",
-    //"Content-Type": "application/x-www-form-urlencoded",
+    //"headers": {
+      //"Content-Type": "text/plane",
+      //"Content-Type": "application/x-www-form-urlencoded",
+    //},
+    //"body": 
   }
 
   // GASからの返信を元にcallbackを呼び出し
   fetch(endpoint,opt)
   .then(response => {
-    console.log('response',response);
-    return response.json();
-  }).then(r => callback(r));  // 成功した処理
+    const rv = response.json();
+    console.log(response,rv);
+    return rv;
+  })
+  .then(data => {
+    console.log(data);
+    callback(data);
+  });  // 成功した処理
 
   console.log("doGet end.");
 }
 const doGetTestData = [
   {from:'あ',to:'xyz',message:'じゅげむ'},
-  //{from:'い',to:'え',message:'ふが'},
-  //{from:'う',to:'/+!',message:'ほげ'},
-  //{from:'abc',to:'-',message:'いくら丼'},
-  //{from:'0123',to:'スタッフ',message:'食べたい'},
+  {from:'い',to:'え',message:'ふが'},
+  {from:'う',to:'/+!',message:'ほげ'},
+  {from:'abc',to:'-',message:'いくら丼'},
+  {from:'0123',to:'スタッフ',message:'食べたい'},
 ]
 const doGetTest = () => {
   for( let i=0 ; i<doGetTestData.length ; i++ ){
@@ -180,7 +192,7 @@ const doGetTest = () => {
     doGet('post',doGetTestData[i],r => {
       console.log('GAS result',r);
       const e = document.getElementById('result');
-      e.innerHTML += '<p>' + r + '</p><hr />';
+      e.innerHTML += '<p>' + JSON.stringify(r) + '</p><hr />';
     });
   }
 }
