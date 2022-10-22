@@ -16,6 +16,14 @@
 </head>
 
 <body>
+  <div id="crypto">
+    <h1>指定文字列の暗号化/復号</h1>
+    <p><label>暗号鍵</label><input type="text" name="key" onchange="convert()" value="Oct.22,2022" /></p>
+    <p><label>文字列</label><input type="text" name="str" onchange="convert()" /></p>
+    <div class="encrypted">暗号化：<p></p></div>
+    <div class="decrypted">復号化：<p></p></div>
+  </div>
+  <!--
   <div id="esTest">
     <p>
       <label>受付番号</label>
@@ -39,8 +47,40 @@
     <input type="submit" id="execute" value="実行">
   </p>
   <div id="output"></div>
+  -->
 </body>
 <script type="text/javascript">
+const convert = () => {
+  const k = document.querySelector('#crypto input[name="key"').value;
+  const v = document.querySelector('#crypto input[name="str"').value;
+  console.log('k='+k+', v='+v);
+  
+}
+
+
+
+function execute () {
+
+// パスフレーズ（暗号鍵）
+let passPhrase = document.getElementById('pass_phrase').value;
+// 暗号化したい元のデータ
+let data = document.getElementById('data').value;
+let utf8_plain = CryptoJS.enc.Utf8.parse(data);
+// 暗号化
+let encrypted = CryptoJS.AES.encrypt( utf8_plain, passPhrase );
+// 復号化
+let decrypted = CryptoJS.AES.decrypt( encrypted , passPhrase );
+let txt_dexrypted = decrypted.toString(CryptoJS.enc.Utf8);
+
+// 表示
+document.getElementById("output").innerHTML = 
+  "key : " + passPhrase +"<br />" +
+  "data : " + data + "<br />" +
+  "encrypted : " + encrypted + "<br />" +
+  "decrypted : " + txt_dexrypted;
+}
+
+/*
 const doGet = (str) => {
   const url = "https://script.google.com/macros/s/AKfycbzuVUrnF-tsXpr9zSBmkiQ7t0oi8liUPGSA8Q7d0IvCQSBe_5bt1vFQaRbsXGlM7r6suQ/exec"
     + '?v=' + str;
@@ -100,26 +140,6 @@ window.onload = () => {
     execute()
   });
 }
-
-function execute () {
-
-  // パスフレーズ（暗号鍵）
-  let passPhrase = document.getElementById('pass_phrase').value;
-  // 暗号化したい元のデータ
-  let data = document.getElementById('data').value;
-  let utf8_plain = CryptoJS.enc.Utf8.parse(data);
-  // 暗号化
-  let encrypted = CryptoJS.AES.encrypt( utf8_plain, passPhrase );
-  // 復号化
-  let decrypted = CryptoJS.AES.decrypt( encrypted , passPhrase );
-  let txt_dexrypted = decrypted.toString(CryptoJS.enc.Utf8);
-
-  // 表示
-  document.getElementById("output").innerHTML = 
-    "key : " + passPhrase +"<br />" +
-    "data : " + data + "<br />" +
-    "encrypted : " + encrypted + "<br />" +
-    "decrypted : " + txt_dexrypted;
-}
+*/
 </script>
 </html>
