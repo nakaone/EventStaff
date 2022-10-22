@@ -20,38 +20,58 @@
     <h1>指定文字列の暗号化/復号</h1>
     <p><label>暗号鍵</label><input type="text" name="key" onchange="convert()" value="Oct.22,2022" /></p>
     <p><label>文字列</label><input type="text" name="str" onchange="convert()" /></p>
-    <div class="encrypted">暗号化：<p></p></div>
-    <div class="decrypted">復号化：<p></p></div>
+    <div class="passPhrase"></div>
+    <div class="str"></div>
+    <div class="utf8_plain"></div>
+    <div class="encrypted"></div>
+    <div class="encryptResult"></div>
+    <div class="decrypted"></div>
+    <div class="txt_dexrypted"></div>
   </div>
 </body>
 <script type="text/javascript">
+/*
+  AES暗号化 (javascript)
+  https://chakkari.org/blog/2020/05/03/aes-encrypt-with-javascript/
+*/
+
 const convert = () => {
 
+  const v = {};
+
   // パスフレーズ（暗号鍵）
-  const passPhrase = document.querySelector('#crypto input[name="key"').value;
+  v.passPhrase = document.querySelector('#crypto input[name="key"]').value;
 
   // 暗号化・復号化対象文字列
-  const str = document.querySelector('#crypto input[name="str"').value;
-  let utf8_plain = CryptoJS.enc.Utf8.parse(str);
+  v.str = document.querySelector('#crypto input[name="str"]').value;
+  v.utf8_plain = CryptoJS.enc.Utf8.parse(v.str);
 
   // 暗号化
-  let encrypted = CryptoJS.AES.encrypt( utf8_plain, passPhrase );
+  v.encrypted = CryptoJS.AES.encrypt( v.utf8_plain, v.passPhrase );  // Obj
+  v.encryptResult = v.encrypted.toString(); // toString()で文字列化
 
   // 復号化
-  let decrypted = CryptoJS.AES.decrypt( str , passPhrase );
-  let txt_dexrypted = decrypted.toString(CryptoJS.enc.Utf8);
+  v.decrypted = CryptoJS.AES.decrypt( v.str , v.passPhrase );
+  v.txt_dexrypted = v.decrypted.toString(CryptoJS.enc.Utf8);
 
-  console.log(
-    'passPhrase="' + passPhrase + '"\n'
-    + 'str="' + str + '"\n'
-    + 'utf8_plain="' + utf8_plain + '"\n'
-    + 'encrypted="' + encrypted + '"\n'
-    + 'decrypted="' + decrypted + '"\n'
-    + 'txt_dexrypted="' + txt_dexrypted + '"\n'
-  );
+  for( let x in v ){
+    console.log(x,v[x]);
+    const e = document.querySelector('#crypto .'+x);
+    e.innerHTML = '<p style="color:red">_1 : _2</p>'.replace('_1',x).replace('_2',v[x]);
+    e.innerHTML += '<p>type : _</p>'.replace('_',whichType(v[x]));
+    e.innerHTML += '<p>length : _</p>'.replace('_',v[x].length);
+    try {
+      e.innerHTML += '<p>json : _</p>'.replace('_',JSON.stringify(v[x]));
+    } catch(e) {
+      console.error(e);
+    }
+  }
 
-  document.querySelector('#crypto .encrypted p').innerText = encrypted;
-  document.querySelector('#crypto .decrypted p').innerText = txt_dexrypted;
+}
+
+const whichType = (arg = undefined) => {
+  return arg === undefined ? 'undefined'
+   : Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
 }
 </script>
 </html>
