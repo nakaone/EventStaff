@@ -27,6 +27,7 @@
     <div class="encryptResult"></div>
     <div class="decrypted"></div>
     <div class="txt_dexrypted"></div>
+    <div id="result"></div>
   </div>
 </body>
 <script type="text/javascript">
@@ -178,6 +179,8 @@ const doGetTest = () => {
     console.log(doGetTestData[i]);
     doGet('post',doGetTestData[i],r => {
       console.log('GAS result',r);
+      const e = document.getElementById('result');
+      e.innerHTML += '<p>' + r + '</p><hr />';
     });
   }
 }
