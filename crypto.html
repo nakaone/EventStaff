@@ -63,7 +63,7 @@ const convert = () => {
     try {
       e.innerHTML += '<p>json : _</p>'.replace('_',JSON.stringify(v[x]));
     } catch(e) {
-      console.error(e);
+      //console.error(e);
     }
   }
 
@@ -80,9 +80,11 @@ class cipher {
   }
   encrypt = (arg) => {
     const str = JSON.stringify(arg);
+    console.log("str="+str);
     const utf8_plain = CryptoJS.enc.Utf8.parse(str);
     const encrypted = CryptoJS.AES.encrypt( utf8_plain, this.passPhrase );  // Obj
     const encryptResult = encrypted.toString();
+    console.log("encryptResult="+encryptResult);
     return encryptResult;
   }
   decrypt = (arg) => {
@@ -93,20 +95,66 @@ class cipher {
 }
 
 // 以下 cipher 用テスト
-const testData = [0,'abc',true,[1,2,3],{a:10,b:20},new Date()];
+const cipherTestData = [0,'abc',true,[1,2,3],{a:10,b:20},new Date()];
 const passPhrase = 'Oct.22,2022';
 const cipherTest = () => {
-  for( let x in testData ){
+  for( let x in cipherTestData ){
     const o = new cipher(passPhrase);
-    const e = o.encrypt(testData[x]);
+    const e = o.encrypt(cipherTestData[x]);
     const d = o.decrypt(e);
     const j = JSON.parse(d);
-    console.log(testData[x],e,whichType(e),d,whichType(d),j,whichType(j));
+    console.log(cipherTestData[x],e,whichType(e),d,whichType(d),j,whichType(j));
   }
 }
 
-cipherTest();
+const doGet = (func='post',data,callback) => {
+  console.log("doGet start. ",func,data,callback);
 
+  // GASに渡すデータを作成
+  const cObj = new cipher(passPhrase);
+  const postData = cObj.encrypt({func:func,data:data});
+  console.log('postData('+whichType(postData)+' '+postData.length+')='+postData);
+
+  // エンドポイントを作成
+  const endpoint =  //GASのAPIのURL
+    'https://script.google.com/macros/s/AKfycbzucRx5ElwxisiNC1xSfk79fLOksZ8rU-RtXYjI2IWatsyH1Z0-PMZqjjV-Jb-frW0eZg/exec'
+    + '?v=' + postData;
+    //"https://script.google.com/macros/s/〜/exec"
+    //.replace("〜",config.GASwebAPId)
+
+  // fetchのオプション指定
+  const opt = {
+    "method": "GET",
+    "mode": "no-cors",
+    //"Accept": "application/json",
+    //"Content-Type": "application/x-www-form-urlencoded",
+  }
+
+  // GASからの返信を元にcallbackを呼び出し
+  fetch(endpoint,opt)
+  .then(response => response.json())
+  .then(r => callback(r));  // 成功した処理
+
+  console.log("doGet end.");
+}
+const doGetTestData = [
+  {from:'あ',to:'xyz',message:'じゅげむ'},
+  //{from:'い',to:'え',message:'ふが'},
+  //{from:'う',to:'/+!',message:'ほげ'},
+  //{from:'abc',to:'-',message:'いくら丼'},
+  //{from:'0123',to:'スタッフ',message:'食べたい'},
+]
+const doGetTest = () => {
+  for( let i=0 ; i<doGetTestData.length ; i++ ){
+    console.log(doGetTestData[i]);
+    doGet('post',doGetTestData[i],r => {
+      console.log('GAS result',r);
+    });
+  }
+}
+
+//cipherTest();
+doGetTest();
 
 </script>
 </html>
