@@ -51,10 +51,32 @@
 </body>
 <script type="text/javascript">
 const convert = () => {
-  const k = document.querySelector('#crypto input[name="key"').value;
-  const v = document.querySelector('#crypto input[name="str"').value;
-  console.log('k='+k+', v='+v);
-  
+
+  // パスフレーズ（暗号鍵）
+  const passPhrase = document.querySelector('#crypto input[name="key"').value;
+
+  // 暗号化・復号化対象文字列
+  const str = document.querySelector('#crypto input[name="str"').value;
+  let utf8_plain = CryptoJS.enc.Utf8.parse(str);
+
+  // 暗号化
+  let encrypted = CryptoJS.AES.encrypt( utf8_plain, passPhrase );
+
+  // 復号化
+  let decrypted = CryptoJS.AES.decrypt( str , passPhrase );
+  let txt_dexrypted = decrypted.toString(CryptoJS.enc.Utf8);
+
+  console.log(
+    'passPhrase="' + passPhrase + '"\n'
+    + 'str="' + str + '"\n'
+    + 'utf8_plain="' + utf8_plain + '"\n'
+    + 'encrypted="' + encrypted + '"\n'
+    + 'decrypted="' + decrypted + '"\n'
+    + 'txt_dexrypted="' + txt_dexrypted + '"\n'
+  );
+
+  document.querySelector('#crypto .encrypted p').innerText = encrypted;
+  document.querySelector('#crypto .decrypted p').innerText = txt_dexrypted;
 }
 
 
@@ -85,10 +107,8 @@ const doGet = (str) => {
   const url = "https://script.google.com/macros/s/AKfycbzuVUrnF-tsXpr9zSBmkiQ7t0oi8liUPGSA8Q7d0IvCQSBe_5bt1vFQaRbsXGlM7r6suQ/exec"
     + '?v=' + str;
   console.log('url='+url);
-  /*
-  var response = UrlFetchApp.fetch(url);
-  Logger.log(response.getContentText());
-  */
+  //var response = UrlFetchApp.fetch(url);
+  //Logger.log(response.getContentText());
   fetch(url, {
     //"method": "GET",
     "mode": "no-cors",
