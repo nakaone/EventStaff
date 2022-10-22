@@ -34,7 +34,7 @@
   AES暗号化 (javascript)
   https://chakkari.org/blog/2020/05/03/aes-encrypt-with-javascript/
 */
-
+const api = 'https://script.google.com/macros/s/AKfycby_3JoBIesmrm9G-CG4RzTh8bjilPR2rHaNkN5LRKTbLgZfhxy9zIT2to6Ra9d8CfceQA/exec';
 const convert = () => {
 
   const v = {};
@@ -144,8 +144,7 @@ const doGet = (func='post',data,callback) => {
 
   // エンドポイントを作成
   const endpoint =  //GASのAPIのURL
-    'https://script.google.com/macros/s/AKfycbyY6MUly7flNrml2ac7pGt-HkK1qDftIYgwxMmnd76jfgOWiar-n2we8lxI6SD6yhfwXQ/exec'
-    + '?v=' + postData;
+    api + '?v=' + postData;
     //"https://script.google.com/macros/s/〜/exec"
     //.replace("〜",config.GASwebAPId)
     console.log('endpoint='+endpoint);
