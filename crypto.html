@@ -74,7 +74,7 @@ const whichType = (arg = undefined) => {
    : Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
 }
 
-class cipher {
+class cipher {  // 変数をAES暗号化文字列に変換
 
   constructor(passPhrase){
     this.passPhrase = passPhrase;
@@ -144,7 +144,7 @@ const doGet = (func='post',data,callback) => {
 
   // エンドポイントを作成
   const endpoint =  //GASのAPIのURL
-    'https://script.google.com/macros/s/AKfycbzucRx5ElwxisiNC1xSfk79fLOksZ8rU-RtXYjI2IWatsyH1Z0-PMZqjjV-Jb-frW0eZg/exec'
+    'https://script.google.com/macros/s/AKfycbyY6MUly7flNrml2ac7pGt-HkK1qDftIYgwxMmnd76jfgOWiar-n2we8lxI6SD6yhfwXQ/exec'
     + '?v=' + postData;
     //"https://script.google.com/macros/s/〜/exec"
     //.replace("〜",config.GASwebAPId)
@@ -181,8 +181,8 @@ const doGetTest = () => {
   }
 }
 
-cipherTest();
-//doGetTest();
+//cipherTest();
+doGetTest();
 
 </script>
 </html>
