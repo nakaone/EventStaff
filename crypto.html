@@ -42,9 +42,15 @@
 </body>
 <script type="text/javascript">
 const doGet = (str) => {
-  const url = "https://script.google.com/macros/s/AKfycbw4s6e7G2g5AFkA7fWHAxGWAWCYIImyryLbnbnVkS7Kayp3i0_3esYF0uXP6JgrMOTRLA/exec";
-  fetch(url+'?v='+str,{
-    "method": "GET",
+  const url = "https://script.google.com/macros/s/AKfycbzuVUrnF-tsXpr9zSBmkiQ7t0oi8liUPGSA8Q7d0IvCQSBe_5bt1vFQaRbsXGlM7r6suQ/exec"
+    + '?v=' + str;
+  console.log('url='+url);
+  /*
+  var response = UrlFetchApp.fetch(url);
+  Logger.log(response.getContentText());
+  */
+  fetch(url, {
+    //"method": "GET",
     "mode": "no-cors",
     //"Accept": "application/json",
     //"Content-Type": "application/x-www-form-urlencoded",
@@ -67,14 +73,20 @@ const upload = () => {
   const data = JSON.stringify(obj);
   const utf8_plain = CryptoJS.enc.Utf8.parse(data);
   const encrypted = CryptoJS.AES.encrypt(utf8_plain,passPhrase);
+  const query = encodeURI(encrypted);
   //const decrypted = CryptoJS.AES.decrypt(encrypted,passPhrase);
   //const txt_dexrypted = decrypted.toString(CryptoJS.enc.Utf8);
+  document.getElementById('output').innerHTML
+    = 'data: ' + data + '<br>'
+    + 'encrypted: ' + encrypted + '<br>'
+    + 'query: ' + query;
 
-  doGet(encrypted,(retult) => {
+  doGet(query,(retult) => {
     document.getElementById("output").innerHTML = 
     "key : " + passPhrase +"<br />" +
     "data : " + data + "<br />" +
     "encrypted : " + encrypted + "<br />" +
+    "query : " + query + "<br />" +
     "decrypted : " + JSON.stringify(result);
   });
 

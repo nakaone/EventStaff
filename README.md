@@ -819,8 +819,49 @@ const delDiv = () => {
 
 ### スマホの開発者画面を参照
 
+[chrome://inspect/#devices](chrome://inspect/#devices)を開く
+
 - [Android実機で Chrome の開発者ツールを開く＆デバッグする方法](https://pisuke-code.com/android-use-chrome-devtools/)
 - Android側でのUSB接続許可：[Android デバイスで USB デバッグを有効にする](https://www.embarcadero.com/starthere/xe5-2/mobdevsetup/android/ja/enabling_usb_debugging_on_an_android_device.html)
+
+### GASでのログ参照方法
+
+GASのdoPostはなぜかconsole.logを入れたとしてもGASのExecutions上でログが取得できない。これを参照する方法。
+
+参考：[Google Apps Scriptでトリガー実行（doGet,doPost）のログを表示するにはGCPプロジェクトに紐付ける必要があるらしい](https://ryjkmr.com/google-apps-script-console-log/)
+
+- ログの設定
+  - GCPでの作業
+    - 新規プロジェクトの作成
+      - GCPコンソールのプロジェクト選択欄で「新しいプロジェクト」を選択
+      - 「プロジェクトの選択」画面で「新しいプロジェクト」を選択
+      - 「新しいプロジェクト」画面でプロジェクト名を付けて「作成」をクリック  
+        `プロジェクト名：EventStaff  場所：組織なし`
+    - 0Auth同意
+      - APIとサービス > 0Auth同意画面
+      - 0Auth同意画面で「User Type : 外部」を設定して「作成」
+      - アプリ登録の編集①0Auth同意画面  
+        以下の3項目だけ設定
+        ```
+        アプリ名：EventStaff
+        ユーザーサポートメール：shimokitasho.oyaji@gmail.com
+        デベロッパーの連絡先：同上
+        ```
+      - アプリ登録の編集②スコープ：特に設定なし
+      - アプリ登録の編集③テストユーザ：特に設定なし
+      - アプリ登録の編集④概要：特に設定なし
+    - コンソール他で表示されるプロジェクト番号をコピー
+  - GASでの作業
+    - Apps Scriptコンソール > プロジェクトの設定(歯車) > プロジェクトを変更
+    - 拡張機能 > Apps Script
+    - GASのプロジェクト設定で「プロジェクト番号」をペースト、「プロジェクトの変更」をクリック
+    - GCPプロジェクト画面で「プロジェクトを変更」をクリック
+    - 改めてデプロイ(新規)を実行
+- ログの参照
+  - https://console.cloud.google.com/logs/
+  - GCPダッシュボード > モニタリング > 「→[モニタリング]に移動」 > 画面右上のLOGGING  
+    GASコンソール「実行数」から「Cloudのログ」を選択しても表示されない
+
 
 ### スプレッドシート上でQRコード作成時の注意
 
