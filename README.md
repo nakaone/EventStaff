@@ -285,6 +285,10 @@ QRコード作成時の注意： MDN「[JSON.parse() は末尾のカンマを許
 
 - URLのクエリ文字列はCriptoJSで暗号化する。暗号化はHTML(crypto.html, index.html)とGAS双方で使える必要があるが、CriptoJS 4.0.0以上はGASで使えないため、[3.3.0のソース](https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.3.0/crypto-js.min.js)をGASに貼り付ける。
 
+参考：[AES暗号化 (javascript)](https://chakkari.org/blog/2020/05/03/aes-encrypt-with-javascript/)
+
+#### ローカル(html)
+
 ```
 class cipher {
   constructor(passPhrase){
@@ -315,6 +319,87 @@ for( let x in testData ){
   console.log(testData[x],e,whichType(e),d,whichType(d),j,whichType(j));
 }
 ```
+
+#### GAS
+
+```
+https://script.google.com/macros/s/AKfycbzucRx5ElwxisiNC1xSfk79fLOksZ8rU-RtXYjI2IWatsyH1Z0-PMZqjjV-Jb-frW0eZg/exec
+```
+
+```
+const passPhrase = "Oct.22,2022";
+
+function doGet(e) {
+  console.log(e);
+
+  const cObj = new cipher(passPhrase);
+  arg = JSON.parse(cObj.decrypt(e.parameter.v));
+  console.log(arg+', '+whichType(arg));
+
+  let rv = null;
+  switch( arg.func ){
+    case 'post':
+      rv = postMessage(arg.data);
+      break;
+  }
+
+  // 結果をJSON化して返す
+  rv = JSON.stringify(rv,null,2);
+  console.log(rv);
+  return ContentService
+  .createTextOutput(rv)
+  .setMimeType(ContentService.MimeType.JSON);
+}
+
+const postMessage = (arg) => {
+  console.log('postMessage start. arg='+JSON.stringify(arg));
+  const v = {
+    timestamp: new Date().toLocaleString('ja-JP'),
+    from: arg.from,
+    to: arg.to,
+    message: arg.message,
+  }
+  console.log('postMessage end. v='+JSON.stringify(v));  
+  return v;
+}
+
+const doGetTest = () => {
+  const testData = [
+    {func:'post',data:{from:'嶋津',to:'スタッフ',message:'ふがふが'}},
+  ];
+  for( let i=0 ; i<testData.length ; i++ ){
+    const o = new cipher(passPhrase);
+    doGet({parameter:{v:o.encrypt(testData[i])}});
+  }
+}
+
+class cipher {
+  constructor(passPhrase){
+    this.passPhrase = passPhrase;
+  }
+  encrypt(arg){
+    const str = JSON.stringify(arg);
+    const utf8_plain = CryptoJS.enc.Utf8.parse(str);
+    const encrypted = CryptoJS.AES.encrypt( utf8_plain, this.passPhrase );  // Obj
+    const encryptResult = encrypted.toString();
+    return encryptResult;
+  }
+  decrypt(arg){
+    const decrypted = CryptoJS.AES.decrypt( arg , this.passPhrase );
+    const txt_dexrypted = decrypted.toString(CryptoJS.enc.Utf8);
+    return txt_dexrypted;
+  }
+}
+
+const whichType = (arg = undefined) => {
+  return arg === undefined ? 'undefined'
+   : Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
+}
+
+//== https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.3.0/crypto-js.min.js
+```
+
+#### memo
 
 <details><summary>着手初日(10/21)夜、四苦八苦して諦めた段階のGASソース</summary>
 
