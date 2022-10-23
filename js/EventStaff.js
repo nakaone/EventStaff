@@ -7,8 +7,10 @@ const changeScreen = (scrId='home',titleStr='お知らせ') => {  // 表示画�
     scrList[i].style.display = 'none';
   }
 
-  // メニュー名を書き換え
-  document.querySelector('header .title').innerText = titleStr;
+  // ローディング画面以外の場合、メニュー名を書き換え
+  if( scrId !== 'loading' ){
+    document.querySelector('header .title').innerText = titleStr;
+  }
   // 指定IDの画面は再表示
   document.querySelector('#'+scrId).style.display = 'flex';
   // メニューを隠す
@@ -22,7 +24,6 @@ const initialize = () => {  // 初期設定処理
 
   // 初期設定終了時の処理を定義
   const terminate = () => {
-    alert('初期設定は正常に終了しました');
     console.log("initialize end.",config);
     changeScreen();// ホーム画面表示
   }
@@ -55,6 +56,7 @@ const initialize = () => {  // 初期設定処理
     config.DateOfExpiry  // 有効期限は取得後24H
     = new Date(new Date().getTime() + 86400000); 
     localStorage.setItem('config',JSON.stringify(config));
+    alert('初期設定は正常に終了しました');
     terminate();
   },{
     selector:'#initialize .scanner',  // 設置位置指定
