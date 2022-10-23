@@ -254,7 +254,7 @@ const scanCode = (callback, arg={}) => { /* QRコードのスキャン
     } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
       scanner.appendChild(o.result);
     }
-  }
+  }  
 
   const video = document.querySelector(opt.selector+' .video video');
   const camera = document.querySelector(opt.selector+' .camera input');
@@ -338,18 +338,33 @@ const whichType = (arg = undefined) => {
    : Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
 }
 
-const toggleMenu = (arg) => {  // メニューの開閉
+const toggleMenu = (arg=null) => {  // メニューの開閉
   // 引数は指定無し(単純開閉切換)またはtrue(強制オープン)
+  console.log('toggleMenu start.',arg);
 
-  // 現状をisActiveに取得
+  // 操作対象要素を取得
+  const openIcon = document.querySelector('header .open'); // 「三」アイコン
+  const closeIcon = document.querySelector('header .close'); // 「×」アイコン
   const nav = document.querySelector('nav');
-  const isActive = nav.style.display === 'grid';
 
-  // 指定無しまたは現状が指定(arg)と異なる場合、開閉切換
-  if( arg !== undefined || arg !== isActive ){
-    document.querySelector('header .open').classList.toggle('active');
-    document.querySelector('header .close').classList.toggle('active');
-    nav.style.display = nav.style.display === 'grid' ? 'none' : 'grid';
+  const v = {  // 現状をisActiveに取得
+    isActive: nav.style.display === 'grid',
   }
 
+  // 行うべき動作を判定。引数無しなら現状の反対
+  v.action = arg === null ? !v.isActive : arg;
+
+  const open = 'flex';
+  const close = 'none';
+  if( v.action ){  // 現在閉じているメニューを開く
+    openIcon.style.display = close;
+    closeIcon.style.display = open;
+    nav.style.display = open;
+  } else {       // 現在開いているメニューを閉じる
+    openIcon.style.display = open;
+    closeIcon.style.display = close;
+    nav.style.display = close;
+  }
+
+  console.log('toggleMenu end.',v);
 }

@@ -1,25 +1,24 @@
 const changeScreen = (scrId='home',titleStr='お知らせ') => {  // 表示画面の切り替え
-  console.log("changeScreen start. scrId="+scrId);
+  console.log("changeScreen start. scrId="+scrId+', titleStr='+titleStr);
 
-  // 一度全部隠す
-  toggleMenu(false);
+  // screenクラスの画面を全部隠す
   const scrList = document.querySelectorAll('.screen');
   for( let i=0 ; i<scrList.length ; i++ ){
     scrList[i].style.display = 'none';
   }
 
-  // 指定IDの画面は再表示
+  // メニュー名を書き換え
   document.querySelector('header .title').innerText = titleStr;
+  // 指定IDの画面は再表示
   document.querySelector('#'+scrId).style.display = 'flex';
+  // メニューを隠す
+  toggleMenu(false);
 
   console.log("changeScreen end.");
 }
 
 const initialize = () => {  // 初期設定処理
   console.log("initialize start.");
-
-  // 初期設定処理の画面を表示
-  changeScreen('initialize',"初期化処理");
 
   // 初期設定終了時の処理を定義
   const terminate = () => {
@@ -42,6 +41,9 @@ const initialize = () => {  // 初期設定処理
       return;
     }
   }
+
+  // 初期設定処理の画面を表示
+  changeScreen('initialize',"初期化処理");
 
   // QRコード読み取り
   config.scanCode = true;

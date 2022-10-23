@@ -56,10 +56,6 @@ header .menu img {
   max-width: 1.4rem;
   max-height: 1.4rem;
 }
-.menu .open         {display: flex;}
-.menu .open.active  {display: none;}
-.menu .close        {display: none;}
-.menu .close.active {display: flex;}
 
 nav {
   z-index: 1;
@@ -83,6 +79,11 @@ nav li {
   padding: 0.2rem 1rem;
   border: solid 3px #888;
   width: calc(15rem - 3rem - 6px);
+}
+
+nav li a {
+  text-decoration:none ;
+  color: white;
 }
 
 /* =========================================================
