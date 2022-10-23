@@ -1,143 +1,51 @@
-const config = {}
-const definition = {
-  editGuestTemplate:  /* 一行分のデータに対する文書構造の定義
-    tag string 1 タグ指定(必須)。"text"の場合は文字列と看做し、createTextNodeで追加する
-    children [object] 0..1 子要素の定義。childrenとtextは排他
-    text string 0..1 文字列の定義。変数に置換する部分には'\t'を挿入
-    skip string 0..1 変数が空白の場合は出力抑止する場合、判断基準となる変数名を指定
-    variable string 0..1 入力データの変数名。複数の変数は不可
-    max number : 子要素が不定繰返ならその回数、不定繰返ではないなら0(固定、既定値)
-      例：members配下に最大5人のメンバがいる場合 ⇒ max:5(添字は0..4となる)
-    --- 上記以外は全て属性指定(properties)。以下は処理対象となる属性 -------
-    class string 0..1 要素のクラス指定。三項演算子の場合、評価結果をクラスとする
-      例： {.., class:"dObj['申込者']==='参加'?'representative':'representative glay'", ..}
-    */
-    {tag:"div", class:"table", children:[
-      {tag:"div", class:"summary", children:[
-        {tag:"div", class:"tr",children:[
-          {tag:"div", class:"th vth", text:"受付番号"},
-          {tag:"div", class:"td entryNo", variable:"受付番号"},
-          {tag:"div", id:'img-qr'},
-        ]},
-        {tag:"div", class:"tr",children:[
-          {tag:"div", class:"th vth", text:"申込者"},
-          {tag:"div", class:"td name", children:[
-            {tag:"ruby", children:[
-              {tag:"rb", variable:"氏名"},
-              {tag:"rt", variable:"読み"},
-            ]},
-          ]},
-        ]},
-        {tag:"div", class:"tr", children:[
-          {tag:"div",class:"td", variable:"参加"},
-          {tag:"select", class:"td status", name:"status00", opt:"未入場,入場済,退場済,不参加", variable:"状態"},
-          {tag:"select", class:"td fee", name:"fee00", opt:"未収,既収,免除", variable:"参加費"},
-        ]},
-        {tag:"div", class:"tr", children:[
-          {tag:"div", class:"th vth", text:"キャンセル"},
-          {tag:"div", class:"td", children:[
-            {tag:"input", type:"checkbox", name:"cancel", checked:"取消"},
-          ]},
-        ]},
-        {tag:"div", class:"tr", children:[
-          {tag:"div", class:"th vth", text:"受付日時"},
-          {tag:"div", class:"td", variable:"登録日時"},
-        ]},
-        {tag:"div", class:"tr", children:[
-          {tag:"div", class:"th vth", text:"e-mail"},
-          {tag:"div", class:"td", variable:"メール"},
-        ]},
-        {tag:"div", class:"tr", children:[
-          {tag:"div", class:"th vth", text:"緊急連絡先"},
-          {tag:"div", class:"td", variable:"連絡先"},
-        ]},
-        {tag:"div", class:"tr", children:[
-          {tag:"div", class:"th vth", text:"引取者"},
-          {tag:"div", class:"td", variable:"引取者"},
-        ]},
-        {tag:"div", class:"tr", children:[
-          {tag:"div", class:"th vth", text:"備考"},
-          {tag:"div", class:"note", variable:"備考"},
-        ]},
-      ]},
-      {tag:"div", class:"tr",children:[
-        {tag:"div", class:"td memNo", text:"①"},
-        {tag:"div", class:"td name", name:"name01", children:[
-          {tag:"ruby", children:[
-            {tag:"rb", variable:"①氏名"},
-            {tag:"rt", variable:"①読み"},
-          ]},
-        ]},
-        {tag:"div", class:"td affiliation", name:"affiliation01", text:"\t", variable:"①所属"},
-      ]},
-      {tag:"div", class:"tr",children:[
-        {tag:"select", class:"td status", name:"status01", opt:"未入場,入場済,退場済,不参加", variable:"①状態"},
-        {tag:"select", class:"td fee", name:"fee01", opt:"未収,既収,免除", variable:"①参加費"},
-      ]},
-      {tag:"div", class:"tr",children:[
-        {tag:"div", class:"td memNo", text:"②"},
-        {tag:"div", class:"td name", name:"name02", children:[
-          {tag:"ruby", children:[
-            {tag:"rb", variable:"②氏名"},
-            {tag:"rt", variable:"②読み"},
-          ]},
-        ]},
-        {tag:"div", class:"td affiliation", name:"affiliation02", text:"\t", variable:"②所属"},
-      ]},
-      {tag:"div", class:"tr",children:[
-        {tag:"select", class:"td status", name:"status02", opt:"未入場,入場済,退場済,不参加,未登録", variable:"②状態"},
-        {tag:"select", class:"td fee", name:"fee02", opt:"未収,既収,免除,無し", variable:"②参加費"},
-      ]},
-      {tag:"div", class:"tr",children:[
-        {tag:"div", class:"td memNo", text:"③"},
-        {tag:"div", class:"td name", name:"name03", children:[
-          {tag:"ruby", children:[
-            {tag:"rb", variable:"③氏名"},
-            {tag:"rt", variable:"③読み"},
-          ]},
-        ]},
-        {tag:"div", class:"td affiliation", name:"affiliation03", text:"\t", variable:"③所属"},
-      ]},
-      {tag:"div", class:"tr",children:[
-        {tag:"select", class:"td status", name:"status03", opt:"未入場,入場済,退場済,不参加,未登録", variable:"③状態"},
-        {tag:"select", class:"td fee", name:"fee03", opt:"未収,既収,免除,無し", variable:"③参加費"},
-      ]},
-    ]
-  },
-  dump: () => {
-    const o = JSON.parse(JSON.stringify(config));
-    // 内容が長すぎるメンバは割愛
-    ['editGuestTemplate','show'].forEach(x => delete o[x]);
-    return JSON.stringify(o);
-  },
-};
-
 const changeScreen = (scrId='home',titleStr='お知らせ') => {  // 表示画面の切り替え
-  console.log("changeScreen start. scrId="+scrId);
+  console.log("changeScreen start. scrId="+scrId+', titleStr='+titleStr);
 
-  // 一度全部隠す
-  toggleMenu(false);
+  // screenクラスの画面を全部隠す
   const scrList = document.querySelectorAll('.screen');
   for( let i=0 ; i<scrList.length ; i++ ){
     scrList[i].style.display = 'none';
   }
 
+  // ローディング画面以外の場合、メニュー名を書き換え
+  if( scrId !== 'loading' ){
+    document.querySelector('header .title').innerText = titleStr;
+  }
   // 指定IDの画面は再表示
-  document.querySelector('header .title').innerText = titleStr;
   document.querySelector('#'+scrId).style.display = 'flex';
+  // メニューを隠す
+  toggleMenu(false);
 
   console.log("changeScreen end.");
+}
+
+const doGet = (postData,callback) => {  // GASのdoGetを呼び出し、結果を返す
+  console.log("doGet start. ",postData,callback);
+
+  // GASに渡すデータを作成
+  const v = encrypt(postData,config.passPhrase);
+  dump('v',v);
+
+  // エンドポイントを作成
+  const endpoint = 'https://script.google.com/macros/s/〜/exec'
+    .replace('〜',config.GASwebAPId) + '?v=' + v;
+  dump('endpoint',endpoint);
+
+  // GASからの返信を受けたらcallbackを呼び出し
+  fetch(endpoint,{"method": "GET"})
+  .then(response => response.json())
+  .then(data => {
+    console.log("doGet end.",data);
+    callback(data);  // 成功した場合、後続処理を呼び出し
+  });
+
 }
 
 const initialize = () => {  // 初期設定処理
   console.log("initialize start.");
 
-  // 初期設定処理の画面を表示
-  changeScreen('initialize',"初期化処理");
-
   // 初期設定終了時の処理を定義
   const terminate = () => {
-    alert('初期設定は正常に終了しました');
     console.log("initialize end.",config);
     changeScreen();// ホーム画面表示
   }
@@ -157,16 +65,18 @@ const initialize = () => {  // 初期設定処理
     }
   }
 
+  // 初期設定処理の画面を表示
+  changeScreen('initialize',"初期化処理");
+
   // QRコード読み取り
   config.scanCode = true;
   scanCode((code) => {
     const o = JSON.parse(code);
-    for( let x in o ){ // configの値を設定
+    for( let x in o ){ // グローバル変数configに値を設定
       config[x] = o[x];
     }
-    config.DateOfExpiry  // 有効期限は取得後24H
-    = new Date(new Date().getTime() + 86400000); 
     localStorage.setItem('config',JSON.stringify(config));
+    alert('初期設定は正常に終了しました');
     terminate();
   },{
     selector:'#initialize .scanner',  // 設置位置指定
@@ -192,9 +102,9 @@ const inputSearchKey = () => {  // 参加者の検索キーを入力
       .innerHTML = ''; // 作業用DIVを除去してカメラでのスキャンを停止
     const postData = {
       func: 'search',
-      key: strEl.value || arg,
+      data: {key: strEl.value || arg},
     };
-    doGet("?func=search&key=" + (strEl.value || arg),(data) => {
+    doGet(postData,(data) => {
       if( data.length === 0 ){
         alert("該当する参加者は存在しませんでした");
       } else if( data.length > 1){

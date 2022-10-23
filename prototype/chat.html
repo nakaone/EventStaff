@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<!-- GAS
+function doPost(e) {
+  Logger.log(e);
+  var name = e.parameter.name;
+  var hobby = e.parameter.hobby;
+
+  const rv = {
+    name: e.parameter.
+    name,hobby: e.parameter.hobby
+  };
+  return ContentService
+  .createTextOutput(JSON.stringify(rv, null, 2))
+  .setMimeType(ContentService.MimeType.JSON);
+}
+-->
+<head>
+  <meta charset="UTF-8">
+  <title>doPostのテスト</title>
+</head>
+<body>
+  <h1>doPostのテスト（Form送信）</h1>
+  <!-- form method="post" action="https://script.google.com/macros/s/AKfycbxhw7ltEFbqS0YoEEPze1KfVsoJYmv3bp5KfkQJVuw38aa5PsdpikZA5vUaA8RUuD_YgQ/exec" -->
+    <p>
+      <label>名前 <input type="text" name="name"></label>
+    </p>
+    <p>
+      <label>趣味 <input type="text" name="hobby"></label>
+    </p>
+    <p>
+      <input type="submit" value="送信" onclick="postData()">
+    </p>
+  <!-- /form -->
+</body>
+<script>
+const postData = () => {
+  const post = {
+    name: document.querySelector('[name="name"]').value,
+    hobby: document.querySelector('[name="hobby"]').value,
+  }
+  console.log(JSON.stringify(post));
+  doPost(post,(data) => {
+    console.log("returned value from doPost = "
+      + JSON.stringify(data));
+  });
+}
+
+
+const doPost = (obj,callback) => {
+  // [備忘録]　GASのdoPost()にJavaScriptからJSONを渡す方法
+  // https://qiita.com/khidaka/items/ebf770591100b1eb0eff
+  //const URL = config.GASwebAPId;
+  const URL = "https://script.google.com/macros/s/AKfycbxy2vQ9COBHg0QzCw6-0UHDy0_sIuTiJ4QGwaCW8asQZI3mf0uFU8iyM7BUgObJ5nLc_g/exec";
+  const postData = {
+    "method"     : "POST",
+    "mode"       : "no-cors",
+    "Content-Type" : "application/x-www-form-urlencoded",
+    "body" : JSON.stringify(obj).replaceAll('"','\\"'),
+  };
+  console.log('postData',postData);
+
+  fetch(URL,postData)
+  .then(response => response.json())
+  .then(data => {
+    console.log('doPost success.\n'
+      + 'type=' + typeof data
+      + '\nlength=' + data.length
+      + '\n' + JSON.stringify(data)
+      , data
+    );
+    callback(data.json());
+  })
+  .catch(e => console.error(e));
+
+}
+</script>
+</html>

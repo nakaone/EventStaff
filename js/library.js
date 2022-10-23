@@ -2,55 +2,47 @@
   汎用ライブラリ
 =================================================== */
 
-const doGet = (query,callback) => {  // GASのdoGetを呼び出し、結果を表示する
-  console.log("doGet start. query="+query);
-  const endpoint =  //GASのAPIのURL。"https://script.google.com/macros/s/〜/exec"
-    "https://script.google.com/macros/s/〜/exec"
-    //.replace("〜",config.GASwebAPId)
-    .replace("〜","AKfycbwOniHTTXL9Ilq55csskVm2XXYlr0m0xYIlbjtw_qosH0-CxO7jRyIg3T4oFxIgJn_-eA")
-    + query;
+const decrypt = (arg,passPhrase) => { // 対象を復号化
+  console.log('decrypt start.\n'+arg);
+  const decodePath = decodeURIComponent(arg);
+  const data = CryptoJS.enc.Base64
+    .parse(decodePath.toString()).toString(CryptoJS.enc.Latin1);
+  const bytes = CryptoJS.AES.decrypt(data, this.passPhrase)
+    .toString(CryptoJS.enc.Utf8)
 
-  fetch(endpoint,{
-    "method": "GET",
-    "mode": "no-cors",
-    //"Accept": "application/json",
-    "Content-Type": "application/x-www-form-urlencoded",
-  })
-  .then(response => response.json())
-  .then(data => {  // 成功した処理
-    console.log('doGet data: type='+whichType(data)+', length='+data.length+'\n'+JSON.stringify(data));
-    callback(data);
-  });
-  console.log("doGet end.");
+  let rv = null;
+  try {
+    rv = JSON.parse(bytes);
+  } catch(e) {
+    rv = bytes;
+  } finally {
+    console.log('decrypt end.\ntype='+whichType(rv)+'\n',rv);
+    return rv;
+  }
+};
+
+const dump = (label,variable) => {  // コンソールに変数の内容出力
+  console.log(label
+    + ' (type=' +whichType(variable)
+    + ', length=' + variable.length + ')\n'
+    , variable
+  );
 }
 
-const doPost = (obj,callback) => {
-  // [備忘録]　GASのdoPost()にJavaScriptからJSONを渡す方法
-  // https://qiita.com/khidaka/items/ebf770591100b1eb0eff
-  //const URL = config.GASwebAPId;
-  const URL = "https://script.google.com/macros/s/AKfycbx9wfFviwrj5vMtA1vmgjMUoSVwdyGpUukFB9PI_66HFQnZRC1rGaYxMWVJ91TZeW4vUQ/exec";
-  const postData = {
-    "method"     : "POST",
-    "mode"       : "no-cors",
-    "Content-Type" : "application/x-www-form-urlencoded",
-    "body" : JSON.stringify(obj)
-  };
+const encrypt = (arg,passPhrase) => { // 対象を暗号化
+  const str = JSON.stringify(arg);
+  console.log('encript start.\ntype='+whichType(arg)+'\n'+str);
 
-  fetch(URL,postData)
-  .then(response => response.json)  //  JavaScript のオブジェクトを生成
-  .then(data => {  // 成功した処理
-    console.log('doPost success.\n'
-      + 'type=' + whichType(data)
-      + '\nlength=' + data.length
-      + '\n' + JSON.stringify(data)
-      , data
-    );
-    callback(data);
-  })
-  .finally(() => {
-    console.log('doPost end.');    
-  })
-}
+  //const utf8_plain = CryptoJS.enc.Utf8.parse(str);
+  const encrypted = CryptoJS.AES.encrypt( str, passPhrase );  // Obj
+  // crypto-jsで複合化するとMalformed UTF-8 data になった件
+  // https://zenn.dev/naonao70/articles/a2f7df87f9f736
+  const encryptResult = CryptoJS.enc.Base64
+    .stringify(CryptoJS.enc.Latin1.parse(encrypted.toString()));
+
+  console.log("encript end.\n"+encryptResult);
+  return encryptResult;
+};
 
 const genChild = (template,dObj,pFP) => {  /* テンプレートに差込データをセットした要素を生成
   引数
@@ -254,7 +246,7 @@ const scanCode = (callback, arg={}) => { /* QRコードのスキャン
     } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
       scanner.appendChild(o.result);
     }
-  }
+  }  
 
   const video = document.querySelector(opt.selector+' .video video');
   const camera = document.querySelector(opt.selector+' .camera input');
@@ -333,23 +325,41 @@ const setQRcode = (selector,opt) => {  // QRコードを指定位置にセット
   });
 }
 
+const toggleMenu = (arg=null,opt={}) => {  // メニューの開閉
+  // 引数は指定無し(単純開閉切換)またはtrue(強制オープン)
+  console.log('toggleMenu start.',arg);
+
+  // 操作対象要素を取得
+  const o = {
+    openIcon: opt.openIcon || 'header .openIcon',
+    closeIcon: opt.closeIcon || 'header .closeIcon',
+    nav: opt.nav || 'nav',
+  }
+  const openIcon = document.querySelector(o.openIcon); // 「三」アイコン
+  const closeIcon = document.querySelector(o.closeIcon); // 「×」アイコン
+  const nav = document.querySelector(o.nav);
+
+  const v = {  // 現状をisActiveに取得
+    isActive: nav.style.display === 'grid',
+  }
+
+  // 行うべき動作を判定。引数無しなら現状の反対
+  v.action = arg === null ? !v.isActive : arg;
+
+  if( v.action ){  // 現在閉じているメニューを開く
+    openIcon.style.display = 'none';
+    closeIcon.style.display = 'flex';
+    nav.style.display = 'grid';
+  } else {       // 現在開いているメニューを閉じる
+    openIcon.style.display = 'flex';
+    closeIcon.style.display = 'none';
+    nav.style.display = 'none';
+  }
+
+  console.log('toggleMenu end.',v);
+}
+
 const whichType = (arg = undefined) => {
   return arg === undefined ? 'undefined'
    : Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
-}
-
-const toggleMenu = (arg) => {  // メニューの開閉
-  // 引数は指定無し(単純開閉切換)またはtrue(強制オープン)
-
-  // 現状をisActiveに取得
-  const nav = document.querySelector('nav');
-  const isActive = nav.style.display === 'grid';
-
-  // 指定無しまたは現状が指定(arg)と異なる場合、開閉切換
-  if( arg !== undefined || arg !== isActive ){
-    document.querySelector('header .open').classList.toggle('active');
-    document.querySelector('header .close').classList.toggle('active');
-    nav.style.display = nav.style.display === 'grid' ? 'none' : 'grid';
-  }
-
 }
