@@ -193,21 +193,31 @@ const updateParticipant = () => {  // 参加者情報更新
     status:'#editParticipant [name="status0_"]',
     fee:'#editParticipant [name="fee0_"]',
   };
-
   const prefix = ['','①','②','③'];
-  let query = "?func=update&key=受付番号&value="
-    + Number(document.querySelector("#editParticipant .entryNo").innerText);
+
+  // 更新用のデータオブジェクトの作成
+  const postData = {func:'update',data:{
+    target:{
+      key: '受付番号',  //更新対象のレコードを特定する為の項目名
+      value: Number(document.querySelector("#editParticipant .entryNo")
+        .innerText), //キーの値
+    } ,
+    revice: [],
+  }};
   for( let i=0 ; i<4 ; i++ ){
     const s = document.querySelector(sList.status.replace('_',i));
-    query += '&' + prefix[i] + '状態='
-      + s.options[s.selectedIndex].value;
+    postData.data.revice.push({
+      key: prefix[i]+'状態',  // 更新対象の項目名
+      value: s.options[s.selectedIndex].value,  // 更新後の値
+    });
     const f = document.querySelector(sList.fee.replace('_',i));
-    query += '&' + prefix[i] + '参加費='
-      + f.options[f.selectedIndex].value;
+    postData.data.revice.push({
+      key: prefix[i]+'参加費',
+      value: f.options[f.selectedIndex].value,
+    });
   }
-  console.log(query);
-
-  doGet(query,(result) => {
+  doGet(postData,(data) => {
+    // 結果表示
     console.log('updateParticipant end.',JSON.stringify(result));
   });
 }

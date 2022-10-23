@@ -697,6 +697,30 @@ const doGetTest = () => {
 
 ### updateSheetData: 状態・参加費の更新
 
+#### 引数
+
+```
+post = {
+  target:{
+    key: 更新対象のレコードを特定する為の項目名
+    value: キーの値
+  } ,
+  revice: [{
+    key: 更新対象の項目名
+    value: 更新後の値
+  },{},...]
+}
+```
+
+#### 戻り値
+
+```
+result = [{
+  column: 更新対象項目
+  before: 更新前の値
+  after: 更新後の値
+},{},..]
+```
 
 ### candidates: 該当者リストの作成
 
