@@ -19,6 +19,27 @@ const changeScreen = (scrId='home',titleStr='お知らせ') => {  // 表示画�
   console.log("changeScreen end.");
 }
 
+const doGet = (func='search',data,callback) => {  // GASのdoGetを呼び出し、結果を返す
+  console.log("doGet start. ",func,data,callback);
+
+  // GASに渡すデータを作成
+  const postData = encrypt({func:func,data:data},config.passPhrase);
+  console.log('postData('+whichType(postData)+' '+postData.length+')='+postData);
+
+  // エンドポイントを作成
+  const endpoint = config.GASwebAPId + '?v=' + postData;
+  console.log('endpoint='+endpoint);
+
+  // GASからの返信を受けたらcallbackを呼び出し
+  fetch(endpoint,{"method": "GET"})
+  .then(response => response.json())
+  .then(data => {
+    console.log("doGet end.",data);
+    callback(data);  // 成功した場合、後続処理を呼び出し
+  });
+
+}
+
 const initialize = () => {  // 初期設定処理
   console.log("initialize start.");
 
@@ -50,11 +71,9 @@ const initialize = () => {  // 初期設定処理
   config.scanCode = true;
   scanCode((code) => {
     const o = JSON.parse(code);
-    for( let x in o ){ // configの値を設定
+    for( let x in o ){ // グローバル変数configに値を設定
       config[x] = o[x];
     }
-    config.DateOfExpiry  // 有効期限は取得後24H
-    = new Date(new Date().getTime() + 86400000); 
     localStorage.setItem('config',JSON.stringify(config));
     alert('初期設定は正常に終了しました');
     terminate();

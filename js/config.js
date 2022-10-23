@@ -1,7 +1,8 @@
 const config = {
   DateOfExpiry: null, // config情報の有効期限
   scanCode: false,    // スキャン実行フラグ。true時のみスキャン可
-  GASwebAPId: null,   // GAS Web API の ID
+  GASwebAPId: null,   // GAS Web API の ID。"https://script.google.com/macros/s/〜/exec"
+  passPhrase: null,   // GASとの共通鍵
 }
 const definition = {
   editGuestTemplate:  /* 一行分のデータに対する文書構造の定義

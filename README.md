@@ -575,19 +575,46 @@ const whichType = (arg = undefined) => {
 
 ### doGet
 
+予約された関数なので、アローでは無くfunctionで定義する。
+
+#### fetchのオプション指定
+
+結論としてGETの場合は不要または`method:"GET"`のみでOK。
+- MDN [fetch()](https://developer.mozilla.org/en-US/docs/Web/API/fetch)
+- [GoogleスプレッドシートをGASとJavaScriptで取得してサイトに表示する方法](https://ayumitk.com/ja/blog/fetch-and-display-google-sheets-data-on-your-website-with-gas-and-javascript/)
+
+POSTの場合、CORSに引っかかってGASまで届かないことがある。
 ```
-  // エラー：CORSに引っかかってGASまで届かない
-  // Access to fetch at 'https://script.google.com/macros/s/〜/exec?key=xxxx'
-  // from origin 'null' has been blocked by CORS policy:
-  // No 'Access-Control-Allow-Origin' header is present on the requested resource.
-  // If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
-
-  // 対応：fetchのパラメータに"mode:'no-cors'"を追加
-  // [備忘録]　GASのdoPost()にJavaScriptからJSONを渡す方法
-  // https://qiita.com/khidaka/items/ebf770591100b1eb0eff
+Access to fetch at 'https://script.google.com/macros/s/〜/exec?key=xxxx'
+from origin 'null' has been blocked by CORS policy:
+No 'Access-Control-Allow-Origin' header is present on the requested resource.
+If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
 ```
 
+その場合はfetchのパラメータに"mode:'no-cors'"を追加する。
+- [GASのdoPost()にJavaScriptからJSONを渡す方法](https://qiita.com/khidaka/items/ebf770591100b1eb0eff)
 
+#### テスト用ソース
+
+```
+const doGetTest = () => {
+  const doGetTestData = [
+    {from:'あ',to:'xyz',message:'じゅげむ'},
+    {from:'い',to:'え',message:'ふが'},
+    {from:'う',to:'/+!',message:'ほげ'},
+    {from:'abc',to:'-',message:'いくら丼'},
+    {from:'0123',to:'スタッフ',message:'食べたい'},
+  ];
+  for( let i=0 ; i<doGetTestData.length ; i++ ){
+    console.log(doGetTestData[i]);
+    doGet('post',doGetTestData[i],r => {
+      console.log('GAS result',r);
+      const e = document.getElementById('result');
+      e.innerHTML += '<p>' + JSON.stringify(r) + '</p><hr />';
+    });
+  }
+}
+```
 
 ### getSheetData: 指定シートからデータ取得
 
@@ -601,6 +628,8 @@ const whichType = (arg = undefined) => {
 
 受付番号として`range.rowStart`、一意キーとしてタイムスタンプ＋e-mail`values[0]+values[1]`を使用する。
 ※ namedValuesでも取得できるが、valuesがFormApp.getResponses()と同じ一次元配列なのでベターと判断。
+
+予約された関数なので、アローでは無くfunctionで定義する。
 
 #### a.フォーム編集用URLの取得
 

@@ -1,103 +1,40 @@
 /* ===================================================
-  汎用クラス
-=================================================== */
-class cipher {  // 変数をAES暗号化文字列に変換
-
-  constructor(passPhrase){
-    this.passPhrase = passPhrase;
-  }
-
-  encrypt(arg){
-    const str = JSON.stringify(arg);
-    console.log('cipher.encript start.\ntype='+whichType(arg)+'\n'+str);
-
-    //const utf8_plain = CryptoJS.enc.Utf8.parse(str);
-    const encrypted = CryptoJS.AES.encrypt( str, this.passPhrase );  // Obj
-    // crypto-jsで複合化するとMalformed UTF-8 data になった件
-    // https://zenn.dev/naonao70/articles/a2f7df87f9f736
-    const encryptResult = CryptoJS.enc.Base64
-      .stringify(CryptoJS.enc.Latin1.parse(encrypted.toString()));
-
-    console.log("cipher.encript end.\n"+encryptResult);
-    return encryptResult;
-  }
-
-  decrypt(arg){
-    console.log('cipher.decrypt start.\n'+arg);
-    const decodePath = decodeURIComponent(arg);
-    const data = CryptoJS.enc.Base64
-      .parse(decodePath.toString()).toString(CryptoJS.enc.Latin1);
-    const bytes = CryptoJS.AES.decrypt(data, this.passPhrase)
-      .toString(CryptoJS.enc.Utf8)
-
-    let rv = null;
-    try {
-      rv = JSON.parse(bytes);
-    } catch(e) {
-      rv = bytes;
-    } finally {
-      console.log('cipher.decrypt end.\ntype='+whichType(rv)+'\n',rv);
-      return rv;
-    }
-
-    /*const decrypted = CryptoJS.AES.decrypt( arg , this.passPhrase );
-    const txt_dexrypted = decrypted.toString(CryptoJS.enc.Utf8);
-    return txt_dexrypted;*/
-  }
-}
-
-/* ===================================================
   汎用ライブラリ
 =================================================== */
-const doGet = (query,callback) => {  // GASのdoGetを呼び出し、結果を表示する
-  console.log("doGet start. query="+query);
-  const endpoint =  //GASのAPIのURL。"https://script.google.com/macros/s/〜/exec"
-    "https://script.google.com/macros/s/〜/exec"
-    //.replace("〜",config.GASwebAPId)
-    .replace("〜","AKfycbwOniHTTXL9Ilq55csskVm2XXYlr0m0xYIlbjtw_qosH0-CxO7jRyIg3T4oFxIgJn_-eA")
-    + query;
 
-  fetch(endpoint,{
-    "method": "GET",
-    "mode": "no-cors",
-    //"Accept": "application/json",
-    "Content-Type": "application/x-www-form-urlencoded",
-  })
-  .then(response => response.json())
-  .then(data => {  // 成功した処理
-    console.log('doGet data: type='+whichType(data)+', length='+data.length+'\n'+JSON.stringify(data));
-    callback(data);
-  });
-  console.log("doGet end.");
-}
+const decrypt = (arg,passPhrase) => { // 対象を復号化
+  console.log('decrypt start.\n'+arg);
+  const decodePath = decodeURIComponent(arg);
+  const data = CryptoJS.enc.Base64
+    .parse(decodePath.toString()).toString(CryptoJS.enc.Latin1);
+  const bytes = CryptoJS.AES.decrypt(data, this.passPhrase)
+    .toString(CryptoJS.enc.Utf8)
 
-const doPost = (obj,callback) => {
-  // [備忘録]　GASのdoPost()にJavaScriptからJSONを渡す方法
-  // https://qiita.com/khidaka/items/ebf770591100b1eb0eff
-  //const URL = config.GASwebAPId;
-  const URL = "https://script.google.com/macros/s/AKfycbx9wfFviwrj5vMtA1vmgjMUoSVwdyGpUukFB9PI_66HFQnZRC1rGaYxMWVJ91TZeW4vUQ/exec";
-  const postData = {
-    "method"     : "POST",
-    "mode"       : "no-cors",
-    "Content-Type" : "application/x-www-form-urlencoded",
-    "body" : JSON.stringify(obj)
-  };
+  let rv = null;
+  try {
+    rv = JSON.parse(bytes);
+  } catch(e) {
+    rv = bytes;
+  } finally {
+    console.log('decrypt end.\ntype='+whichType(rv)+'\n',rv);
+    return rv;
+  }
+};
 
-  fetch(URL,postData)
-  .then(response => response.json)  //  JavaScript のオブジェクトを生成
-  .then(data => {  // 成功した処理
-    console.log('doPost success.\n'
-      + 'type=' + whichType(data)
-      + '\nlength=' + data.length
-      + '\n' + JSON.stringify(data)
-      , data
-    );
-    callback(data);
-  })
-  .finally(() => {
-    console.log('doPost end.');    
-  })
-}
+const encrypt = (arg,passPhrase) => { // 対象を暗号化
+  const str = JSON.stringify(arg);
+  console.log('encript start.\ntype='+whichType(arg)+'\n'+str);
+
+  //const utf8_plain = CryptoJS.enc.Utf8.parse(str);
+  const encrypted = CryptoJS.AES.encrypt( str, passPhrase );  // Obj
+  // crypto-jsで複合化するとMalformed UTF-8 data になった件
+  // https://zenn.dev/naonao70/articles/a2f7df87f9f736
+  const encryptResult = CryptoJS.enc.Base64
+    .stringify(CryptoJS.enc.Latin1.parse(encrypted.toString()));
+
+  console.log("encript end.\n"+encryptResult);
+  return encryptResult;
+};
 
 const genChild = (template,dObj,pFP) => {  /* テンプレートに差込データをセットした要素を生成
   引数
@@ -380,11 +317,6 @@ const setQRcode = (selector,opt) => {  // QRコードを指定位置にセット
   });
 }
 
-const whichType = (arg = undefined) => {
-  return arg === undefined ? 'undefined'
-   : Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
-}
-
 const toggleMenu = (arg=null) => {  // メニューの開閉
   // 引数は指定無し(単純開閉切換)またはtrue(強制オープン)
   console.log('toggleMenu start.',arg);
@@ -414,4 +346,9 @@ const toggleMenu = (arg=null) => {  // メニューの開閉
   }
 
   console.log('toggleMenu end.',v);
+}
+
+const whichType = (arg = undefined) => {
+  return arg === undefined ? 'undefined'
+   : Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
 }
