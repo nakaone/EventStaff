@@ -97,6 +97,7 @@ const inputSearchKey = () => {  // 参加者の検索キーを入力
   // スキャナから呼ばれる場合はargが存在、input欄の入力から呼ばれる場合は不存在
   const callback = (arg) => {
     console.log('inputSearchKey.callback start.',arg);
+    config.scanCode = false;  // スキャンを停止
     changeScreen('loading');
     document.querySelector('#inputSearchKey .scanner')
       .innerHTML = ''; // 作業用DIVを除去してカメラでのスキャンを停止
