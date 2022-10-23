@@ -274,255 +274,42 @@ GCPの無料枠に収めるため、送受信の情報量・頻度は極力絞�
 - 回答の編集を許可する：ON
 
 
-## Ⅲ.2.回答(スプレッドシートGAS)
+## Ⅲ.2.回答(スプレッドシート)
 
 QRコード作成時の注意： MDN「[JSON.parse() は末尾のカンマを許容しない](https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse#json.parse_%E3%81%AF%E6%9C%AB%E5%B0%BE%E3%81%AE%E3%82%AB%E3%83%B3%E3%83%9E%E3%82%92%E8%A8%B1%E5%AE%B9%E3%81%97%E3%81%AA%E3%81%84)」
 
 ⇒ d列に"label:'value',"の文字列を作成し、arrayformula(concatenate(d:d))とすると末尾にカンマが入る。
 ついでに単一引用符も許されないので、要注意。
 
-### crypto
+## Ⅲ.3.回答(GAS)
 
-- URLのクエリ文字列はCriptoJSで暗号化する。暗号化はHTML(crypto.html, index.html)とGAS双方で使える必要があるが、CriptoJS 4.0.0以上はGASで使えないため、[3.3.0のソース](https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.3.0/crypto-js.min.js)をGASに貼り付ける。
+### 全体ソース
 
-参考：[AES暗号化 (javascript)](https://chakkari.org/blog/2020/05/03/aes-encrypt-with-javascript/)
-
-#### ローカル(html)
-
-```
-class cipher {
-  constructor(passPhrase){
-    this.passPhrase = passPhrase;
-  }
-  encrypt = (arg) => {
-    const str = JSON.stringify(arg);
-    const utf8_plain = CryptoJS.enc.Utf8.parse(str);
-    const encrypted = CryptoJS.AES.encrypt( utf8_plain, this.passPhrase );  // Obj
-    const encryptResult = encrypted.toString();
-    return encryptResult;
-  }
-  decrypt = (arg) => {
-    const decrypted = CryptoJS.AES.decrypt( arg , this.passPhrase );
-    const txt_dexrypted = decrypted.toString(CryptoJS.enc.Utf8);
-    return txt_dexrypted;
-  }
-}
-
-// 以下 cipher 用テスト
-const testData = [0,'abc',true,[1,2,3],{a:10,b:20},new Date()];
-const passPhrase = 'Oct.22,2022';
-for( let x in testData ){
-  const o = new cipher(passPhrase);
-  const e = o.encrypt(testData[x]);
-  const d = o.decrypt(e);
-  const j = JSON.parse(d);
-  console.log(testData[x],e,whichType(e),d,whichType(d),j,whichType(j));
-}
-```
-
-#### GAS
-
-```
-https://script.google.com/macros/s/AKfycbzucRx5ElwxisiNC1xSfk79fLOksZ8rU-RtXYjI2IWatsyH1Z0-PMZqjjV-Jb-frW0eZg/exec
-```
-
-```
-const passPhrase = "Oct.22,2022";
-
-function doGet(e) {
-  console.log(e);
-
-  const cObj = new cipher(passPhrase);
-  arg = cObj.decrypt(e.parameter.v);
-  console.log(arg+', '+whichType(arg));
-
-  let rv = null;
-  switch( arg.func ){
-    case 'post':
-      rv = postMessage(arg.data);
-      break;
-  }
-
-  // 結果をJSON化して返す
-  rv = JSON.stringify(rv,null,2);
-  console.log(rv);
-  return ContentService
-  .createTextOutput(rv)
-  .setMimeType(ContentService.MimeType.JSON);
-}
-
-const postMessage = (arg) => {
-  console.log('postMessage start. arg='+JSON.stringify(arg));
-  const v = {
-    timestamp: new Date().toLocaleString('ja-JP'),
-    from: arg.from,
-    to: arg.to,
-    message: arg.message,
-  }
-  console.log('postMessage end. v='+JSON.stringify(v));  
-  return v;
-}
-
-const doGetTest = () => {
-  const testData = [
-    {func:'post',data:{from:'嶋津',to:'スタッフ',message:'ふがふが'}},
-  ];
-  for( let i=0 ; i<testData.length ; i++ ){
-    const o = new cipher(passPhrase);
-    doGet({parameter:{v:o.encrypt(testData[i])}});
-  }
-}
-
-class cipher {  // 変数をAES暗号化文字列に変換
-
-  constructor(passPhrase){
-    this.passPhrase = passPhrase;
-  }
-
-  encrypt(arg){
-    const str = JSON.stringify(arg);
-    console.log('cipher.encript start.\ntype='+whichType(arg)+'\n'+str);
-
-    //const utf8_plain = CryptoJS.enc.Utf8.parse(str);
-    const encrypted = CryptoJS.AES.encrypt( str, this.passPhrase );  // Obj
-    // crypto-jsで複合化するとMalformed UTF-8 data になった件
-    // https://zenn.dev/naonao70/articles/a2f7df87f9f736
-    const encryptResult = CryptoJS.enc.Base64
-      .stringify(CryptoJS.enc.Latin1.parse(encrypted.toString()));
-
-    console.log("cipher.encript end.\n"+encryptResult);
-    return encryptResult;
-  }
-
-  decrypt(arg){
-    console.log('cipher.decrypt start.\n'+arg);
-    const decodePath = decodeURIComponent(arg);
-    const data = CryptoJS.enc.Base64
-      .parse(decodePath.toString()).toString(CryptoJS.enc.Latin1);
-    const bytes = CryptoJS.AES.decrypt(data, this.passPhrase)
-      .toString(CryptoJS.enc.Utf8)
-
-    let rv = null;
-    try {
-      rv = JSON.parse(bytes);
-    } catch(e) {
-      rv = bytes;
-    } finally {
-      console.log('cipher.decrypt end.\ntype='+whichType(rv)+'\n',rv);
-      return rv;
-    }
-
-    /*const decrypted = CryptoJS.AES.decrypt( arg , this.passPhrase );
-    const txt_dexrypted = decrypted.toString(CryptoJS.enc.Utf8);
-    return txt_dexrypted;*/
-  }
-}
-
-const whichType = (arg = undefined) => {
-  return arg === undefined ? 'undefined'
-   : Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
-}
-
-//== https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.3.0/crypto-js.min.js
-```
-
-#### memo
-
-<details><summary>着手初日(10/21)夜、四苦八苦して諦めた段階のGASソース</summary>
+2022/10/23 11:14  doGet修正前
 
 ```
 function doGet(e) {
-  console.log(e);
-
-  const passPhrase = "Ku2H!r0k0";
-  const data = e.parameter.v;
-  const decrypted = CryptoJS.AES.decrypt(data,passPhrase);
-  const txt_dexrypted = decrypted.toString(CryptoJS.enc.Utf8);
-  const decoded = decodeURI(txt_dexrypted);
-  const dObj = JSON.parse(decoded);
-  dObj['受付番号'] += 'fuga';
-  dObj['氏名'] += 'hoge';
-  Logger.log('dObj='+JSON.stringify(dObj));
-
-  return ContentService
-  .createTextOutput(JSON.stringify(dObj, null, 2))
-  .setMimeType(ContentService.MimeType.JSON);
-}
-
-const test = () => {
-  //crypto-jsで複合化するとMalformed UTF-8 data になった件
-  //https://zenn.dev/naonao70/articles/a2f7df87f9f736
-  const e = {parameter:{v:"U2FsdGVkX186sBdfV2zo+cXkBX22SwdVxWTVNLwq6gPYSKvzjagfxJJJBYxC8N4Q/pWZRSC/O6soaKDhQ9NEjbhsHD8K5cesc4Cxtxtcsko="}};
-  const rv = doGet(e);
-  Logger.log(JSON.parse(rv.getContent()));
-}
-
-
-const cryptTest = () => {
-  const passPhrase = "Ku2H!r0k0";
-  const data = JSON.stringify({a:10,b:20});
-  Logger.log(data);
-  const utf8_plain = CryptoJS.enc.Utf8.parse(data);
-  Logger.log(utf8_plain);
-  const encrypted = CryptoJS.AES.encrypt(utf8_plain,passPhrase);
-  Logger.log(encrypted);
-  const decrypted = CryptoJS.AES.decrypt(encrypted,passPhrase);
-  Logger.log(decrypted);
-  const txt_dexrypted = decrypted.toString(CryptoJS.enc.Utf8);
-  Logger.log(txt_dexrypted);
-
-}
-
-//== https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.3.0/crypto-js.min.js
-(後略)
-```
-
-</details>
-
-### doGet
-
-```
-  // エラー：CORSに引っかかってGASまで届かない
-  // Access to fetch at 'https://script.google.com/macros/s/〜/exec?key=xxxx'
-  // from origin 'null' has been blocked by CORS policy:
-  // No 'Access-Control-Allow-Origin' header is present on the requested resource.
-  // If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
-
-  // 対応：fetchのパラメータに"mode:'no-cors'"を追加
-  // [備忘録]　GASのdoPost()にJavaScriptからJSONを渡す方法
-  // https://qiita.com/khidaka/items/ebf770591100b1eb0eff
-```
-
-
-### doPost: パラメータにより処理を分岐
-
-```
-function doPost(e) {
-  Logger.log('doPost start.'+JSON.stringify(e));
+  Logger.log('doGet start.'+JSON.stringify(e));
 
   let result = {fuga:'hoge'}; // 返値の初期値
   const dObj = getSheetData(); // データをシートから取得
-  //dObj.post = JSON.parse(e.postData.getDataAsString());
 
   if( e.parameter.func === 'search' ){  // 該当者リストの作成
     result = candidates(dObj,e.parameter.key);
   } else if( e.parameter.func === 'update' ){  // 状態・参加費の更新
-    //result = updateParticipant(dObj);
-    result = updateSheetData(dObj,e.parameter);
+    result = updateSheetData(dObj,JSON.parse(e.parameter));
   }
 
-  // 結果確認
-  Logger.log(JSON.stringify(result));
-
   // JSON文字列に変換して出力する
-  Logger.log('doPost end.');
+  Logger.log('doGet end.'+JSON.stringify(result));
   return makeResultJSON(result);
 }
-```
 
-### getSheetData: 指定シートからデータ取得
+const doGetTest = () => {
+  //doGet({parameter:{func:'search',key:'ナ'}});
+  doGet({parameter:{func:'update',data:'{"target":{"key":"受付番号","value":"12"},"revice":[{"key":"参加費","value":"ふが"},{"key":"③状態","value":"ほげ"}]}'}});
+}
 
-```
 const getSheetData = (sheetName='マスタ') => {  /* getSheetData: 指定シートからデータ取得
   返値 = {
     rows: 取得した生データ(二次元配列)
@@ -549,12 +336,8 @@ const getSheetData = (sheetName='マスタ') => {  /* getSheetData: 指定シー
   Logger.log('getSheetData end.\n'+JSON.stringify(rv));
   return rv;
 };
-```
 
-### updateSheetData: 状態・参加費の更新
-
-```
-const updateSheetData = (dObj,data) => {  /* シートを更新する
+const updateSheetData = (dObj,post) => {  /* シートを更新する
   data = {
     target:{
       key: 更新対象のレコードを特定する為の項目名
@@ -571,6 +354,13 @@ const updateSheetData = (dObj,data) => {  /* シートを更新する
     after: 更新後の値
   },{},..]
   */
+  // データ形式を処理しやすく変更
+  const data = {target:{key:post.key,value:post.value},revice:[]};
+  for( let i in data ){
+    if( i !== 'key' && i !== 'value' ){
+      data.revice.push({key: i,value: post[i]});
+    }
+  }
   Logger.log('updateSheetData start. data='+JSON.stringify(data));
 
   // 1.何行目のデータを更新するか特定する
@@ -611,22 +401,15 @@ const updateSheetData = (dObj,data) => {  /* シートを更新する
   Logger.log('updateSheetData end.'+JSON.stringify(log));
   return log;
 }
-```
 
-### makeResultJSON: 返値オブジェクトから返却用JSONを生成
-
-```
 // makeResultJSON: 返値オブジェクトから返却用JSONを生成
 const makeResultJSON = (arg) => {
   return ContentService
   .createTextOutput(JSON.stringify(arg, null, 2))
   .setMimeType(ContentService.MimeType.JSON);
+  //return ContentService.createTextOutput(JSON.stringify(ret)).setMimeType(ContentService.MimeType.JSON);  
 }
-```
 
-### candidates: 該当者リストの作成
-
-```
 const candidates = (dObj,key) => {  // 該当者リストの作成
   Logger.log('candidates start. key='+key);
 
@@ -643,65 +426,50 @@ const candidates = (dObj,key) => {  // 該当者リストの作成
   Logger.log('candidates end. result='+JSON.stringify(result));
   return result;
 }
-```
 
-### doPostTest: テスト用スクリプト
 
-```
-const doPostTest = () => {
-  const e = {
-    //parameter: {func: "search",key: "12",},
-    //parameter: {func: "search",key: "ナ",},
-    parameter: {func: "update", target:{key:"受付番号",value:"12"},revice:[{key:"参加費",value:"ほげ"},{key:"③状態",value:"ふが"}]},
-  };
- doPost(e);
-}
-```
-
-### onFormSubmit: フォーム登録時、参加者にメールを自動返信
-
-<details><summary>source</summary>
-
-```
 // テストデータ出典
 // https://e.usen.com/onyankomember/
 
-const bodyPattern = `
-::firstName:: 様
-
-下北沢小学校おやじの会です。この度は参加登録、ありがとうございました。
-
-当日は検温後に受付に行き、添付QRコードまたは受付番号を担当者にお示しください。
-=============================
-受付番号： ::entryNo::
-=============================
-
-なお登録いただいた参加メンバの追加・欠席、または申込みのキャンセルがあった場合、以下のフォームを修正してお知らせください。
-::editURL::
-
-当日のお越しをお待ちしております。
-`;
-
 const htmlPattern = `
-&lt;p&gt;::firstName:: 様&lt;/p&gt;
+<p>::firstName:: 様</p>
 
-&lt;p&gt;下北沢小学校おやじの会です。この度は参加登録、ありがとうございました。&lt;/p&gt;
+<p>下北沢小学校おやじの会です。この度は参加登録、ありがとうございました。</p>
 
-&lt;p&gt;当日は検温後に受付に行き、以下を受付担当者にお示しください。&lt;/p&gt;
-&lt;div style=&quot;
-  border: solid 2px #f00;
-  padding:5px;&quot;&gt;受付番号：
-  &lt;p style=&quot;text-align:center;&quot;&gt;
-    &lt;span style=&quot;font-size: 3rem;&quot;&gt;::entryNo::&lt;/span&gt;
-  &lt;/p&gt;
-  &lt;p style=&quot;text-align:center;&quot;&gt;
-    &lt;img src=&#039;cid:qr_code&#039; /&gt;
-  &lt;/p&gt;
-&lt;/div&gt;
+<p>当日は検温後に受付に行き、以下を受付担当者にお示しください。</p>
+<div style="
+  position: relative;
+  margin: 2rem;
+  padding: 0.5rem 1rem;
+  border: solid 4px #95ccff;
+  border-radius: 8px;
+">
+  <span style="
+    position: absolute;
+    display: inline-block;
+    top: calc(-0.5rem - 2px);
+    left: 2rem;
+    padding: 0 0.5rem;
+    line-height: 1;
+    background: #fff;
+    color: #95ccff;
+    font-weight: bold;
+  ">受付番号</span>
+  <p style="
+    text-align:center;
+    font-size: 3rem;
+    font-weight: bold;
+  ">
+    ::entryNo::
+  </p>
+  <p style="text-align: center;">
+    <img src='cid:qr_code' />
+  </p>
+</div>
 
-&lt;p&gt;もし登録いただいた参加メンバの追加・欠席、または申込みのキャンセルがあった場合、以下から修正してください。&lt;/p&gt;
+<p>もし登録いただいた参加メンバの追加・欠席、または申込みのキャンセルがあった場合、以下から修正してください。</p>
 
-&lt;p&gt;&lt;a href=&quot;::editURL::&quot; style=&quot;
+<p><a href="::editURL::" style="
   display: inline-block;
   padding: 20px 50px 20px 50px;
   text-decoration: none;
@@ -709,141 +477,132 @@ const htmlPattern = `
   background: blue;
   font-weight: bold;
   border: solid 4px blue;
-  border-radius: 8px;&quot;&gt;参加申込の修正&lt;/a&gt;&lt;/p&gt;
+  border-radius: 8px;">参加申込の修正</a></p>
 
-&lt;p&gt;なお当日の注意事項・持ち物リストは適宜追加されることがありますので、イベント前日に「&lt;a href=&quot;https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97&quot;&gt;開催案内&lt;/a&gt;」のページで再度ご確認いただけますようお願い申し上げます。&lt;/p&gt;
+<p>なお当日の注意事項・持ち物リストは適宜追加されることがありますので、イベント前日に「<a href="https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97">開催案内</a>」のページで再度ご確認いただけますようお願い申し上げます。</p>
 
-&lt;p&gt;当日のお越しをお待ちしております。&lt;/p&gt;
+<p>当日のお越しをお待ちしております。</p>
 `;
 
 function onFormSubmit(  // メールの自動返信
-  e={namedValues:{&#039;メールアドレス&#039;:[&#039;nakaone.kunihiro@gmail.com&#039;]}} // テスト用既定値
+  e={namedValues:{'メールアドレス':['nakaone.kunihiro@gmail.com']}} // テスト用既定値
 ) {
   console.log(e.namedValues);
 
   // 1.受付番号の採番
   // 「回答」シート上で書き込まれた行番号＋「当日」上のデータ件数−ヘッダ1行×2シート
   let entryNo = e.range.rowStart - 2
-    + SpreadsheetApp.getActiveSpreadsheet().getSheetByName(&#039;当日&#039;).getLastRow();
+    + SpreadsheetApp.getActiveSpreadsheet().getSheetByName('当日').getLastRow();
   // シートに受付番号を記入
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(&#039;回答&#039;);
-  sheet.getRange(&quot;S&quot;+e.range.rowStart).setValue(entryNo); // 受付番号はS列
-  entryNo = (&#039;0000&#039;+entryNo).slice(-4);
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('回答');
+  sheet.getRange("S"+e.range.rowStart).setValue(entryNo); // 受付番号はS列
+  entryNo = ('0000'+entryNo).slice(-4);
 
   // 2.編集用URLの取得
   // 2.1.シート側のキーを生成
-  const sKey = sheet.getRange(&quot;A&quot;+e.range.rowStart).getValue().getTime()
-    + e.namedValues[&#039;メールアドレス&#039;][0];
+  const sKey = sheet.getRange("A"+e.range.rowStart).getValue().getTime()
+    + e.namedValues['メールアドレス'][0];
   /* 以下だと秒単位でミリ秒が無いためフォームと一致しない
-  const sKey = new Date(e.namedValues[&#039;タイムスタンプ&#039;][0]).getTime()
-    + e.namedValues[&#039;メールアドレス&#039;][0]; */
-  console.log(&#039;sKey = &#039;+sKey);
+  const sKey = new Date(e.namedValues['タイムスタンプ'][0]).getTime()
+    + e.namedValues['メールアドレス'][0]; */
+  console.log('sKey = '+sKey);
 
   // 2.2.フォームデータを全件読み込み
   // FormIdはフォームの編集画面。入力画面、回答後の「回答を記録しました」画面とは異なる。
-  const FormId = &quot;1hnQLsY3lRh0gQMGfXoJJqAL_yBpKR6T0h2RFRc8tUEA&quot;;
+  const FormId = "1hnQLsY3lRh0gQMGfXoJJqAL_yBpKR6T0h2RFRc8tUEA";
   const formData = FormApp.openById(FormId).getResponses();
 
   // 2.3.フォームデータを順次検索
-  let editURL = &#039;&#039;;
-  for( let i=formData.length-1 ; i&gt;=0 ; i++ ){
+  let editURL = '';
+  for( let i=formData.length-1 ; i>=0 ; i++ ){
     const fKey = formData[i].getTimestamp().getTime()
       + formData[i].getRespondentEmail();
     console.log(i,fKey);
     if( sKey === fKey ){
-      console.log(&#039;formData&#039;,formData[i]);
+      console.log('formData',formData[i]);
       editURL = formData[i].getEditResponseUrl();
       break;
     }
   }
-  console.log(&#039;editURL = &#039;+editURL);
+  console.log('editURL = '+editURL);
 
   // 2.4.シートに編集用URLを保存
-  sheet.getRange(&quot;T&quot;+e.range.rowStart).setValue(editURL); // 編集用URLはT列
+  sheet.getRange("T"+e.range.rowStart).setValue(editURL); // 編集用URLはT列
 
   // 3.本文の編集
-  const firstName = e.namedValues[&#039;申請者氏名&#039;][0].match(/^([^　]+)/)[1];
-  const body = bodyPattern
-    .replace(&quot;::firstName::&quot;,firstName)
-    .replace(&quot;::entryNo::&quot;,entryNo)
-    .replace(&quot;::editURL::&quot;,editURL);
-  /*let body = JSON.stringify(e) + &#039;\n\n&#039;
-    + &#039;entryNo = &#039; + entryNo + &#039;\n\n&#039;
-    + &#039;editURL = &#039; + editURL + &#039;\n&#039;
-  ;*/
+  const firstName = e.namedValues['申請者氏名'][0].match(/^([^　]+)/)[1];
+  const body = 'dummy';
 
   // 3.2.htmlメールの編集
   const options = {
-    name: &#039;下北沢小学校おやじの会&#039;,
-    replyTo: &#039;shimokitasho.oyaji@gmail.com&#039;,
+    name: '下北沢小学校おやじの会',
+    replyTo: 'shimokitasho.oyaji@gmail.com',
     //attachments: createQrCode(entryNo),
     htmlBody: htmlPattern
-      .replace(&quot;::firstName::&quot;,firstName)
-      .replace(&quot;::entryNo::&quot;,entryNo)
-      .replace(&quot;::editURL::&quot;,editURL),
+      .replace("::firstName::",firstName)
+      .replace("::entryNo::",entryNo)
+      .replace("::editURL::",editURL),
     inlineImages: {
       qr_code: createQrCode(entryNo),
     }
   }
 
   GmailApp.sendEmail(
-    e.namedValues[&#039;メールアドレス&#039;][0],  // to
-    &#039;【完了】QR受付テストへの登録&#039;,     // subject
+    e.namedValues['メールアドレス'][0],  // to
+    '【完了】QR受付テストへの登録',     // subject
     body,
     options
   );
 }
 
-const createQrCode = (code_data) =&gt; { // QRコード生成
-  let url = &#039;https://chart.googleapis.com/chart?chs=200x200&amp;cht=qr&amp;chl=&#039; + code_data;
+const createQrCode = (code_data) => { // QRコード生成
+  let url = 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=' + code_data;
   let option = {
-      method: &quot;get&quot;,
+      method: "get",
       muteHttpExceptions: true
     };
   let ajax = UrlFetchApp.fetch(url, option);
   console.log(ajax.getBlob())
   return ajax.getBlob();
-}</pre>
-      </details>
+}
 
-      AppScript > トリガー > トリガーを追加 > onFormSubmit/フォーム送信時
-
-      <div><h3>1.引数・戻り値</h3>
-        引数はフォームから登録された内容の情報。
-        <details><summary>サンプル</summary>
-          <pre class="hljs" style="display: block; overflow-x: auto; padding: 0.5em; color: rgb(51, 51, 51); background: rgb(248, 248, 248);">{
-            <span class="hljs-string" style="color: rgb(221, 17, 68);">"authMode"</span>:<span class="hljs-string" style="color: rgb(221, 17, 68);">"FULL"</span>,
-            <span class="hljs-string" style="color: rgb(221, 17, 68);">"namedValues"</span>:{
-              <span class="hljs-string" style="color: rgb(221, 17, 68);">"参加者③所属"</span>:[<span class="hljs-string" style="color: rgb(221, 17, 68);">""</span>],
-              <span class="hljs-string" style="color: rgb(221, 17, 68);">"参加者③氏名"</span>:[<span class="hljs-string" style="color: rgb(221, 17, 68);">""</span>],
-              <span class="hljs-string" style="color: rgb(221, 17, 68);">"タイムスタンプ"</span>:[<span class="hljs-string" style="color: rgb(221, 17, 68);">"2022/10/06 13:08:50"</span>],
-              <span class="hljs-string" style="color: rgb(221, 17, 68);">"メールアドレス"</span>:[<span class="hljs-string" style="color: rgb(221, 17, 68);">"nakaone.kunihiro@gmail.com"</span>],
-              <span class="hljs-string" style="color: rgb(221, 17, 68);">"参加者②氏名"</span>:[<span class="hljs-string" style="color: rgb(221, 17, 68);">""</span>],
-              <span class="hljs-string" style="color: rgb(221, 17, 68);">"参加者②氏名読み"</span>:[<span class="hljs-string" style="color: rgb(221, 17, 68);">""</span>],
-              <span class="hljs-string" style="color: rgb(221, 17, 68);">"引取者氏名"</span>:[<span class="hljs-string" style="color: rgb(221, 17, 68);">""</span>],
-              <span class="hljs-string" style="color: rgb(221, 17, 68);">"参加者①氏名"</span>:[<span class="hljs-string" style="color: rgb(221, 17, 68);">"内海　和子"</span>],
-              <span class="hljs-string" style="color: rgb(221, 17, 68);">"参加者③氏名読み"</span>:[<span class="hljs-string" style="color: rgb(221, 17, 68);">""</span>],
-              <span class="hljs-string" style="color: rgb(221, 17, 68);">"緊急連絡先"</span>:[<span class="hljs-string" style="color: rgb(221, 17, 68);">""</span>],
-              <span class="hljs-string" style="color: rgb(221, 17, 68);">"備考"</span>:[<span class="hljs-string" style="color: rgb(221, 17, 68);">""</span>],
-              <span class="hljs-string" style="color: rgb(221, 17, 68);">"参加者①氏名読み"</span>:[<span class="hljs-string" style="color: rgb(221, 17, 68);">"うつみ
-              かずこ"</span>],
-              <span class="hljs-string" style="color: rgb(221, 17, 68);">"参加者①所属"</span>:[<span class="hljs-string" style="color: rgb(221, 17, 68);">"4年"</span>],
-              <span class="hljs-string" style="color: rgb(221, 17, 68);">"参加者②所属"</span>:[<span class="hljs-string" style="color: rgb(221, 17, 68);">""</span>]
-            },
-            <span class="hljs-string" style="color: rgb(221, 17, 68);">"range"</span>:{<span class="hljs-string" style="color: rgb(221, 17, 68);">"columnEnd"</span>:<span class="hljs-number" style="color: teal;">14</span>,<span class="hljs-string" style="color: rgb(221, 17, 68);">"columnStart"</span>:<span class="hljs-number" style="color: teal;">1</span>,<span class="hljs-string" style="color: rgb(221, 17, 68);">"rowEnd"</span>:<span class="hljs-number" style="color: teal;">14</span>,<span class="hljs-string" style="color: rgb(221, 17, 68);">"rowStart"</span>:<span class="hljs-number" style="color: teal;">14</span>},
-            <span class="hljs-string" style="color: rgb(221, 17, 68);">"source"</span>:{},
-            <span class="hljs-string" style="color: rgb(221, 17, 68);">"triggerUid"</span>:<span class="hljs-string" style="color: rgb(221, 17, 68);">"12944381"</span>,
-            <span class="hljs-string" style="color: rgb(221, 17, 68);">"values"</span>:[<span class="hljs-string" style="color: rgb(221, 17, 68);">"2022/10/06 13:08:50"</span>,<span class="hljs-string" style="color: rgb(221, 17, 68);">"nakaone.kunihiro@gmail.com"</span>,<span class="hljs-string" style="color: rgb(221, 17, 68);">"内海　和子"</span>,<span class="hljs-string" style="color: rgb(221, 17, 68);">"うつみ　かずこ"</span>,<span class="hljs-string" style="color: rgb(221, 17, 68);">"4年"</span>,<span class="hljs-string" style="color: rgb(221, 17, 68);">""</span>,<span class="hljs-string" style="color: rgb(221, 17, 68);">""</span>,<span class="hljs-string" style="color: rgb(221, 17, 68);">""</span>,<span class="hljs-string" style="color: rgb(221, 17, 68);">""</span>,<span class="hljs-string" style="color: rgb(221, 17, 68);">""</span>,<span class="hljs-string" style="color: rgb(221, 17, 68);">""</span>,<span class="hljs-string" style="color: rgb(221, 17, 68);">""</span>,<span class="hljs-string" style="color: rgb(221, 17, 68);">""</span>,<span class="hljs-string" style="color: rgb(221, 17, 68);">""</span>]
-          }
+const whichType = (arg = undefined) => {
+  return arg === undefined ? 'undefined'
+   : Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
+}
 ```
 
-</details>
+
+### doGet
+
+```
+  // エラー：CORSに引っかかってGASまで届かない
+  // Access to fetch at 'https://script.google.com/macros/s/〜/exec?key=xxxx'
+  // from origin 'null' has been blocked by CORS policy:
+  // No 'Access-Control-Allow-Origin' header is present on the requested resource.
+  // If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
+
+  // 対応：fetchのパラメータに"mode:'no-cors'"を追加
+  // [備忘録]　GASのdoPost()にJavaScriptからJSONを渡す方法
+  // https://qiita.com/khidaka/items/ebf770591100b1eb0eff
+```
+
+
+
+### getSheetData: 指定シートからデータ取得
+
+
+### updateSheetData: 状態・参加費の更新
+
+
+### candidates: 該当者リストの作成
+
+### onFormSubmit: フォーム登録時、参加者にメールを自動返信
 
 受付番号として`range.rowStart`、一意キーとしてタイムスタンプ＋e-mail`values[0]+values[1]`を使用する。
 ※ namedValuesでも取得できるが、valuesがFormApp.getResponses()と同じ一次元配列なのでベターと判断。
 
-
-#### 2.フォーム編集用URLの取得
+#### a.フォーム編集用URLの取得
 
 参加者の追加・削除やキャンセル登録のため、登録者(参加者)がフォームを編集する必要があるが、編集用URLはGoogle Spreadには記録されず、フォームの登録情報にしか存在しない。
 そこで①フォームの登録情報を全件取得し、②Google Spreadの登録日時＋e-mailから特定し、③特定された登録情報から編集用URLを取得、という手順を踏む。</p>
@@ -875,7 +634,7 @@ for( let i=0 ; i<formData.length ; i++ ){
 
 getEditResponseUrl()他のメソッドの詳細については、Google公式 [Class FormResponse](https://developers.google.com/apps-script/reference/forms/form-response)参照。
 
-#### 3.注意事項
+#### b.注意事項
 
 1. 運用前、GASコンソールで「実行」し、権限を付与しておく
 
@@ -895,7 +654,7 @@ getEditResponseUrl()他のメソッドの詳細については、Google公式 [C
 フォーム > 回答タグ > スプレッドシートアイコン右のメニュー >
 「新しい回答についてのメール通知を受け取る」のチェックを外す
 
-#### 4.参考
+#### c.参考
 
 - [メールの自動返信](https://blog.hubspot.jp/google-forms-automatic-reply#f)
 - [メールへのファイル添付](https://my-funs.com/gas-mailapp/)
@@ -911,14 +670,7 @@ getEditResponseUrl()他のメソッドの詳細については、Google公式 [C
 
 ### whichType: 渡された変数の型を判定
 
-```
-const whichType = (arg = undefined) => {
-  return arg === undefined ? 'undefined'
-   : Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
-}
-```
-
-## Ⅲ.3.受付担当者画面(html)
+## Ⅲ.4.受付担当者画面(html)
 
 ### temp
 
@@ -1071,7 +823,117 @@ MDN「[JSON.parse() は末尾のカンマを許容しない](https://developer.m
 ついでに単一引用符も許されないので、要注意。
 
 
-## Ⅳ.2.履歴
+## Ⅳ.2.プロトタイプ
+
+### crypto: クエリ文字列の暗号化
+
+- URLのクエリ文字列はCriptoJSで暗号化する。暗号化はHTML(crypto.html, index.html)とGAS双方で使える必要があるが、CriptoJS 4.0.0以上はGASで使えないため、[3.3.0のソース](https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.3.0/crypto-js.min.js)をGASに貼り付ける。
+
+参考：[AES暗号化 (javascript)](https://chakkari.org/blog/2020/05/03/aes-encrypt-with-javascript/)
+
+#### GAS
+
+```
+const passPhrase = "Oct.22,2022";
+
+function doGet(e) {
+  console.log(e);
+
+  const cObj = new cipher(passPhrase);
+  arg = cObj.decrypt(e.parameter.v);
+  console.log(arg+', '+whichType(arg));
+
+  let rv = null;
+  switch( arg.func ){
+    case 'post':
+      rv = postMessage(arg.data);
+      break;
+  }
+
+  // 結果をJSON化して返す
+  rv = JSON.stringify(rv,null,2);
+  console.log(rv);
+  return ContentService
+  .createTextOutput(rv)
+  .setMimeType(ContentService.MimeType.JSON);
+}
+
+const postMessage = (arg) => {
+  console.log('postMessage start. arg='+JSON.stringify(arg));
+  const v = {
+    timestamp: new Date().toLocaleString('ja-JP'),
+    from: arg.from,
+    to: arg.to,
+    message: arg.message,
+  }
+  console.log('postMessage end. v='+JSON.stringify(v));  
+  return v;
+}
+
+const doGetTest = () => {
+  const testData = [
+    {func:'post',data:{from:'嶋津',to:'スタッフ',message:'ふがふが'}},
+  ];
+  for( let i=0 ; i<testData.length ; i++ ){
+    const o = new cipher(passPhrase);
+    doGet({parameter:{v:o.encrypt(testData[i])}});
+  }
+}
+
+class cipher {  // 変数をAES暗号化文字列に変換
+
+  constructor(passPhrase){
+    this.passPhrase = passPhrase;
+  }
+
+  encrypt(arg){
+    const str = JSON.stringify(arg);
+    console.log('cipher.encript start.\ntype='+whichType(arg)+'\n'+str);
+
+    //const utf8_plain = CryptoJS.enc.Utf8.parse(str);
+    const encrypted = CryptoJS.AES.encrypt( str, this.passPhrase );  // Obj
+    // crypto-jsで複合化するとMalformed UTF-8 data になった件
+    // https://zenn.dev/naonao70/articles/a2f7df87f9f736
+    const encryptResult = CryptoJS.enc.Base64
+      .stringify(CryptoJS.enc.Latin1.parse(encrypted.toString()));
+
+    console.log("cipher.encript end.\n"+encryptResult);
+    return encryptResult;
+  }
+
+  decrypt(arg){
+    console.log('cipher.decrypt start.\n'+arg);
+    const decodePath = decodeURIComponent(arg);
+    const data = CryptoJS.enc.Base64
+      .parse(decodePath.toString()).toString(CryptoJS.enc.Latin1);
+    const bytes = CryptoJS.AES.decrypt(data, this.passPhrase)
+      .toString(CryptoJS.enc.Utf8)
+
+    let rv = null;
+    try {
+      rv = JSON.parse(bytes);
+    } catch(e) {
+      rv = bytes;
+    } finally {
+      console.log('cipher.decrypt end.\ntype='+whichType(rv)+'\n',rv);
+      return rv;
+    }
+
+    /*const decrypted = CryptoJS.AES.decrypt( arg , this.passPhrase );
+    const txt_dexrypted = decrypted.toString(CryptoJS.enc.Utf8);
+    return txt_dexrypted;*/
+  }
+}
+
+const whichType = (arg = undefined) => {
+  return arg === undefined ? 'undefined'
+   : Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
+}
+
+//== https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.3.0/crypto-js.min.js
+```
+
+## Ⅳ.3.履歴
 
 <details><summary>2022/10/06 : 改善しようとして動作不良</summary>
 
