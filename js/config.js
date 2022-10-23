@@ -1,4 +1,8 @@
-const config = {}
+const config = {
+  DateOfExpiry: null, // config情報の有効期限
+  scanCode: false,    // スキャン実行フラグ。true時のみスキャン可
+  GASwebAPId: null,   // GAS Web API の ID
+}
 const definition = {
   editGuestTemplate:  /* 一行分のデータに対する文書構造の定義
     tag string 1 タグ指定(必須)。"text"の場合は文字列と看做し、createTextNodeで追加する
