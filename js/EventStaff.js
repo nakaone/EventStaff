@@ -19,16 +19,17 @@ const changeScreen = (scrId='home',titleStr='お知らせ') => {  // 表示画�
   console.log("changeScreen end.");
 }
 
-const doGet = (func='search',data,callback) => {  // GASのdoGetを呼び出し、結果を返す
-  console.log("doGet start. ",func,data,callback);
+const doGet = (postData,callback) => {  // GASのdoGetを呼び出し、結果を返す
+  console.log("doGet start. ",postData,callback);
 
   // GASに渡すデータを作成
-  const postData = encrypt({func:func,data:data},config.passPhrase);
-  console.log('postData('+whichType(postData)+' '+postData.length+')='+postData);
+  const v = encrypt(postData,config.passPhrase);
+  dump('v',v);
 
   // エンドポイントを作成
-  const endpoint = config.GASwebAPId + '?v=' + postData;
-  console.log('endpoint='+endpoint);
+  const endpoint = 'https://script.google.com/macros/s/〜/exec'
+    .replace('〜',config.GASwebAPId) + '?v=' + v;
+  dump('endpoint',endpoint);
 
   // GASからの返信を受けたらcallbackを呼び出し
   fetch(endpoint,{"method": "GET"})
@@ -101,9 +102,9 @@ const inputSearchKey = () => {  // 参加者の検索キーを入力
       .innerHTML = ''; // 作業用DIVを除去してカメラでのスキャンを停止
     const postData = {
       func: 'search',
-      key: strEl.value || arg,
+      data: {key: strEl.value || arg},
     };
-    doGet("?func=search&key=" + (strEl.value || arg),(data) => {
+    doGet(postData,(data) => {
       if( data.length === 0 ){
         alert("該当する参加者は存在しませんでした");
       } else if( data.length > 1){

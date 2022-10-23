@@ -21,6 +21,14 @@ const decrypt = (arg,passPhrase) => { // 対象を復号化
   }
 };
 
+const dump = (label,variable) => {  // コンソールに変数の内容出力
+  console.log(label
+    + ' (type=' +whichType(variable)
+    + ', length=' + variable.length + ')\n'
+    , variable
+  );
+}
+
 const encrypt = (arg,passPhrase) => { // 対象を暗号化
   const str = JSON.stringify(arg);
   console.log('encript start.\ntype='+whichType(arg)+'\n'+str);
