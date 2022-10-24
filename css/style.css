@@ -145,9 +145,28 @@ nav li a {
   width: calc(100% - 2rem);
 }
 
-#editParticipant .entryNo, .name {font-size: 2rem;}
+#editParticipant .entryNo, .name {font-size: 1.4rem;}
 #editParticipant .detail {display: none;}
+#editParticipant .participant {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: row;
+  flex-direction: row;
+}
+#editParticipant .participant div:nth-of-type(1) {width:1.2rem;}
+#editParticipant .participant div:nth-of-type(2) {
+  width:3rem;
+  white-space: no-wrap;
+}
+#editParticipant .participant div:nth-of-type(3),
+#editParticipant .participant div:nth-of-type(4) {
+  margin-left: 0.5rem;
+  width: 5rem;
+}
+#editParticipant select {font-size: 1rem;}
+/*
 #editParticipant label {margin-left:2rem;}
+*/
 
 /*
 .vth {width:6rem;}

@@ -33,31 +33,52 @@ const definition = {
       ]},
     ]},
     {tag:"div", class:"tr participant", children:[
+      {tag:"div"},
+      {tag:"div"},
+      {tag:"div", children:[
+        {tag:"select", class:"status", name:"status00",
+          opt:"未入場,入場済,退場済,不参加,未登録", variable:"状態"},
+      ]},
+      {tag:"div", children:[
+        {tag:"select", class:"fee", name:"fee00",
+          opt:"未収,既収,免除,無し", variable:"参加費"},
+      ]},
+    ]},
+    {tag:"div", class:"tr participant", children:[
+      {tag:"div", text:"①"},
       {tag:"div", variable:"①氏名"},
-      {tag:"label", text:'①状態'},
-      {tag:"select", class:"td status", name:"status01",
-        opt:"未入場,入場済,退場済,不参加,未登録", variable:"①状態"},
-      {tag:"label", text:'①参加費'},
-      {tag:"select", class:"td fee", name:"fee01",
-        opt:"未収,既収,免除,無し", variable:"①参加費"},
+      {tag:"div", children:[
+        {tag:"select", class:"status", name:"status01",
+          opt:"未入場,入場済,退場済,不参加,未登録", variable:"①状態"},
+      ]},
+      {tag:"div", children:[
+        {tag:"select", class:"fee", name:"fee01",
+          opt:"未収,既収,免除,無し", variable:"①参加費"},
+      ]},
     ]},
     {tag:"div", class:"tr participant", children:[
+      {tag:"div", text:"②"},
       {tag:"div", variable:"②氏名"},
-      {tag:"label", text:'②状態'},
-      {tag:"select", class:"td status", name:"status02",
-        opt:"未入場,入場済,退場済,不参加,未登録", variable:"②状態"},
-      {tag:"label", text:'②参加費'},
-      {tag:"select", class:"td fee", name:"fee02",
-        opt:"未収,既収,免除,無し", variable:"②参加費"},
+      {tag:"div", children:[
+        {tag:"select", class:"status", name:"status02",
+          opt:"未入場,入場済,退場済,不参加,未登録", variable:"②状態"},
+      ]},
+      {tag:"div", children:[
+        {tag:"select", class:"fee", name:"fee02",
+          opt:"未収,既収,免除,無し", variable:"②参加費"},
+      ]},
     ]},
     {tag:"div", class:"tr participant", children:[
+      {tag:"div", text:"③"},
       {tag:"div", variable:"③氏名"},
-      {tag:"label", text:'③状態'},
-      {tag:"select", class:"td status", name:"status03",
-        opt:"未入場,入場済,退場済,不参加,未登録", variable:"③状態"},
-      {tag:"label", text:'③参加費'},
-      {tag:"select", class:"td fee", name:"fee03",
-        opt:"未収,既収,免除,無し", variable:"③参加費"},
+      {tag:"div", children:[
+        {tag:"select", class:"status", name:"status03",
+          opt:"未入場,入場済,退場済,不参加,未登録", variable:"③状態"},
+      ]},
+      {tag:"div", children:[
+        {tag:"select", class:"fee", name:"fee03",
+          opt:"未収,既収,免除,無し", variable:"③参加費"},
+      ]},
     ]},
   ]},
   opt: {  // ドロップダウンの選択肢のリスト
