@@ -179,23 +179,32 @@ const editParticipant = (arg) => {  // 検索結果の内容編集
     let o = genChild(definition.editGuestTemplate,arg,'root');  // 全体の定義と'root'を渡す
     if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
       throw o.result;
-    } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
+    } else if( o.append ){  // 追加フラグがtrue
+      // 親要素に追加
       editArea.appendChild(o.result);
-      // 「詳細」ボタンクリックで開くよう設定
+
+      // 「詳細」ボタンクリック時の処理を定義
       document.querySelector('#editParticipant .entry input[type="button"]')
       .addEventListener('click', () => {
-        document.querySelector('#editParticipant .detail').style.display = 'block';
+        const detail = document.querySelector('#editParticipant .detail');
+        const button = document.querySelector('#editParticipant .entry input[type="button"]');
+        if( button.value === '詳細' ){
+          button.value = '閉じる';
+          detail.style.display = 'block';
+        } else {
+          button.value = '詳細';
+          detail.style.display = 'none';
+        }
       });
-      // 「閉じる」ボタンクリックで閉じるよう設定
-      document.querySelector('#editParticipant .detail input[type="button"]')
-      .addEventListener('click', () => {
-        document.querySelector('#editParticipant .detail').style.display = 'none';
-      });
-    }
+      
+      // 編集用URLをQRコードで表示
+      // https://saitodev.co/article/QRCode.js%E3%82%92%E8%A9%A6%E3%81%97%E3%81%A6%E3%81%BF%E3%81%9F/
+      setQRcode('#editParticipant .qrcode',{text:arg['編集用URL']});
 
-    // 編集用URLをQRコードで表示
-    // https://saitodev.co/article/QRCode.js%E3%82%92%E8%A9%A6%E3%81%97%E3%81%A6%E3%81%BF%E3%81%9F/
-    setQRcode('#editParticipant .qrcode',arg['編集用URL']);
+      // 「遷移」ボタンクリック時の遷移先を定義
+      document.querySelector('#editParticipant .form input[type="button"]')
+        .onclick = () => window.open(arg['編集用URL'], '_blank');
+    }
 
   console.log('editParticipant end.');
 }

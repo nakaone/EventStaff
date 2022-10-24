@@ -13,26 +13,26 @@ const definition = {
         {tag:"ruby", children:[
           {tag:"rb", variable:"氏名"},
           {tag:"rt", variable:"読み"},
-          {tag:"input", type:"button", value:"詳細"},
         ]},
       ]},
-    ]},
-    {tag:"div", class:"tr detail", children:[
-      {tag:"div", class:"tr", children:[
-        {tag:"input", type:"button", value:"閉じる"},
-        {tag:"p", text:"受付日時：\t", variable:"登録日時"},
-        {tag:"p", text:"e-mail：\t", variable:"メール"},
-        {tag:"p", text:"緊急連絡先：\t", variable:"連絡先"},
-        {tag:"p", text:"引取者：\t", variable:"引取者"},
-        {tag:"p", text:"備考：\t", variable:"備考"},
-        {tag:"p", text:"キャンセル：\t", variable:"取消"},
-        {tag:"p", text:"申込フォーム", children:[
-          {tag:"div", class:"qrcode"},
-        ]},
-        {tag:"input", type:"button", value:"閉じる"},
+      {tag:"div", children:[
+        {tag:"input", type:"button", value:"詳細"},
       ]},
     ]},
-    {tag:"div", class:"tr participant", children:[
+    {tag:"div", class:"tr detail", children:[ // 詳細情報
+      {tag:"div", text:"受付日時：\t", variable:"登録日時"},
+      {tag:"div", text:"e-mail：\t", variable:"メール"},
+      {tag:"div", text:"緊急連絡先：\t", variable:"連絡先"},
+      {tag:"div", text:"引取者：\t", variable:"引取者"},
+      {tag:"div", text:"備考：\t", variable:"備考"},
+      {tag:"div", text:"キャンセル：\t", variable:"取消"},
+      {tag:"div", class:"form", children:[
+        {tag:"div", text:"申込フォーム："},
+        {tag:"div", class:"qrcode"},
+        {tag:"input", type:"button", value:"遷移"},
+      ]},
+    ]},
+    {tag:"div", class:"tr participant", children:[ // 申請者の状態・参加費
       {tag:"div"},
       {tag:"div"},
       {tag:"div", children:[
@@ -44,6 +44,7 @@ const definition = {
           opt:"未収,既収,免除,無し", variable:"参加費"},
       ]},
     ]},
+    {tag:'hr'}, // 以下参加者
     {tag:"div", class:"tr participant", children:[
       {tag:"div", text:"①"},
       {tag:"div", variable:"①氏名"},
