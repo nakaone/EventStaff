@@ -294,7 +294,9 @@ const passPhrase = "Oct.22,2022"; // テスト用共通鍵
 
 const doGetTest = () => {
   const testData = [
-    {func:'test',data:{from:'嶋津',to:'スタッフ',message:'ふがふが'}},
+    //{func:'test',data:{from:'嶋津',to:'スタッフ',message:'ふがふが'}},
+    //{func:'search',data:{key:'ナ'}},
+    {func:'update',data:{target:{key:'受付番号',value:12},revice:[{key:'状態',value:'不参加'},{key:'参加費',value:'無し'}]}},
   ];
   for( let i=0 ; i<testData.length ; i++ ){
     doGet({parameter:{v:encrypt(testData[i],passPhrase)}});
@@ -309,13 +311,12 @@ function doGet(e) {
   console.log('arg',whichType(arg),arg);
 
   let rv = [];
-  const dObj = getSheetData(); // データをシートから取得
   switch( arg.func ){  // 処理指定により分岐
     case 'search':  // 該当者の検索
-      rv = candidates(dObj,arg.data);
+      rv = candidates(arg.data);
       break;
     case 'update':  // 参加者情報の更新
-      rv = updateSheetData(dObj,arg.data);
+      rv = updateParticipant(arg.data);
       break;
     case 'post':  // 掲示板への投稿
       rv = postMessage(arg.data);
@@ -408,22 +409,33 @@ function onFormSubmit(  // メールの自動返信
 // トリガーから呼ばれる関数・定義
 // ===========================================================
 
-const candidates = (dObj,key) => {  // 該当者リストの作成
-  Logger.log('candidates start. key='+key);
+const candidates = (data) => {  // 該当者リストの作成
+  console.log('candidates start.',data);
 
+  const dObj = getSheetData('マスタ'); // データをシートから取得
   let result = [];
-  const sKey = String(key);
+  const sKey = String(data.key);
   if( sKey.match(/^[0-9]+$/) ){
-    Logger.log('number='+Number(sKey));
+    console.log('number='+Number(sKey));
     result = dObj.data.filter(x => {return Number(x['受付番号']) === Number(sKey)});
   } else if( sKey.match(/^[ァ-ヾ　]+$/) ){
-    Logger.log('kana='+sKey);
+    console.log('kana='+sKey);
     result = dObj.data.filter(x => {return x['読み'].indexOf(sKey) === 0});
   }
 
-  Logger.log('candidates end. result='+JSON.stringify(result));
+  console.log('candidates end. result='+JSON.stringify(result));
   return result;
 };
+
+const updateParticipant = (data) => { // 参加者情報を更新
+  console.log('updateParticipant start.',data);
+
+  const dObj = getSheetData('マスタ'); // データをシートから取得
+  const rv = updateSheetData(dObj,data);
+
+  console.log('updateParticipant end.',rv);
+  return rv;
+}
 
 const postMessage = (arg) => {
   console.log('postMessage start. arg='+JSON.stringify(arg));
@@ -437,59 +449,7 @@ const postMessage = (arg) => {
   return v;
 };
 
-// 返信メールの文型定義
-const htmlPattern = `
-<p>::firstName:: 様</p>
 
-<p>下北沢小学校おやじの会です。この度は参加登録、ありがとうございました。</p>
-
-<p>当日は検温後に受付に行き、以下を受付担当者にお示しください。</p>
-<div style="
-  position: relative;
-  margin: 2rem;
-  padding: 0.5rem 1rem;
-  border: solid 4px #95ccff;
-  border-radius: 8px;
-">
-  <span style="
-    position: absolute;
-    display: inline-block;
-    top: calc(-0.5rem - 2px);
-    left: 2rem;
-    padding: 0 0.5rem;
-    line-height: 1;
-    background: #fff;
-    color: #95ccff;
-    font-weight: bold;
-  ">受付番号</span>
-  <p style="
-    text-align:center;
-    font-size: 3rem;
-    font-weight: bold;
-  ">
-    ::entryNo::
-  </p>
-  <p style="text-align: center;">
-    <img src='cid:qr_code' />
-  </p>
-</div>
-
-<p>もし登録いただいた参加メンバの追加・欠席、または申込みのキャンセルがあった場合、以下から修正してください。</p>
-
-<p><a href="::editURL::" style="
-  display: inline-block;
-  padding: 20px 50px 20px 50px;
-  text-decoration: none;
-  color: white;
-  background: blue;
-  font-weight: bold;
-  border: solid 4px blue;
-  border-radius: 8px;">参加申込の修正</a></p>
-
-<p>なお当日の注意事項・持ち物リストは適宜追加されることがありますので、イベント前日に「<a href="https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97">開催案内</a>」のページで再度ご確認いただけますようお願い申し上げます。</p>
-
-<p>当日のお越しをお待ちしております。</p>
-`;
 
 // ===========================================================
 // ライブラリ
@@ -547,15 +507,14 @@ const encrypt = (arg,passPhrase) => {
   return encryptResult;
 };
 
-const getSheetData = (sheetName='マスタ') => {  /* getSheetData: 指定シートからデータ取得
-  返値 = {
-    rows: 取得した生データ(二次元配列)
-    keys: ヘッダ行(1行目固定)の一次元配列
-    data: データ行を[{ラベル1:値, ラベル2:値, ..},{..},..]形式にした配列
-    sheet: getSheetで取得したシートのオブジェクト
-  };
-  */
-  Logger.log('getSheetData start. sheetName='+sheetName);
+const getSheetData = (sheetName='マスタ') => {  // getSheetData: 指定シートからデータ取得
+  // 返値 = {
+  //   rows: 取得した生データ(二次元配列)
+  //   keys: ヘッダ行(1行目固定)の一次元配列
+  //   data: データ行を[{ラベル1:値, ラベル2:値, ..},{..},..]形式にした配列
+  //   sheet: getSheetで取得したシートのオブジェクト
+  // };
+  console.log('getSheetData start. sheetName='+sheetName);
 
   const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
   // JSONオブジェクトに変換する
@@ -570,72 +529,73 @@ const getSheetData = (sheetName='マスタ') => {  /* getSheetData: 指定シー
     return obj;
   });
   const rv = {rows:rows, keys:keys, data:data, sheet:sheet};
-  Logger.log('getSheetData end.\n'+JSON.stringify(rv));
+  console.log('getSheetData end.\n'+JSON.stringify({
+    rows: [rv.rows[0] || 'null'],
+    keys: rv.keys || 'null',
+    data: [rv.data[0] || 'null'],
+    sheet: rv.sheet || 'null',
+  }));
   return rv;
 };
 
-const updateSheetData = (dObj,post) => {  /* シートを更新する
-  data = {
-    target:{
-      key: 更新対象のレコードを特定する為の項目名
-      value: キーの値
-    } ,
-    revice: [{
-      key: 更新対象の項目名
-      value: 更新後の値
-    },{},...]
-  }
-  result = [{
-    column: 更新対象項目
-    before: 更新前の値
-    after: 更新後の値
-  },{},..]
-  */
-  // データ形式を処理しやすく変更
-  const data = {target:{key:post.key,value:post.value},revice:[]};
-  for( let i in data ){
-    if( i !== 'key' && i !== 'value' ){
-      data.revice.push({key: i,value: post[i]});
-    }
-  }
-  Logger.log('updateSheetData start. data='+JSON.stringify(data));
+const updateSheetData = (dObj,post) => {  // シートを更新する
+  // ■引数
+  // dObj = getSheetDataで取得したシート情報オブジェクト
+  // post = {
+  //   target:{
+  //     key: 更新対象のレコードを特定する為の項目名
+  //     value: キーの値
+  //   } ,
+  //   revice: [{
+  //     key: 更新対象の項目名
+  //     value: 更新後の値
+  //   },{},...]
+  // }
+  // ■戻り値
+  // result = [{
+  //   column: 更新対象項目
+  //   before: 更新前の値
+  //   after: 更新後の値
+  // },{},..]
+
+  console.log('updateSheetData start.',JSON.stringify(post));
 
   // 1.何行目のデータを更新するか特定する
-  const map = dObj.data.map(x => x[data.target.key]);
-  const rowNum = map.indexOf(String(data.target.value)) + 2;
+  const map = dObj.data.map(x => x[post.target.key]);
+  const rowNum = map.indexOf(String(post.target.value)) + 2;
 
   // 2.更新対象行のデータをuArrに保存する
   const uArr = dObj.rows[rowNum-2];
-  Logger.log('uArr = '+JSON.stringify(uArr));
+  console.log('uArr = '+JSON.stringify(uArr));
 
   // 3.uArrのデータを順次更新しながらログに記録、更新範囲をメモ
   let maxColumn = 0;
   let minColumn = 99999;
   const log = [];
-  for( let i=0 ; i<data.revice.length ; i++ ){
+  for( let i=0 ; i<post.revice.length ; i++ ){
     // (1) 更新対象項目の列番号を特定、columnに保存
-    const column = dObj.keys.indexOf(data.revice[i].key);
+    const column = dObj.keys.indexOf(post.revice[i].key);
     // (2) >maxColumn or <minColumn ならmax/minを更新
     maxColumn = column > maxColumn ? column : maxColumn;
     minColumn = column < minColumn ? column : minColumn;
     // (3) logに更新対象項目/更新前の値/更新後の値を保存
     log.push({
-      column: data.revice[i].key,
+      column: post.revice[i].key,
       before: uArr[column],
-      after: data.revice[i].value,
+      after: post.revice[i].value,
     });
     // (4) uArr[column]の値を更新
-    uArr[column] = data.revice[i].value;
+    uArr[column] = post.revice[i].value;
   }
-  Logger.log('uArr = '+JSON.stringify(uArr));
+  console.log('uArr = '+JSON.stringify(uArr));
 
   // uArrから更新範囲のデータを切り出して更新
   const range = dObj.sheet.getRange(rowNum, minColumn+1, 1, maxColumn-minColumn+1);
   const sv = uArr.splice(minColumn, maxColumn-minColumn+1);
-  Logger.log('sv = '+JSON.stringify(sv));
+  console.log('sv = '+JSON.stringify(sv));
   range.setValues([sv]);
 
-  Logger.log('updateSheetData end.'+JSON.stringify(log));
+  console.log('updateSheetData end.'+JSON.stringify(log));
   return log;
 };
 
@@ -643,6 +603,60 @@ const whichType = (arg = undefined) => {  // 変数の型を判定
   return arg === undefined ? 'undefined'
    : Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
 };
+
+// 返信メールの文型定義
+const htmlPattern = `
+<p>::firstName:: 様</p>
+
+<p>下北沢小学校おやじの会です。この度は参加登録、ありがとうございました。</p>
+
+<p>当日は検温後に受付に行き、以下を受付担当者にお示しください。</p>
+<div style="
+  position: relative;
+  margin: 2rem;
+  padding: 0.5rem 1rem;
+  border: solid 4px #95ccff;
+  border-radius: 8px;
+">
+  <span style="
+    position: absolute;
+    display: inline-block;
+    top: calc(-0.5rem - 2px);
+    left: 2rem;
+    padding: 0 0.5rem;
+    line-height: 1;
+    background: #fff;
+    color: #95ccff;
+    font-weight: bold;
+  ">受付番号</span>
+  <p style="
+    text-align:center;
+    font-size: 3rem;
+    font-weight: bold;
+  ">
+    ::entryNo::
+  </p>
+  <p style="text-align: center;">
+    <img src='cid:qr_code' />
+  </p>
+</div>
+
+<p>もし登録いただいた参加メンバの追加・欠席、または申込みのキャンセルがあった場合、以下から修正してください。</p>
+
+<p><a href="::editURL::" style="
+  display: inline-block;
+  padding: 20px 50px 20px 50px;
+  text-decoration: none;
+  color: white;
+  background: blue;
+  font-weight: bold;
+  border: solid 4px blue;
+  border-radius: 8px;">参加申込の修正</a></p>
+
+<p>なお当日の注意事項・持ち物リストは適宜追加されることがありますので、イベント前日に「<a href="https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97">開催案内</a>」のページで再度ご確認いただけますようお願い申し上げます。</p>
+
+<p>当日のお越しをお待ちしております。</p>
+`;
 
 //== https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.3.0/crypto-js.min.js
 (後略)
