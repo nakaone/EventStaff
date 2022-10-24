@@ -31,7 +31,8 @@ const dump = (label,variable) => {  // コンソールに変数の内容出力
 
 const encrypt = (arg,passPhrase) => { // 対象を暗号化
   const str = JSON.stringify(arg);
-  console.log('encript start.\ntype='+whichType(arg)+'\n'+str);
+  console.log('encript start.\ntype='+whichType(arg)
+    + '\n' + str + '\npassPhrase='+passPhrase);
 
   //const utf8_plain = CryptoJS.enc.Utf8.parse(str);
   const encrypted = CryptoJS.AES.encrypt( str, passPhrase );  // Obj

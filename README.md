@@ -296,7 +296,10 @@ const doGetTest = () => {
   const testData = [
     //{func:'test',data:{from:'嶋津',to:'スタッフ',message:'ふがふが'}},
     //{func:'search',data:{key:'ナ'}},
-    {func:'update',data:{target:{key:'受付番号',value:12},revice:[{key:'状態',value:'不参加'},{key:'参加費',value:'無し'}]}},
+    {func:'update',data:{target:{key:'受付番号',value:12},revice:[
+      {key:'状態',value:'参加'},
+      {key:'参加費',value:'既収'},
+    ]}},
   ];
   for( let i=0 ; i<testData.length ; i++ ){
     doGet({parameter:{v:encrypt(testData[i],passPhrase)}});
@@ -449,8 +452,6 @@ const postMessage = (arg) => {
   return v;
 };
 
-
-
 // ===========================================================
 // ライブラリ
 // ===========================================================
@@ -551,7 +552,7 @@ const updateSheetData = (dObj,post) => {  // シートを更新する
   //     value: 更新後の値
   //   },{},...]
   // }
-  // ■戻り値
+  // ■戻り値　※変更された項目のみ
   // result = [{
   //   column: 更新対象項目
   //   before: 更新前の値
@@ -579,11 +580,13 @@ const updateSheetData = (dObj,post) => {  // シートを更新する
     maxColumn = column > maxColumn ? column : maxColumn;
     minColumn = column < minColumn ? column : minColumn;
     // (3) logに更新対象項目/更新前の値/更新後の値を保存
-    log.push({
-      column: post.revice[i].key,
-      before: uArr[column],
-      after: post.revice[i].value,
-    });
+    if( uArr[column] !== post.revice[i].value ){
+      log.push({
+        column: post.revice[i].key,
+        before: uArr[column],
+        after: post.revice[i].value,
+      });
+    }
     // (4) uArr[column]の値を更新
     uArr[column] = post.revice[i].value;
   }
@@ -814,6 +817,22 @@ getEditResponseUrl()他のメソッドの詳細については、Google公式 [C
 ### whichType: 渡された変数の型を判定
 
 ## Ⅲ.4.受付担当者画面(html)
+
+### genChild
+
+```
+一行分のデータに対する文書構造の定義
+tag string 1 タグ指定(必須)。"text"の場合は文字列と看做し、createTextNodeで追加する
+children [object] 0..1 子要素の定義。childrenとtextは排他
+text string 0..1 文字列の定義。変数に置換する部分には'\t'を挿入
+skip string 0..1 変数が空白の場合は出力抑止する場合、判断基準となる変数名を指定
+variable string 0..1 入力データの変数名。複数の変数は不可
+max number : 子要素が不定繰返ならその回数、不定繰返ではないなら0(固定、既定値)
+  例：members配下に最大5人のメンバがいる場合 ⇒ max:5(添字は0..4となる)
+--- 上記以外は全て属性指定(properties)。以下は処理対象となる属性 -------
+class string 0..1 要素のクラス指定。三項演算子の場合、評価結果をクラスとする
+  例： {.., class:"dObj['申込者']==='参加'?'representative':'representative glay'", ..}
+```
 
 ### temp
 

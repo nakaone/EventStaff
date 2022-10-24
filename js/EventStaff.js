@@ -44,6 +44,10 @@ const doGet = (postData,callback) => {  // GASのdoGetを呼び出し、結果�
 const initialize = () => {  // 初期設定処理
   console.log("initialize start.");
 
+  const dummy = {};
+  Object.assign(definition,dummy);
+  console.log('l.69',definition);
+
   // 初期設定終了時の処理を定義
   const terminate = () => {
     console.log("initialize end.",config);
@@ -177,6 +181,16 @@ const editParticipant = (arg) => {  // 検索結果の内容編集
       throw o.result;
     } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
       editArea.appendChild(o.result);
+      // 「詳細」ボタンクリックで開くよう設定
+      document.querySelector('#editParticipant .entry input[type="button"]')
+      .addEventListener('click', () => {
+        document.querySelector('#editParticipant .detail').style.display = 'block';
+      });
+      // 「閉じる」ボタンクリックで閉じるよう設定
+      document.querySelector('#editParticipant .detail input[type="button"]')
+      .addEventListener('click', () => {
+        document.querySelector('#editParticipant .detail').style.display = 'none';
+      });
     }
 
     // 編集用URLをQRコードで表示
@@ -218,7 +232,15 @@ const updateParticipant = () => {  // 参加者情報更新
   }
   doGet(postData,(data) => {
     // 結果表示
-    console.log('updateParticipant end.',JSON.stringify(result));
+    let result = '<p>以下の修正を行いました。</p>';
+    for( let i=0 ; i<data.length ; i++ ){
+      result += '<p>_1 : _2 => _3</p>'
+        .replace('_1',data[i].column)
+        .replace('_2',data[i].before)
+        .replace('_3',data[i].after);
+    }
+    document.querySelector('#editParticipant .result').innerHTML = result;
+    console.log('updateParticipant end.',JSON.stringify(data));
   });
 }
 

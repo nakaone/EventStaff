@@ -109,18 +109,20 @@ nav li a {
 /* =========================================================
   ホーム画面
 ========================================================= */
-#home {
-  height: 100%;
+#home, #editParticipant {
+  width: 100%;
+  height: calc(100% - 2rem);  /* ヘッダ分減らす */
   padding-right: 0;
   background-color: white;
   display:flex;
   display: -webkit-flex;
-  flex-direction: column;  /* row:横並び */
+  flex-direction: row;
+  -webkit-flex-direction: row;
   flex-wrap: wrap;
-  justify-content: flex-end;
-  -webkit-justify-content: flex-end;
-  align-items: flex-end;
-  -webkit-align-items: flex-end;
+  justify-content: flex-start;
+  -webkit-justify-content: flex-start;
+  align-items: flex-start;
+  -webkit-align-items: flex-start;
 }
 #home > div {
   font-size: 1.5rem;
@@ -135,6 +137,35 @@ nav li a {
   color: rgba(255,255,255,1);
 }
 
+/* =========================================================
+  参加者情報編集
+========================================================= */
+#editParticipant > div {
+  border: solid 1px red;
+  width: calc(100% - 2rem);
+}
+
+#editParticipant .entryNo, .name {font-size: 2rem;}
+#editParticipant .detail {display: none;}
+#editParticipant label {margin-left:2rem;}
+
+/*
+.vth {width:6rem;}
+.summary {margin-bottom: 1rem;}
+#img-qr {margin-left:20px;width:200px; height: 200px;}
+.note {
+  word-break: break-all;
+  overflow-wrap: break-word;
+  width: calc(100% - 8px - 6rem);
+}
+
+.memNo {width:1.2rem;}
+.name {width:calc(100% - 6.2rem - 12px);}
+.affiliation {width:5rem;}
+
+.status {margin-left:2rem;width:4rem;}
+.fee {margin-left:2rem;width:4rem;}
+*/
 
 /* =========================================================
   参加フォームURL
@@ -185,20 +216,3 @@ nav li a {
 }
 .th, .td {margin:2px; white-space: nowrap;}
 .th {background-color: aliceblue;}
-
-.summary {margin-bottom: 1rem;}
-.vth {width:6rem;} /* 表上部のラベル列 */
-.entryNo {font-size: 2rem;}
-#img-qr {margin-left:20px;width:200px; height: 200px;}
-.note {  /* 備考欄では折り返して表示 */
-  word-break: break-all;
-  overflow-wrap: break-word;
-  width: calc(100% - 8px - 6rem);
-}
-
-.memNo {width:1.2rem;}
-.name {width:calc(100% - 6.2rem - 12px);}
-.affiliation {width:5rem;}
-
-.status {margin-left:2rem;width:4rem;}
-.fee {margin-left:2rem;width:4rem;}
