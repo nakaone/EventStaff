@@ -255,12 +255,14 @@ const scanCode = (callback, arg={}) => { /* QRコードのスキャン
   const ctx = canvas.getContext('2d');
 
   // 動画撮影用Webカメラを起動
-  const userMedia = {video: {facingMode: "environment"}};
+  const userMedia = {audio:false, video:{facingMode: "environment"}};
   navigator.mediaDevices.getUserMedia(userMedia).then((stream)=>{
     video.srcObject = stream;
     video.setAttribute("playsinline", true);
     video.play();
     drawFinder(callback);  // 起動が成功したらdrawFinderを呼び出す
+  }).catch(e => {
+    alert('カメラを使用できません\n'+e.message);
   });
 
   const drawFinder = () => {  // キャンバスに描画する
