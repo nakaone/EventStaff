@@ -22,7 +22,7 @@ div {margin:0px;padding:0px;}
   flex-wrap: wrap;
 }
 
-input {
+input, button {
   font-size: 1rem;
 }
 
