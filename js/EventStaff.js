@@ -159,7 +159,6 @@ const editParticipant = (arg) => {  // 検索結果の内容編集
   changeScreen('editParticipant','参加者情報入力');
 
     // 該当が1件のみなら編集画面へ
-
     const editArea = document.querySelector('#editParticipant .edit');
     editArea.innerHTML = '';
 
@@ -183,7 +182,11 @@ const editParticipant = (arg) => {  // 検索結果の内容編集
       // 親要素に追加
       editArea.appendChild(o.result);
 
-      // 「詳細」ボタンクリック時の処理を定義
+      // 「更新」「破棄」「詳細」ボタンクリック時の処理を定義
+      document.querySelector('#editParticipant input[name="update"]')
+      .addEventListener(updateParticipant());
+      document.querySelector('#editParticipant input[name="cancel"]')
+      .addEventListener(changeScreen());
       document.querySelector('#editParticipant .entry input[type="button"]')
       .addEventListener('click', () => {
         const detail = document.querySelector('#editParticipant .detail');
