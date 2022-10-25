@@ -1,0 +1,71 @@
+<!DOCTYPE html><html lang="ja">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <meta http-equiv="Content-Script-Type" content="text/javascript">
+  <title></title>
+  <style>
+    /* =========================================================
+    ========================================================= */
+    html {font-size:10pt;  /* 基本となる文字サイズ */}
+    body {box-sizing: border-box;}  /* 枠線は要素サイズに含める */
+    div {margin:0px;padding:0px;}
+  </style>
+</head>
+
+<body>
+※結果はコンソールで確認
+</body>
+<script type="text/javascript">
+// MDN JavaScript のデータ型とデータ構造
+// https://developer.mozilla.org/ja/docs/Web/JavaScript/Data_structures
+// MDN typeof
+
+const testData = [
+  undefined,true,0,'abc',42n,Symbol('foo'),(a) => a*2,
+  new Date(),new RegExp('^.+'),[1,2],
+  [undefined,true,0,'abc',Symbol('foo'),(a) => a*2,new Date(),new RegExp('^.+'),[1,2]],
+  {a:10,b:{c:true,d:['abc',Symbol('baa')],e:(x)=>x*4},f:new Date()},
+];
+const inspectTest = () => {
+  for( let i=0 ; i<testData.length ; i++ ){
+    try {
+      console.log(testData[i] + ' => ' + inspect(testData[i]));
+    } catch(e) {
+      console.log(JSON.stringify(testData[i]) + ' => ' + inspect(testData[i]));
+    }
+  }
+}
+
+const inspect = (arg,depth=0) => {
+  // プリミティブ型または関数
+  const primitiveList = ['undefined','boolean','number','string','bigint','symbol','function'];
+  let i = primitiveList.indexOf(typeof arg);
+  if( i > -1 ){
+    return primitiveList[i];
+  }
+  // 配列またはハッシュ以外
+  const whichType = Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
+  if( whichType !== 'Array' && whichType !== 'Object' )
+    return whichType;
+
+  let rv = null;
+  if( whichType === 'Array' ){
+    // 配列の場合、順次再帰で呼び出し
+    rv = [];
+    for( let i=0 ; i<arg.length ; i++ ){
+      rv.push(inspect(arg[i],depth+1));
+    }
+  } else {
+    // ハッシュの場合、メンバ名つきの配列を作成
+    rv = {};
+    for( let x in arg ){
+      rv[x] = inspect(arg[x],depth+1);
+    }
+  }
+  return depth === 0 ? JSON.stringify(rv) : rv;
+}
+
+inspectTest();
+</script>
+</html>
