@@ -98,26 +98,13 @@ const inputSearchKey = () => {  // 参加者の検索キーを入力
   // スキャンまたは値入力時の動作を定義
   const strEl = document.querySelector('#inputSearchKey input');
 
-  // スキャナから呼ばれる場合はargが存在、input欄の入力から呼ばれる場合は不存在
+  // スキャナから読み込まれた文字列をinput欄にセット
   const callback = (arg) => {
     console.log('inputSearchKey.callback start.',arg);
     config.scanCode = false;  // スキャンを停止
-    changeScreen('loading');
     document.querySelector('#inputSearchKey .scanner')
-      .innerHTML = ''; // 作業用DIVを除去してカメラでのスキャンを停止
-    const postData = {
-      func: 'search',
-      data: {key: strEl.value || arg},
-    };
-    doGet(postData,(data) => {
-      if( data.length === 0 ){
-        alert("該当する参加者は存在しませんでした");
-      } else if( data.length > 1){
-        selectParticipant(data);  // 該当が複数件なら選択画面へ
-      } else {
-        editParticipant(data[0]);  // 該当が1件のみなら編集画面へ
-      }  
-    });
+      .innerHTML = ''; // スキャナ用DIV内を除去
+    strEl.value = arg;
   };
 
   // スキャナを起動
@@ -131,7 +118,22 @@ const inputSearchKey = () => {  // 参加者の検索キーを入力
   });
 
   // キーワード入力欄の値が変わったら検索するよう設定
-  strEl.addEventListener('change',callback);
+  strEl.addEventListener('change',() => {
+    changeScreen('loading');
+    const postData = {
+      func: 'search',
+      data: {key: convertCharacters(strEl.value,'kata')},
+    };
+    doGet(postData,(data) => {
+      if( data.length === 0 ){
+        alert("該当する参加者は存在しませんでした");
+      } else if( data.length > 1){
+        selectParticipant(data);  // 該当が複数件なら選択画面へ
+      } else {
+        editParticipant(data[0]);  // 該当が1件のみなら編集画面へ
+      }  
+    });
+  });
 
   console.log('inputSearchKey end.');
 }
