@@ -9,7 +9,6 @@ html, body {
   height: calc(100% - 2rem);
   font-size: 5vw;  /* 基本となる文字サイズ */
   box-sizing: border-box; /* 枠線は要素サイズに含める */
-  background-color: purple;
 }
 div {margin:0px;padding:0px;}
 
@@ -25,7 +24,6 @@ div {margin:0px;padding:0px;}
   -webkit-align-items: flex-start;
   align-items: flex-start;
   flex-wrap: wrap;
-  background-color:pink;
 }
 
 input {
