@@ -246,12 +246,16 @@ const updateParticipant = () => {  // 参加者情報更新
   }
   doGet(postData,(data) => {
     // 結果表示
-    let result = '<p>以下の修正を行いました。</p>';
-    for( let i=0 ; i<data.length ; i++ ){
-      result += '<p>_1 : _2 => _3</p>'
-        .replace('_1',data[i].column)
-        .replace('_2',data[i].before)
-        .replace('_3',data[i].after);
+    let result = '<p>以下の変更を行いました。</p>';
+    if( data.length > 0 ){
+      for( let i=0 ; i<data.length ; i++ ){
+        result += '<p>_1 : _2 => _3</p>'
+          .replace('_1',data[i].column)
+          .replace('_2',data[i].before)
+          .replace('_3',data[i].after);
+      }
+    } else {
+      result = '<p>変更点はありませんでした。</p>';
     }
     document.querySelector('#editParticipant .result').innerHTML = result;
     console.log('updateParticipant end.',JSON.stringify(data));
