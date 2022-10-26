@@ -48,12 +48,14 @@ const convertCharacters = (str,kana='hira') => {  // 英数カナの変換
   };
 
   // 全角カタカナ <-> 全角ひらがな
-  const katakanaRegex = /[\u30A1-\u30FA]/g;
-  const toHiragana = t => t
-    .replace(katakanaRegex , x => String.fromCharCode(x.charCodeAt(0) - 0x60));
-  const hiraganaRegex = /[\u3041-\u3096]/g;
-  const toKatakana = t => t
-    .replace(hiraganaRegex, x => String.fromCharCode(x.charCodeAt(0) + 0x60));
+  const toHiragana = (t) => {return t.replace(
+    /[\u30A1-\u30FA]/g ,  // カタカナの正規表現
+    x => String.fromCharCode(x.charCodeAt(0) - 0x60)
+  )};
+  const toKatakana = (t) => {return t.replace(
+    /[\u3041-\u3096]/g ,  // ひらがなの正規表現
+    x => String.fromCharCode(x.charCodeAt(0) + 0x60)
+  )};
 
   rv = kana === 'hira' ? toHiragana(rv) : toKatakana(rv);
   return rv;
