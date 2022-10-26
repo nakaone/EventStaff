@@ -206,7 +206,7 @@ const editParticipant = (arg) => {  // 検索結果の内容編集
       // https://saitodev.co/article/QRCode.js%E3%82%92%E8%A9%A6%E3%81%97%E3%81%A6%E3%81%BF%E3%81%9F/
       setQRcode('#editParticipant .qrcode',{text:arg['編集用URL']});
 
-      // 「遷移」ボタンクリック時の遷移先を定義
+      // 「申込フォームを表示」ボタンクリック時の遷移先を定義
       document.querySelector('#editParticipant .form input[type="button"]')
         .onclick = () => window.open(arg['編集用URL'], '_blank');
     }
