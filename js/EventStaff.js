@@ -256,16 +256,29 @@ const updateParticipant = () => {  // 参加者情報更新
   });
 }
 
-const showFormURL = () => { // 参加フォームURLのQRコード表示
-  console.log("showFormURL start.");
-  changeScreen('showFormURL','参加フォームURL');
-  //document.getElementById('showFormURL').style.height = config.qrSize * 2 + 'px';
+const onThatDay = (arg) => { // 参加フォームURLのQRコード表示
+  console.log("onThatDay start.",arg);
 
-  // 申請フォームのQRコードを表示
-  setQRcode('#showFormURL div',{
+  // 申請フォームのQRコードをセット
+  setQRcode('#onThatDay .qrcode',{
     text: "https://docs.google.com/forms/d/" + config.formId + "/edit",
   });
-  console.log("showFormURL end.");
+
+  // QRコード表示/非表示ボタンにイベント設定
+  const btn = document.querySelector('#onThatDay input[type="button"]');
+  const qr = document.querySelector('#onThatDay .qrcode');
+  btn.addEventListener(() => {
+    if( btn.value === 'QRコード表示' ){
+      btn.value = 'QRコード非表示';
+      qr.style.display = 'block';
+    } else {
+      btn.value = 'QRコード表示';
+      qr.style.display = 'none';
+    }
+  });
+
+  changeScreen('onThatDay','当日参加対応');
+  console.log("onThatDay end.");
 }
 
 const showSummary = () => {  // 集計表の表示

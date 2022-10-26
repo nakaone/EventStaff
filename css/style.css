@@ -215,14 +215,14 @@ nav li a {
 /* =========================================================
   参加フォームURL
 ========================================================= */
-#showFormURL {
+#onThatDay {
   width: 80%;
   padding: 0 10%;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
 }
-#showFormURL div {
+#onThatDay div {
   padding-top: 2rem;
   display: block;
   margin: auto;

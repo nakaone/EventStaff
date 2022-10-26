@@ -23,8 +23,7 @@
 
       <li>一斉配信</li>
       <li onclick="inputSearchKey()">参加者検索</li>
-      <li onclick="showFormURL()">申請フォームURL</li>
-      <li>紙申請登録</li>
+      <li onclick="onThatDay()">当日参加対応</li>
       <li onclick="showSummary()">参加状況</li>
 
       <li><a href="https://docs.google.com/spreadsheets/d/1Q6ADZK55twiISYmZhRjF56QprRecPNWvkhISIUpmkDk/edit?usp=sharing">
@@ -69,9 +68,15 @@
     <div class="result"></div>
   </div>
 
-  <div id="showFormURL" class="screen"><!-- 参加フォームURLのQRコード表示画面 -->
-    <div></div>
-    <p>QRコードのリンク先のフォームで新規参加登録してください。</p>
+  <div id="onThatDay" class="screen"><!-- 参加フォームURLのQRコード表示画面 -->
+    <div>
+      <p>スマホをお持ちの場合、申請フォームに必要事項を記入してください。</p>
+      <input type="button" value="QRコード表示" />
+      <div class="qrcode" style="display:none"></div>
+    </div>
+    <div>
+      <p>スマホをお持ちでない場合、事前記入された当日参加申請票を以下からスキャンしてください</p>
+    </div>
   </div>
 
   <div id="shimokitaMap" class="screen">
