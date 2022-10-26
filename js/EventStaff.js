@@ -104,8 +104,6 @@ const initialize = () => {  // 初期設定処理
 
 const inputSearchKey = () => {  // 参加者の検索キーを入力
   console.log('inputSearchKey start.');
-
-  document.querySelector('header .title').innerText = "登録済参加者処理";
   changeScreen('inputSearchKey','該当者の検索');
 
   // スキャンまたは値入力時の動作を定義
