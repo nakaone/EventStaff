@@ -127,7 +127,7 @@ const inputSearchKey = () => {  // 参加者の検索キーを入力
   },{
     selector:'#inputSearchKey .scanner',  // 設置位置指定
     RegExp:/^[0-9]+$/,  // 数字
-    alert: true,  // 読み込み時、内容をalert表示する
+    alert: false,  // 読み込み時、内容をalert表示しない
   });
 
   // キーワード入力欄の値が変わったら検索するよう設定
