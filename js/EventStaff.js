@@ -166,7 +166,7 @@ const editParticipant = (arg) => {  // 検索結果の内容編集
     arg['受付番号'] = ('000'+arg['受付番号']).slice(-4);  // 0パディング
     arg['登録日時'] = new Date(arg['登録日時']).toLocaleString('ja-JP');
     // 「取消」の文字列が入っていればtrue
-    arg['取消'] = arg['取消'].length === 0 ? false : true;
+    arg['取消'] = arg['取消'].length === 0 ? "無し" : "有り";
     ['','①','②','③'].forEach(x => {
       if( arg[x+'状態'].length === 0 )
         arg[x+'状態'] = arg[x+'氏名'].length === 0 ? '未登録' : '未入場';
