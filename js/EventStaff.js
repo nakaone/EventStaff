@@ -131,7 +131,7 @@ const inputSearchKey = () => {  // 参加者の検索キーを入力
   });
 
   // キーワード入力欄の値が変わったら検索するよう設定
-  strEl.addEventListener('change',() => {
+  strEl.addEventListener('input',() => {
     changeScreen('loading');
     const postData = {
       func: 'search',
@@ -303,7 +303,6 @@ const onThatDay = (arg) => { // 参加フォームURLのQRコード表示
 const showSummary = () => {  // 集計表の表示
   console.log("showSummary start.");
   changeScreen('showSummary','参加状況');
-  alert(config.dump());
   console.log("showSummary end.");
 }
 
