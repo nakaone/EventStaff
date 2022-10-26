@@ -26,8 +26,7 @@
       <li onclick="onThatDay()">当日参加対応</li>
       <li onclick="showSummary()">参加状況</li>
 
-      <li><a href="https://docs.google.com/spreadsheets/d/1Q6ADZK55twiISYmZhRjF56QprRecPNWvkhISIUpmkDk/edit?usp=sharing">
-        進行予定</a></li>
+      <li onclick="changeScreen('schedule','進行予定')">進行予定</a></li>
       <li onclick="changeScreen('shimokitaMap','校内案内図')">校内案内図</li>
       <li><a href="https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97">
         募集要項</a></li>
@@ -79,7 +78,11 @@
     </div>
   </div>
 
-  <div id="shimokitaMap" class="screen">
+  <div id="schedule" class="screen"><!-- 進行予定表 -->
+    <iframe width="600" height="400" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT4Y1RoJgfYOLuv4hfNJrf6aYdOaBy7eoSZKwwEibePe04XiLn91rLFGq6LO9_-R-vnPVCTM21RMitE/pubhtml?gid=0&amp;single=true&amp;widget=true&amp;headers=false"></iframe>
+  </div>
+
+  <div id="shimokitaMap" class="screen"><!-- 校内案内図 -->
     <img src="img/shimokita.svg" />
     <img src="img/shimokita.png" />
   </div>

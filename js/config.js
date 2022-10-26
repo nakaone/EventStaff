@@ -7,6 +7,8 @@ const config = {
 }
 
 const definition = {
+  schedule: // 進行予定表の元になるスプレッド
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vT4Y1RoJgfYOLuv4hfNJrf6aYdOaBy7eoSZKwwEibePe04XiLn91rLFGq6LO9_-R-vnPVCTM21RMitE/pubhtml?gid=0&single=true",
   editGuestTemplate: {tag:"div", class:"table", children:[
     {tag:"div", class:"tr entry", children:[
       {tag:"div", class:"td entryNo", variable:"受付番号"},
