@@ -48,6 +48,19 @@ const initialize = () => {  // 初期設定処理
   Object.assign(definition,dummy);
   console.log('l.69',definition);
 
+  // お知らせ画面の「投稿する」ボタンの動作を定義
+  const postButton = document.querySelector('#home .postArea input');
+  postButton.addEventListener('click',() => {
+    const post = document.querySelector('#home .postMessage');
+    if( postButton.value === '投稿する' ){
+      postButton.value = '閉じる';
+      post.style.display = 'block';
+    } else {
+      postButton.value = '投稿する';
+      post.style.display = 'none';
+    }
+  });
+
   // 初期設定終了時の処理を定義
   const terminate = () => {
     console.log("initialize end.",config);

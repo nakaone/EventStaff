@@ -46,10 +46,20 @@
     <div class="msg"></div>
   </div>
 
-  <div id="home" class="screen"><!-- ホーム画面
-    将来的に一斉通知の表示画面に -->
-    <input type="button" value="投稿する" />
-  </div>
+  <div id="home" class="screen"><!-- ホーム画面 -->
+    <div class="postArea">
+      <input type="button" value="投稿する" />
+      <div class="postMessage" style="display:none">
+        <input type="text" name="handleName" width="100%"
+          placeholder="「お知らせ」に表示する名前を入れてください"
+          onchange="config.handleName=this.value;alert(this.value+'に設定しました')"
+        />
+      </div>
+    </div>
+    <div class="boardArea">
+
+    </div>
+</div>
 
   <div id="inputSearchKey" class="screen"><!-- 該当者検索 -->
     <input type="text" placeholder="&#x1F50D受付番号または氏名読み(最初の数文字)" />
@@ -80,7 +90,9 @@
   </div>
 
   <div id="schedule" class="screen"><!-- 進行予定表 -->
-    <iframe width="600" height="400" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT4Y1RoJgfYOLuv4hfNJrf6aYdOaBy7eoSZKwwEibePe04XiLn91rLFGq6LO9_-R-vnPVCTM21RMitE/pubhtml?gid=0&amp;single=true&amp;widget=true&amp;headers=false"></iframe>
+    <iframe width="100%" height="80%"
+    src="https://docs.google.com/spreadsheets/d/1r7zcqA4nMhGkypLuYmQ53HL_v21_7jD7b3GvAAA34f4/edit?usp=sharing"
+    ></iframe>
   </div>
 
   <div id="shimokitaMap" class="screen"><!-- 校内案内図 -->
@@ -98,10 +110,6 @@
     <hr />
     <input type="button" value="設定の参照" onclick="alert(localStorage.getItem('config'))" />
     <input type="button" value="設定のクリア" onclick="localStorage.removeItem('config');alert('clear!')" />
-    <input type="text" name="handleName" width="100%"
-      placeholder="「お知らせ」に表示する名前を入れてください"
-      onchange="config.handleName=this.value;alert(this.value+'に設定しました')"
-    />
   </div>
 </body>
 <script src="js/jsQR.js" defer></script>
