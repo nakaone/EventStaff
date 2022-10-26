@@ -110,32 +110,9 @@ const inputSearchKey = () => {  // 参加者の検索キーを入力
   const strEl = document.querySelector('#inputSearchKey input');
 
   // スキャナから読み込まれた文字列をinput欄にセット
-  const callback = (arg) => {
-    console.log('inputSearchKey.callback start.',arg);
-    config.scanCode = false;  // スキャンを停止
-    document.querySelector('#inputSearchKey .scanner')
-      .innerHTML = ''; // スキャナ用DIV内を除去
-    strEl.value = arg;
-  };
-
-  // スキャナを起動
-  config.scanCode = true;
-  scanCode((code) => {
-    callback(code);
-  },{
-    selector:'#inputSearchKey .scanner',  // 設置位置指定
-    RegExp:/^[0-9]+$/,  // 数字
-    alert: false,  // 読み込み時、内容をalert表示しない
-  });
-
-  // キーワード入力欄の値が変わったら検索するよう設定
-  strEl.addEventListener('input',() => {
+  const callback = (keyPhrase) => {
     changeScreen('loading');
-    const postData = {
-      func: 'search',
-      data: {key: convertCharacters(strEl.value,'kata')},
-    };
-    doGet(postData,(data) => {
+    doGet({func:'search',data:{key:keyPhrase}},(data) => {
       if( data.length === 0 ){
         alert("該当する参加者は存在しませんでした");
       } else if( data.length > 1){
@@ -144,6 +121,28 @@ const inputSearchKey = () => {  // 参加者の検索キーを入力
         editParticipant(data[0]);  // 該当が1件のみなら編集画面へ
       }  
     });
+  };
+
+  // スキャナを起動
+  config.scanCode = true;
+  scanCode((code) => {
+    console.log('scanCode: ' + code);
+    config.scanCode = false;  // スキャンを停止
+    document.querySelector('#inputSearchKey .scanner')
+      .innerHTML = ''; // スキャナ用DIV内を除去
+    strEl.value = code; // 念の為入力欄にもセット
+    callback(code);
+  },{
+    selector:'#inputSearchKey .scanner',  // 設置位置指定
+    RegExp:/^[0-9]+$/,  // 数字かチェック
+    alert: false,  // 読み込み時、内容をalert表示しない
+  });
+
+  // キーワード入力欄の値が変わったら検索するよう設定
+  strEl.addEventListener('input',() => {
+    const keyPhrase = convertCharacters(strEl.value,'kata');
+    console.log('keyPhrase: '+ strEl.value + ' -> ' + keyPhrase );
+    callback(keyPhrase);
   });
 
   console.log('inputSearchKey end.');
@@ -171,56 +170,56 @@ const editParticipant = (arg) => {  // 検索結果の内容編集
   console.log('editParticipant start.',arg);
   changeScreen('editParticipant','参加者情報入力');
 
-    // 該当が1件のみなら編集画面へ
-    const editArea = document.querySelector('#editParticipant .edit');
-    editArea.innerHTML = '';
+  // 該当が1件のみなら編集画面へ
+  const editArea = document.querySelector('#editParticipant .edit');
+  editArea.innerHTML = '';
 
-    // データクレンジング
-    arg['受付番号'] = ('000'+arg['受付番号']).slice(-4);  // 0パディング
-    arg['登録日時'] = new Date(arg['登録日時']).toLocaleString('ja-JP');
-    // 「取消」の文字列が入っていればtrue
-    arg['取消'] = arg['取消'].length === 0 ? "無し" : "有り";
-    ['','①','②','③'].forEach(x => {
-      if( arg[x+'状態'].length === 0 )
-        arg[x+'状態'] = arg[x+'氏名'].length === 0 ? '未登録' : '未入場';
-      if( arg[x+'参加費'].length === 0 )
-        arg[x+'参加費'] = arg[x+'氏名'].length === 0 ? '無し' : '未収';
+  // データクレンジング
+  arg['受付番号'] = ('000'+arg['受付番号']).slice(-4);  // 0パディング
+  arg['登録日時'] = new Date(arg['登録日時']).toLocaleString('ja-JP');
+  // 「取消」の文字列が入っていればtrue
+  arg['取消'] = arg['取消'].length === 0 ? "無し" : "有り";
+  ['','①','②','③'].forEach(x => {
+    if( arg[x+'状態'].length === 0 )
+      arg[x+'状態'] = arg[x+'氏名'].length === 0 ? '未登録' : '未入場';
+    if( arg[x+'参加費'].length === 0 )
+      arg[x+'参加費'] = arg[x+'氏名'].length === 0 ? '無し' : '未収';
+  });
+
+  // 要素の作成とセット
+  let o = genChild(definition.editGuestTemplate,arg,'root');  // 全体の定義と'root'を渡す
+  if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
+    throw o.result;
+  } else if( o.append ){  // 追加フラグがtrue
+    // 親要素に追加
+    editArea.appendChild(o.result);
+
+    // 「更新」「破棄」「詳細」ボタンクリック時の処理を定義
+    document.querySelector('#editParticipant input[name="update"]')
+    .addEventListener('click',updateParticipant());
+    document.querySelector('#editParticipant input[name="cancel"]')
+    .addEventListener('click',changeScreen());
+    document.querySelector('#editParticipant .entry input[type="button"]')
+    .addEventListener('click', () => {
+      const detail = document.querySelector('#editParticipant .detail');
+      const button = document.querySelector('#editParticipant .entry input[type="button"]');
+      if( button.value === '詳細' ){
+        button.value = '閉じる';
+        detail.style.display = 'block';
+      } else {
+        button.value = '詳細';
+        detail.style.display = 'none';
+      }
     });
+    
+    // 編集用URLをQRコードで表示
+    // https://saitodev.co/article/QRCode.js%E3%82%92%E8%A9%A6%E3%81%97%E3%81%A6%E3%81%BF%E3%81%9F/
+    setQRcode('#editParticipant .qrcode',{text:arg['編集用URL']});
 
-    // 要素の作成とセット
-    let o = genChild(definition.editGuestTemplate,arg,'root');  // 全体の定義と'root'を渡す
-    if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
-      throw o.result;
-    } else if( o.append ){  // 追加フラグがtrue
-      // 親要素に追加
-      editArea.appendChild(o.result);
-
-      // 「更新」「破棄」「詳細」ボタンクリック時の処理を定義
-      document.querySelector('#editParticipant input[name="update"]')
-      .addEventListener('click',updateParticipant());
-      document.querySelector('#editParticipant input[name="cancel"]')
-      .addEventListener('click',changeScreen());
-      document.querySelector('#editParticipant .entry input[type="button"]')
-      .addEventListener('click', () => {
-        const detail = document.querySelector('#editParticipant .detail');
-        const button = document.querySelector('#editParticipant .entry input[type="button"]');
-        if( button.value === '詳細' ){
-          button.value = '閉じる';
-          detail.style.display = 'block';
-        } else {
-          button.value = '詳細';
-          detail.style.display = 'none';
-        }
-      });
-      
-      // 編集用URLをQRコードで表示
-      // https://saitodev.co/article/QRCode.js%E3%82%92%E8%A9%A6%E3%81%97%E3%81%A6%E3%81%BF%E3%81%9F/
-      setQRcode('#editParticipant .qrcode',{text:arg['編集用URL']});
-
-      // 「申込フォームを表示」ボタンクリック時の遷移先を定義
-      document.querySelector('#editParticipant .form input[type="button"]')
-        .onclick = () => window.open(arg['編集用URL'], '_blank');
-    }
+    // 「申込フォームを表示」ボタンクリック時の遷移先を定義
+    document.querySelector('#editParticipant .form input[type="button"]')
+      .onclick = () => window.open(arg['編集用URL'], '_blank');
+  }
 
   console.log('editParticipant end.');
 }

@@ -2,12 +2,18 @@
   汎用ライブラリ
 =================================================== */
 
-const convertCharacters = (str,kana='hira') => {  // 英数カナの変換
-  // [JavaScript] 全角ひらがな⇔全角カタカナの文字列変換 [コピペ用のメモ]
-  // https://neko-note.org/javascript-hiragana-katakana/1024
-  // [JavaScript] 全角⇔半角の変換を行う（英数字、カタカナ）
-  // https://www.yoheim.net/blog.php?q=20191101
-
+/**
+ * 文字を変換。全角英数字は半角、半角カナは全角、ひらがな<->カタカナは指定
+ * @param {string} str - 変換対象文字列
+ * @param {string} kana - true:ひらがな、false:カタカナ
+ * @returns {string} 変換結果
+ * 
+ * [JavaScript] 全角ひらがな⇔全角カタカナの文字列変換 [コピペ用のメモ]
+ * https://neko-note.org/javascript-hiragana-katakana/1024
+ * [JavaScript] 全角⇔半角の変換を行う（英数字、カタカナ）
+ * https://www.yoheim.net/blog.php?q=20191101
+ */
+function convertCharacters(str,kana=true){ 
   let rv = str;
   // 全角英数字 -> 半角英数字
   rv = rv.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => {
@@ -69,7 +75,7 @@ const convertCharacters = (str,kana='hira') => {  // 英数カナの変換
   //console.log(a+'\n'+toHiragana(a));
   //console.log(a+'\n'+toKatakana(a));
 
-  rv = kana === 'hira' ? toHiragana(rv) : toKatakana(rv);
+  rv = kana ? toHiragana(rv) : toKatakana(rv);
   return rv;
 }
 
