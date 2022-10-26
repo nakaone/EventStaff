@@ -96,10 +96,8 @@
     <div><a href="prototype/crypto.html" target="_blank">prototype::crypto</a></div>
     <div><a href="prototype/inspect.html" target="_blank">prototype::inspect</a></div>
     <hr />
-    <ul>
-      <li onclick="alert(localStorage.getItem('config'))">設定の参照</li>
-      <li onclick="localStorage.removeItem('config');alert('clear!')">設定のクリア</li>
-    </ul>
+    <input type="button" value="設定の参照" onclick="alert(localStorage.getItem('config'))" />
+    <input type="button" value="設定のクリア" onclick="localStorage.removeItem('config');alert('clear!')" />
     <input type="text" name="handleName" width="100%"
       placeholder="「お知らせ」に表示する名前を入れてください"
       onchange="config.handleName=this.value;alert(this.value+'に設定しました')"
