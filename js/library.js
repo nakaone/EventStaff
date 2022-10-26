@@ -48,14 +48,26 @@ const convertCharacters = (str,kana='hira') => {  // 英数カナの変換
   };
 
   // 全角カタカナ <-> 全角ひらがな
-  const toHiragana = (t) => {return t.replace(
-    /[\u30A1-\u30FA]/g ,  // カタカナの正規表現
-    x => String.fromCharCode(x.charCodeAt(0) - 0x60)
-  )};
-  const toKatakana = (t) => {return t.replace(
-    /[\u3041-\u3096]/g ,  // ひらがなの正規表現
-    x => String.fromCharCode(x.charCodeAt(0) + 0x60)
-  )};
+  const hRep = (x,offset,string) => { // offset:マッチした位置 string:文字列全部
+    //console.log('hRep start.',x,offset,string);
+    const rv = String.fromCharCode(x.charCodeAt(0) - 0x60);
+    //console.log('hRep end.',rv);
+    return rv;
+  }
+  const toHiragana = t => t.replace(/[\u30A1-\u30FA]/g,hRep);
+  
+  const kRep = (x,offset,string) => {
+    //console.log('kRep start.',x,offset,string);
+    const rv = String.fromCharCode(x.charCodeAt(0) + 0x60);
+    //console.log('kRep end.',rv);
+    return rv;
+  }
+  const toKatakana = t => t.replace(/[\u3041-\u3096]/g,kRep);
+  
+  // テスト用
+  //a = 'ＡＢＣａｂｃ０１２ABCabc012ｱｲｳあいうアイウ'
+  //console.log(a+'\n'+toHiragana(a));
+  //console.log(a+'\n'+toKatakana(a));
 
   rv = kana === 'hira' ? toHiragana(rv) : toKatakana(rv);
   return rv;
