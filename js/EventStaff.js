@@ -126,7 +126,7 @@ const inputSearchKey = () => {  // 参加者の検索キーを入力
     callback(code);
   },{
     selector:'#inputSearchKey .scanner',  // 設置位置指定
-    RegExp:/^[0-9]{4}$/,  // 数字4桁
+    RegExp:/^[0-9]+$/,  // 数字
     alert: true,  // 読み込み時、内容をalert表示する
   });
 
