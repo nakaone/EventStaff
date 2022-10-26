@@ -30,7 +30,7 @@ const definition = {
       {tag:"div", class:"form", children:[
         {tag:"div", text:"申込フォーム："},
         {tag:"div", class:"qrcode"},
-        {tag:"input", type:"button", value:"遷移"},
+        {tag:"input", type:"button", value:"申込フォームの表示"},
       ]},
     ]},
     {tag:"div", class:"tr participant", children:[ // 申請者の状態・参加費
