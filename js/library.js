@@ -60,7 +60,7 @@ function convertCharacters(str,kana=true){
     //console.log('hRep end.',rv);
     return rv;
   }
-  const toHiragana = t => t.replace(/[\u30A1-\u30FA]/g,hRep);
+  const toHiragana = (t) => t.replace(/[\u30A1-\u30FA]/g,hRep);
   
   const kRep = (x,offset,string) => {
     //console.log('kRep start.',x,offset,string);
@@ -68,7 +68,7 @@ function convertCharacters(str,kana=true){
     //console.log('kRep end.',rv);
     return rv;
   }
-  const toKatakana = t => t.replace(/[\u3041-\u3096]/g,kRep);
+  const toKatakana = (t) => t.replace(/[\u3041-\u3096]/g,kRep);
   
   // テスト用
   //a = 'ＡＢＣａｂｃ０１２ABCabc012ｱｲｳあいうアイウ'

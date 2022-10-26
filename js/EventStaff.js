@@ -107,11 +107,14 @@ const inputSearchKey = () => {  // 参加者の検索キーを入力
   changeScreen('inputSearchKey','該当者の検索');
 
   // スキャンまたは値入力時の動作を定義
-  const strEl = document.querySelector('#inputSearchKey input');
+  const strEl = document.querySelector('#inputSearchKey input[type="text"]');
 
   // スキャナから読み込まれた文字列をinput欄にセット
   const callback = (keyPhrase) => {
     changeScreen('loading');
+    config.scanCode = false;  // スキャンを停止
+    document.querySelector('#inputSearchKey .scanner')
+      .innerHTML = ''; // スキャナ用DIV内を除去
     doGet({func:'search',data:{key:keyPhrase}},(data) => {
       if( data.length === 0 ){
         alert("該当する参加者は存在しませんでした");
@@ -127,9 +130,6 @@ const inputSearchKey = () => {  // 参加者の検索キーを入力
   config.scanCode = true;
   scanCode((code) => {
     console.log('scanCode: ' + code);
-    config.scanCode = false;  // スキャンを停止
-    document.querySelector('#inputSearchKey .scanner')
-      .innerHTML = ''; // スキャナ用DIV内を除去
     strEl.value = code; // 念の為入力欄にもセット
     callback(code);
   },{
@@ -139,8 +139,9 @@ const inputSearchKey = () => {  // 参加者の検索キーを入力
   });
 
   // キーワード入力欄の値が変わったら検索するよう設定
-  strEl.addEventListener('input',() => {
-    const keyPhrase = convertCharacters(strEl.value,'kata');
+  document.querySelector('#inputSearchKey input[type="button"]')
+  .addEventListener('click',() => {
+    const keyPhrase = strEl.value; //暫定：convertCharacters(strEl.value,'kata');
     console.log('keyPhrase: '+ strEl.value + ' -> ' + keyPhrase );
     callback(keyPhrase);
   });
@@ -194,11 +195,7 @@ const editParticipant = (arg) => {  // 検索結果の内容編集
     // 親要素に追加
     editArea.appendChild(o.result);
 
-    // 「更新」「破棄」「詳細」ボタンクリック時の処理を定義
-    document.querySelector('#editParticipant input[name="update"]')
-    .addEventListener('click',updateParticipant());
-    document.querySelector('#editParticipant input[name="cancel"]')
-    .addEventListener('click',changeScreen());
+    // 「詳細」ボタンクリック時の処理を定義
     document.querySelector('#editParticipant .entry input[type="button"]')
     .addEventListener('click', () => {
       const detail = document.querySelector('#editParticipant .detail');
@@ -211,7 +208,7 @@ const editParticipant = (arg) => {  // 検索結果の内容編集
         detail.style.display = 'none';
       }
     });
-    
+
     // 編集用URLをQRコードで表示
     // https://saitodev.co/article/QRCode.js%E3%82%92%E8%A9%A6%E3%81%97%E3%81%A6%E3%81%BF%E3%81%9F/
     setQRcode('#editParticipant .qrcode',{text:arg['編集用URL']});

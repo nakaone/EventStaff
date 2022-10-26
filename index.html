@@ -63,6 +63,7 @@
 
   <div id="inputSearchKey" class="screen"><!-- 該当者検索 -->
     <input type="text" placeholder="&#x1F50D受付番号または氏名読み(最初の数文字)" />
+    <input type="button" value="検索" />
     <div class="scanner"></div><!-- QRコードスキャナ -->
   </div>
 
@@ -71,9 +72,9 @@
 
   <div id="editParticipant" class="screen"><!-- 参加者情報編集 -->
     <div class="edit"></div>
-    <div class="action">
-      <input type="button" name="update" value="更新" />
-      <input type="button" name="cancel" value="破棄" />
+    <div>
+      <input value="更新" type="button" onclick="updateParticipant()" />
+      <input value="破棄" type="button" onclick="changeScreen()" />
     </div>
     <div class="result"></div>
   </div>
@@ -90,14 +91,14 @@
   </div>
 
   <div id="schedule" class="screen"><!-- 進行予定表 -->
-    <iframe width="100%" height="80%"
+    <!-- iframe width="100%" height="80%"
     src="https://docs.google.com/spreadsheets/d/1Q6ADZK55twiISYmZhRjF56QprRecPNWvkhISIUpmkDk/edit?usp=sharing"
-    ></iframe>
+    ></iframe -->
   </div>
 
   <div id="shimokitaMap" class="screen"><!-- 校内案内図 -->
-    <img src="img/shimokita.svg" width="100%" />
-    <img src="img/shimokita.png" width="100%" />
+    <div><img src="img/shimokita.svg" width="100%" /></div>
+    <div><img src="img/shimokita.png" width="100%" /></div>
   </div>
 
   <div id="showSummary" class="screen"><!-- 集計表の表示画面 -->

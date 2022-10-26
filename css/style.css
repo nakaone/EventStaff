@@ -126,9 +126,9 @@ nav li a {
 /* =========================================================
   参加者情報編集
 ========================================================= */
-#editParticipant > div {
+/*#editParticipant > div {
   width: calc(100% - 2rem);
-}
+}*/
 
 #eidtParticipant .entry {
   display: -webkit-flex;
