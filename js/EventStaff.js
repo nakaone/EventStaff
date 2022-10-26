@@ -199,9 +199,9 @@ const editParticipant = (arg) => {  // 検索結果の内容編集
 
       // 「更新」「破棄」「詳細」ボタンクリック時の処理を定義
       document.querySelector('#editParticipant input[name="update"]')
-      .addEventListener(updateParticipant());
+      .addEventListener('click',updateParticipant());
       document.querySelector('#editParticipant input[name="cancel"]')
-      .addEventListener(changeScreen());
+      .addEventListener('click',changeScreen());
       document.querySelector('#editParticipant .entry input[type="button"]')
       .addEventListener('click', () => {
         const detail = document.querySelector('#editParticipant .detail');
@@ -286,7 +286,7 @@ const onThatDay = (arg) => { // 参加フォームURLのQRコード表示
   // QRコード表示/非表示ボタンにイベント設定
   const btn = document.querySelector('#onThatDay input[type="button"]');
   const qr = document.querySelector('#onThatDay .qrcode');
-  btn.addEventListener(() => {
+  btn.addEventListener('click',() => {
     if( btn.value === 'QRコード表示' ){
       btn.value = 'QRコード非表示';
       qr.style.display = 'block';
