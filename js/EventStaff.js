@@ -283,7 +283,7 @@ const onThatDay = (arg) => { // 参加フォームURLのQRコード表示
 
 const showSummary = () => {  // 集計表の表示
   console.log("showSummary start.");
-  changeScreen('showSummary','参加状況集計');
+  changeScreen('showSummary','参加状況');
   alert(config.dump());
   console.log("showSummary end.");
 }
