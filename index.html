@@ -19,10 +19,7 @@
   </header>
   <nav class="menu">
     <ul>
-      <li><a href="./crypto.html">暗号化テスト</a></li>
-
       <li>お知らせ</li>
-      <li><a href="prototype/crypto.html">crypto</a></li>
 
       <li>一斉配信</li>
       <li onclick="inputSearchKey()">参加者検索</li>
@@ -37,9 +34,8 @@
         募集要項</a></li>
       <li><a href="https://docs.google.com/forms/d/16r3luYQRiLVmI9xqaD4FuaSlUqTRGvI8nAGrjGcg8lc/viewform">
         アンケート</a></li>
+      <li onclick="changeScreen('system','システム設定')">システム設定</li>
 
-      <li onclick="alert(localStorage.getItem('config'))">設定の参照</li>
-      <li onclick="localStorage.removeItem('config');alert('clear!')">設定のクリア</li>
     </ul>
   </nav>
   <div id="loading" class="screen"><!-- ローディング中 -->
@@ -86,6 +82,20 @@
   <div id="showSummary" class="screen"><!-- 集計表の表示画面 -->
   </div>
 
+  <div id="system" class="screen"><!-- システム画面 -->
+    <div><a href="prototype/chat.html" target="_blank">prototype::chat</a></div>
+    <div><a href="prototype/crypto.html" target="_blank">prototype::crypto</a></div>
+    <div><a href="prototype/inspect.html" target="_blank">prototype::inspect</a></div>
+    <hr />
+    <ul>
+      <li onclick="alert(localStorage.getItem('config'))">設定の参照</li>
+      <li onclick="localStorage.removeItem('config');alert('clear!')">設定のクリア</li>
+    </ul>
+    <input type="text" name="handleName" width="100%"
+      placeholder="「お知らせ」に表示する名前を入れてください"
+      onchange="config.handleName=this.value;alert(this.value+'に設定しました')"
+    />
+  </div>
 </body>
 <script src="js/jsQR.js" defer></script>
 <script src="js/qrcode.min.js" defer></script>

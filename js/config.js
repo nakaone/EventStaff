@@ -3,6 +3,7 @@ const config = {
   scanCode: false,    // スキャン実行フラグ。true時のみスキャン可
   GASwebAPId: null,   // GAS Web API の ID。"https://script.google.com/macros/s/〜/exec"
   passPhrase: null,   // GASとの共通鍵
+  handleName: null,   // お知らせに表示する自分の名前
 }
 
 const definition = {
