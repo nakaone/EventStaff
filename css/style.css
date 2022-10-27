@@ -130,6 +130,10 @@ nav li a {
 #home .fromto input {
   width: 8rem;
 }
+#home textarea {
+  width: 100%;
+  height: 4rem;
+}
 #home .boardArea {
   width: 100%;
   height: 100%;

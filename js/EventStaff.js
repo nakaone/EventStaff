@@ -327,7 +327,9 @@ const getMessages = (arg=0) => {
           msg += m;
         }
         // 掲示板領域に書き込み
-        document.querySelector('#home .boardArea').innerHTML = msg;
+        const msgEl = document.querySelector('#home .boardArea');
+        msgEl.innerHTML = msg;
+        msgEl.scrollIntoView(false);
         console.log('getMessages periodical end: '+msg);
       });
     }
