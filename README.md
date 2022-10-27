@@ -361,6 +361,9 @@ function doGet(e) {
   .setMimeType(ContentService.MimeType.JSON);
 }
 
+/** メールの自動返信
+ * @param {Object} e - 
+ */
 function onFormSubmit(  // メールの自動返信
   e={namedValues:{'メールアドレス':['nakaone.kunihiro@gmail.com']}} // テスト用既定値
 ) {
@@ -432,6 +435,93 @@ function onFormSubmit(  // メールの自動返信
   );
 }
 
+const htmlPattern = `
+<p>::firstName:: 様</p>
+
+<p>下北沢小学校おやじの会です。この度は参加登録、ありがとうございました。</p>
+
+<p>当日は検温後に受付に行き、以下を受付担当者にお示しください。</p>
+<div style="
+  position: relative;
+  margin: 2rem;
+  padding: 0.5rem 1rem;
+  border: solid 4px #95ccff;
+  border-radius: 8px;
+">
+  <span style="
+    position: absolute;
+    display: inline-block;
+    top: calc(-0.5rem - 2px);
+    left: 2rem;
+    padding: 0 0.5rem;
+    line-height: 1;
+    background: #fff;
+    color: #95ccff;
+    font-weight: bold;
+  ">受付番号</span>
+  <p style="
+    text-align:center;
+    font-size: 3rem;
+    font-weight: bold;
+  ">
+    ::entryNo::
+  </p>
+  <p style="text-align: center;">
+    <img src='cid:qr_code' />
+  </p>
+</div>
+
+<p>もし登録いただいた参加メンバの追加・欠席、または申込みのキャンセルがあった場合、
+以下から修正してください。</p>
+
+<p><a href="::editURL::" style="
+  display: inline-block;
+  padding: 20px 50px 20px 50px;
+  text-decoration: none;
+  color: white;
+  background: blue;
+  font-weight: bold;
+  border: solid 4px blue;
+  border-radius: 8px;">参加申込の修正</a></p>
+
+<p>なお当日の注意事項・持ち物リストは適宜追加されることがありますので、
+イベント前日に「<a href="::boardURL::">開催案内</a>」のページで
+再度ご確認いただけますようお願い申し上げます。</p>
+
+<p>当日のお越しをお待ちしております。</p>
+`;
+
+const createQrCode = (code_data) => { // QRコード生成
+  let url = 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=' + code_data;
+  let option = {
+      method: "get",
+      muteHttpExceptions: true
+    };
+  let ajax = UrlFetchApp.fetch(url, option);
+  console.log(ajax.getBlob())
+  return ajax.getBlob();
+};
+
+const onFormSubmitTest = () => {
+  const testData = [
+    undefined,
+    true,0,'abc',
+    //42n,
+    Symbol('foo'),
+    (a) => a*2,
+    new Date(),new RegExp('^.+'),[1,2],
+    [undefined,true,0,'abc',Symbol('foo'),(a) => a*2,new Date(),new RegExp('^.+'),[1,2]],
+    {a:10,b:{c:true,d:['abc',Symbol('baa')],e:(x)=>x*4},f:new Date()},
+  ];
+  for( let i=0 ; i<testData.length ; i++ ){
+    try {
+      console.log(testData[i] + ' => ' + szLib.inspect(testData[i]));
+    } catch(e) {
+      console.log(JSON.stringify(testData[i]) + ' => ' + szLib.inspect(testData[i]));
+    }
+  }
+}
+
 // ===========================================================
 // トリガーから呼ばれる関数・定義
 // ===========================================================
@@ -475,218 +565,6 @@ const postMessage = (arg) => {
   console.log('postMessage end. v='+JSON.stringify(v));  
   return v;
 };
-
-// ===========================================================
-// ライブラリ
-// ===========================================================
-
-const createQrCode = (code_data) => { // QRコード生成
-  let url = 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=' + code_data;
-  let option = {
-      method: "get",
-      muteHttpExceptions: true
-    };
-  let ajax = UrlFetchApp.fetch(url, option);
-  console.log(ajax.getBlob())
-  return ajax.getBlob();
-};
-
-const decrypt = (arg,passPhrase) => {
-  console.log('decrypt start.\n'+arg);
-  const decodePath = decodeURIComponent(arg);
-  dump('decodePath',decodePath);
-  const data = CryptoJS.enc.Base64
-    .parse(decodePath.toString()).toString(CryptoJS.enc.Latin1);
-  dump('data',data);
-  const bytes = CryptoJS.AES.decrypt(data, passPhrase)
-    .toString(CryptoJS.enc.Utf8)
-  dump('bytes',bytes);
-
-  let rv = null;
-  try {
-    rv = JSON.parse(bytes);
-  } catch(e) {
-    rv = bytes;
-  } finally {
-    console.log('decrypt end.\ntype='+whichType(rv)+'\n',rv);
-    return rv;
-  }
-};
-
-const dump = (label,variable) => {  // 変数の型と値をコンソールに出力。デバッグ用
-  console.log(label+' (type='+whichType(variable)+')\n',variable);
-}
-
-const encrypt = (arg,passPhrase) => {
-  const str = JSON.stringify(arg);
-  console.log('encript start.\ntype='+whichType(arg)+'\n'+str);
-
-  //const utf8_plain = CryptoJS.enc.Utf8.parse(str);
-  const encrypted = CryptoJS.AES.encrypt( str, passPhrase );  // Obj
-  // crypto-jsで複合化するとMalformed UTF-8 data になった件
-  // https://zenn.dev/naonao70/articles/a2f7df87f9f736
-  const encryptResult = CryptoJS.enc.Base64
-    .stringify(CryptoJS.enc.Latin1.parse(encrypted.toString()));
-
-  console.log("encript end.\n"+encryptResult);
-  return encryptResult;
-};
-
-const getSheetData = (sheetName='マスタ') => {  // getSheetData: 指定シートからデータ取得
-  // 返値 = {
-  //   rows: 取得した生データ(二次元配列)
-  //   keys: ヘッダ行(1行目固定)の一次元配列
-  //   data: データ行を[{ラベル1:値, ラベル2:値, ..},{..},..]形式にした配列
-  //   sheet: getSheetで取得したシートのオブジェクト
-  // };
-  console.log('getSheetData start. sheetName='+sheetName);
-
-  const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
-  // JSONオブジェクトに変換する
-  const rows = sheet.getDataRange().getValues()
-    .filter(row => row[0]);  // 空白行は削除
-  const keys = rows.splice(0, 1)[0];  // ヘッダを一次元配列で取得
-  const data = rows.map(row => {  // [{ラベル1:値, ラベル2:値, ..},{..},..]形式
-    const obj = {};
-    row.map((item, index) => {
-      obj[String(keys[index])] = String(item);
-    });
-    return obj;
-  });
-  const rv = {rows:rows, keys:keys, data:data, sheet:sheet};
-  console.log('getSheetData end.\n'+JSON.stringify({
-    rows: [rv.rows[0] || 'null'],
-    keys: rv.keys || 'null',
-    data: [rv.data[0] || 'null'],
-    sheet: rv.sheet || 'null',
-  }));
-  return rv;
-};
-
-const updateSheetData = (dObj,post) => {  // シートを更新する
-  // ■引数
-  // dObj = getSheetDataで取得したシート情報オブジェクト
-  // post = {
-  //   target:{
-  //     key: 更新対象のレコードを特定する為の項目名
-  //     value: キーの値
-  //   } ,
-  //   revice: [{
-  //     key: 更新対象の項目名
-  //     value: 更新後の値
-  //   },{},...]
-  // }
-  // ■戻り値　※変更された項目のみ
-  // result = [{
-  //   column: 更新対象項目
-  //   before: 更新前の値
-  //   after: 更新後の値
-  // },{},..]
-
-  console.log('updateSheetData start.',JSON.stringify(post));
-
-  // 1.何行目のデータを更新するか特定する
-  const map = dObj.data.map(x => x[post.target.key]);
-  const rowNum = map.indexOf(String(post.target.value)) + 2;
-
-  // 2.更新対象行のデータをuArrに保存する
-  const uArr = dObj.rows[rowNum-2];
-  console.log('uArr = '+JSON.stringify(uArr));
-
-  // 3.uArrのデータを順次更新しながらログに記録、更新範囲をメモ
-  let maxColumn = 0;
-  let minColumn = 99999;
-  const log = [];
-  for( let i=0 ; i<post.revice.length ; i++ ){
-    // (1) 更新対象項目の列番号を特定、columnに保存
-    const column = dObj.keys.indexOf(post.revice[i].key);
-    // (2) >maxColumn or <minColumn ならmax/minを更新
-    maxColumn = column > maxColumn ? column : maxColumn;
-    minColumn = column < minColumn ? column : minColumn;
-    // (3) logに更新対象項目/更新前の値/更新後の値を保存
-    if( uArr[column] !== post.revice[i].value ){
-      log.push({
-        column: post.revice[i].key,
-        before: uArr[column],
-        after: post.revice[i].value,
-      });
-    }
-    // (4) uArr[column]の値を更新
-    uArr[column] = post.revice[i].value;
-  }
-  console.log('uArr = '+JSON.stringify(uArr));
-
-  // uArrから更新範囲のデータを切り出して更新
-  const range = dObj.sheet.getRange(rowNum, minColumn+1, 1, maxColumn-minColumn+1);
-  const sv = uArr.splice(minColumn, maxColumn-minColumn+1);
-  console.log('sv = '+JSON.stringify(sv));
-  range.setValues([sv]);
-
-  console.log('updateSheetData end.'+JSON.stringify(log));
-  return log;
-};
-
-const whichType = (arg = undefined) => {  // 変数の型を判定
-  return arg === undefined ? 'undefined'
-   : Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
-};
-
-// 返信メールの文型定義
-const htmlPattern = `
-<p>::firstName:: 様</p>
-
-<p>下北沢小学校おやじの会です。この度は参加登録、ありがとうございました。</p>
-
-<p>当日は検温後に受付に行き、以下を受付担当者にお示しください。</p>
-<div style="
-  position: relative;
-  margin: 2rem;
-  padding: 0.5rem 1rem;
-  border: solid 4px #95ccff;
-  border-radius: 8px;
-">
-  <span style="
-    position: absolute;
-    display: inline-block;
-    top: calc(-0.5rem - 2px);
-    left: 2rem;
-    padding: 0 0.5rem;
-    line-height: 1;
-    background: #fff;
-    color: #95ccff;
-    font-weight: bold;
-  ">受付番号</span>
-  <p style="
-    text-align:center;
-    font-size: 3rem;
-    font-weight: bold;
-  ">
-    ::entryNo::
-  </p>
-  <p style="text-align: center;">
-    <img src='cid:qr_code' />
-  </p>
-</div>
-
-<p>もし登録いただいた参加メンバの追加・欠席、または申込みのキャンセルがあった場合、以下から修正してください。</p>
-
-<p><a href="::editURL::" style="
-  display: inline-block;
-  padding: 20px 50px 20px 50px;
-  text-decoration: none;
-  color: white;
-  background: blue;
-  font-weight: bold;
-  border: solid 4px blue;
-  border-radius: 8px;">参加申込の修正</a></p>
-
-<p>なお当日の注意事項・持ち物リストは適宜追加されることがありますので、イベント前日に「<a href="https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97">開催案内</a>」のページで再度ご確認いただけますようお願い申し上げます。</p>
-
-<p>当日のお越しをお待ちしております。</p>
-`;
-
-//== https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.3.0/crypto-js.min.js
-(後略)
 ```
 
 
@@ -892,26 +770,24 @@ getEditResponseUrl()他のメソッドの詳細については、Google公式 [C
 ```
 const passPhrase = "Oct.22,2022"; // テスト用共通鍵
 
-const szLibTest = () => {
-  console.log(szLib.whichType('a'));
-  console.log(szLib.dump('b',{b:10}));
-}
-
 // ===========================================================
 // トリガー関数
 // ===========================================================
 
 const doGetTest = () => {
+  const tStr = (x) => {
+    return x.toLocaleString('ja-JP') + '.' + x.getMilliseconds();
+  };
   const testData = [
-    //{func:'test',data:{from:'嶋津',to:'スタッフ',message:'ふがふが'}},
-    //{func:'search',data:{key:'ナ'}},
-    {func:'update',data:{target:{key:'受付番号',value:12},revice:[
-      {key:'状態',value:'参加'},
-      {key:'参加費',value:'既収'},
-    ]}},
+    {func:'postMessage',data:{
+      timestamp: tStr(new Date()),
+      from: '嶋津パパ',
+      to: '嶋津ママ',
+      message: '追加のテスト',
+    }},
   ];
   for( let i=0 ; i<testData.length ; i++ ){
-    doGet({parameter:{v:encrypt(testData[i],passPhrase)}});
+    doGet({parameter:{v:szLib.encrypt(testData[i],passPhrase)}});
   }
 };
 
@@ -919,22 +795,13 @@ function doGet(e) {
   console.log('doGet start.',e);
 
   // 'v'で渡されたクエリを復号
-  arg = decrypt(e.parameter.v,passPhrase);
-  console.log('arg',whichType(arg),arg);
+  arg = szLib.decrypt(e.parameter.v,passPhrase);
+  console.log('arg',szLib.whichType(arg),arg);
 
   let rv = [];
   switch( arg.func ){  // 処理指定により分岐
-    case 'search':  // 該当者の検索
-      rv = candidates(arg.data);
-      break;
-    case 'update':  // 参加者情報の更新
-      rv = updateParticipant(arg.data);
-      break;
-    case 'post':  // 掲示板への投稿
+    case 'postMessage':  // 掲示板への投稿
       rv = postMessage(arg.data);
-      break;
-    case 'test':  // テスト用
-      rv = arg.data;  // 何もせず、そのまま返す
       break;
   }
 
@@ -946,120 +813,14 @@ function doGet(e) {
   .setMimeType(ContentService.MimeType.JSON);
 }
 
-function onFormSubmit(  // メールの自動返信
-  e={namedValues:{'メールアドレス':['nakaone.kunihiro@gmail.com']}} // テスト用既定値
-) {
-  console.log(e.namedValues);
+function postMessage(data){
+  console.log('postMessage start. data='+JSON.stringify(data));
 
-  // 1.受付番号の採番
-  // 「回答」シート上で書き込まれた行番号＋「当日」上のデータ件数−ヘッダ1行×2シート
-  let entryNo = e.range.rowStart - 2
-    + SpreadsheetApp.getActiveSpreadsheet().getSheetByName('当日').getLastRow();
-  // シートに受付番号を記入
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('回答');
-  sheet.getRange("S"+e.range.rowStart).setValue(entryNo); // 受付番号はS列
-  entryNo = ('0000'+entryNo).slice(-4);
-
-  // 2.編集用URLの取得
-  // 2.1.シート側のキーを生成
-  const sKey = sheet.getRange("A"+e.range.rowStart).getValue().getTime()
-    + e.namedValues['メールアドレス'][0];
-  /* 以下だと秒単位でミリ秒が無いためフォームと一致しない
-  const sKey = new Date(e.namedValues['タイムスタンプ'][0]).getTime()
-    + e.namedValues['メールアドレス'][0]; */
-  console.log('sKey = '+sKey);
-
-  // 2.2.フォームデータを全件読み込み
-  // FormIdはフォームの編集画面。入力画面、回答後の「回答を記録しました」画面とは異なる。
-  const FormId = "1hnQLsY3lRh0gQMGfXoJJqAL_yBpKR6T0h2RFRc8tUEA";
-  const formData = FormApp.openById(FormId).getResponses();
-
-  // 2.3.フォームデータを順次検索
-  let editURL = '';
-  for( let i=formData.length-1 ; i>=0 ; i++ ){
-    const fKey = formData[i].getTimestamp().getTime()
-      + formData[i].getRespondentEmail();
-    console.log(i,fKey);
-    if( sKey === fKey ){
-      console.log('formData',formData[i]);
-      editURL = formData[i].getEditResponseUrl();
-      break;
-    }
-  }
-  console.log('editURL = '+editURL);
-
-  // 2.4.シートに編集用URLを保存
-  sheet.getRange("T"+e.range.rowStart).setValue(editURL); // 編集用URLはT列
-
-  // 3.本文の編集
-  const firstName = e.namedValues['申請者氏名'][0].match(/^([^　]+)/)[1];
-  const body = 'dummy';
-
-  // 3.2.htmlメールの編集
-  const options = {
-    name: '下北沢小学校おやじの会',
-    replyTo: 'shimokitasho.oyaji@gmail.com',
-    //attachments: createQrCode(entryNo),
-    htmlBody: htmlPattern
-      .replace("::firstName::",firstName)
-      .replace("::entryNo::",entryNo)
-      .replace("::editURL::",editURL),
-    inlineImages: {
-      qr_code: createQrCode(entryNo),
-    }
-  }
-
-  GmailApp.sendEmail(
-    e.namedValues['メールアドレス'][0],  // to
-    '【完了】QR受付テストへの登録',     // subject
-    body,
-    options
-  );
-}
-
-// ===========================================================
-// トリガーから呼ばれる関数・定義
-// ===========================================================
-
-const candidates = (data) => {  // 該当者リストの作成
-  console.log('candidates start.',data);
-
-  const dObj = getSheetData('マスタ'); // データをシートから取得
-  let result = [];
-  const sKey = String(data.key);
-  if( sKey.match(/^[0-9]+$/) ){
-    console.log('number='+Number(sKey));
-    result = dObj.data.filter(x => {return Number(x['受付番号']) === Number(sKey)});
-  } else if( sKey.match(/^[ァ-ヾ　]+$/) ){
-    console.log('kana='+sKey);
-    result = dObj.data.filter(x => {return x['読み'].indexOf(sKey) === 0});
-  }
-
-  console.log('candidates end. result='+JSON.stringify(result));
-  return result;
-};
-
-const updateParticipant = (data) => { // 参加者情報を更新
-  console.log('updateParticipant start.',data);
-
-  const dObj = getSheetData('マスタ'); // データをシートから取得
-  const rv = updateSheetData(dObj,data);
-
-  console.log('updateParticipant end.',rv);
+  const dObj = szLib.getSheetData('ログ');
+  const rv = szLib.updateSheetData(dObj,data);
+  console.log('postMessage end.',JSON.stringify(rv));
   return rv;
 }
-
-const postMessage = (arg) => {
-  console.log('postMessage start. arg='+JSON.stringify(arg));
-  const v = {
-    timestamp: new Date().toLocaleString('ja-JP'),
-    from: arg.from,
-    to: arg.to,
-    message: arg.message,
-  }
-  console.log('postMessage end. v='+JSON.stringify(v));  
-  return v;
-};
 ```
 
 ## Ⅲ.6.szLib(GASライブラリ)
@@ -1323,6 +1084,27 @@ function inspect(arg,depth=0){
  * @param {Object[]} post.revice - 1セルの更新情報
  * @param {string} post.revice.key - 更新対象の項目名
  * @param {any} post.revice.value - 更新後の値
+ * @param {Object} opt - オプション
+ * 
+ * post = {  更新の場合
+ *   target: {
+ *     key: 更新対象の項目名(キー項目)
+ *     value: キー値
+ *   },
+ *   revice: [{
+ *     key: 更新対象の項目名
+ *     value: 更新後の値
+ *   },{..},..]
+ * }
+ * 
+ * post = [{　　追加の場合
+ *   key: 追加対象の項目名
+ *   value: 項目の値
+ * },{..},..]
+ * 
+ * opt = {
+ *   append: {boolean} キー値が存在しない場合、追加を許すならtrue
+ * }
  * @returns {Object[]} 更新結果。変更された項目のみ。
  * result = [{
  *   column: 更新対象項目
@@ -1330,45 +1112,69 @@ function inspect(arg,depth=0){
  *   after: 更新後の値
  * },{},..]
  */
-function updateSheetData(dObj,post){
+function updateSheetData(dObj,post,opt={append:true}){
   console.log('updateSheetData start.',JSON.stringify(post));
-
-  // 1.何行目のデータを更新するか特定する
-  const map = dObj.data.map(x => x[post.target.key]);
-  const rowNum = map.indexOf(String(post.target.value)) + 2;
-
-  // 2.更新対象行のデータをuArrに保存する
-  const uArr = dObj.rows[rowNum-2];
-  console.log('uArr = '+JSON.stringify(uArr));
-
-  // 3.uArrのデータを順次更新しながらログに記録、更新範囲をメモ
-  let maxColumn = 0;
-  let minColumn = 99999;
   const log = [];
-  for( let i=0 ; i<post.revice.length ; i++ ){
-    // (1) 更新対象項目の列番号を特定、columnに保存
-    const column = dObj.keys.indexOf(post.revice[i].key);
-    // (2) >maxColumn or <minColumn ならmax/minを更新
-    maxColumn = column > maxColumn ? column : maxColumn;
-    minColumn = column < minColumn ? column : minColumn;
-    // (3) logに更新対象項目/更新前の値/更新後の値を保存
-    if( uArr[column] !== post.revice[i].value ){
-      log.push({
-        column: post.revice[i].key,
-        before: uArr[column],
-        after: post.revice[i].value,
-      });
-    }
-    // (4) uArr[column]の値を更新
-    uArr[column] = post.revice[i].value;
-  }
-  console.log('uArr = '+JSON.stringify(uArr));
 
-  // uArrから更新範囲のデータを切り出して更新
-  const range = dObj.sheet.getRange(rowNum, minColumn+1, 1, maxColumn-minColumn+1);
-  const sv = uArr.splice(minColumn, maxColumn-minColumn+1);
-  console.log('sv = '+JSON.stringify(sv));
-  range.setValues([sv]);
+  const doUpdate = () => {
+    // 1.何行目のデータを更新するか特定する
+    const map = dObj.data.map(x => x[post.target.key]);
+    const rowNum = map.indexOf(String(post.target.value)) + 2;
+
+    // 2.更新対象行のデータをuArrに保存する
+    const uArr = dObj.rows[rowNum-2];
+    console.log('uArr = '+JSON.stringify(uArr));
+
+    // 3.uArrのデータを順次更新しながらログに記録、更新範囲をメモ
+    let maxColumn = 0;
+    let minColumn = 99999;
+    for( let i=0 ; i<post.revice.length ; i++ ){
+      // (1) 更新対象項目の列番号を特定、columnに保存
+      const column = dObj.keys.indexOf(post.revice[i].key);
+      // (2) >maxColumn or <minColumn ならmax/minを更新
+      maxColumn = column > maxColumn ? column : maxColumn;
+      minColumn = column < minColumn ? column : minColumn;
+      // (3) logに更新対象項目/更新前の値/更新後の値を保存
+      if( uArr[column] !== post.revice[i].value ){
+        log.push({
+          column: post.revice[i].key,
+          before: uArr[column],
+          after: post.revice[i].value,
+        });
+      }
+      // (4) uArr[column]の値を更新
+      uArr[column] = post.revice[i].value;
+    }
+    console.log('uArr = '+JSON.stringify(uArr));
+
+    // uArrから更新範囲のデータを切り出して更新
+    const range = dObj.sheet.getRange(rowNum, minColumn+1, 1, maxColumn-minColumn+1);
+    const sv = uArr.splice(minColumn, maxColumn-minColumn+1);
+    console.log('sv = '+JSON.stringify(sv));
+    range.setValues([sv]);
+  }
+
+  const doAppend = () => {
+    // 追加対象行のデータをaArrとして作成
+    const aArr = [];
+    const rv = {};
+    for( let i=0 ; i<dObj.keys.length ; i++ ){
+      rv[dObj.keys[i]] = post[dObj.keys[i]] || '';
+      aArr.push(rv[dObj.keys[i]]);
+    }
+    dObj.sheet.appendRow(aArr);
+    log.push(rv);
+    console.log('aArr = '+JSON.stringify(aArr));
+    console.log('rv = '+JSON.stringify(rv));
+  }
+
+  if( post.hasOwnProperty('target') ){
+    console.log('doUpdate');
+    doUpdate();
+  } else if( opt.append ){
+    console.log('doAppend');
+    doAppend();
+  }
 
   console.log('updateSheetData end.'+JSON.stringify(log));
   return log;

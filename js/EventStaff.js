@@ -284,6 +284,9 @@ const postMessage = () => { // メッセージを投稿
   const toNum = toEl.selectedIndex;
   msg.to = toEl.options[toNum].value;
 
+  doGet({func:'postMessage',data:msg},(response) => {
+    console.log(response);
+  });
   console.log('postMessage end.',JSON.stringify(msg));
 }
 
