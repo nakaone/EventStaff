@@ -50,10 +50,31 @@
     <div class="postArea">
       <input type="button" value="投稿する" />
       <div class="postMessage" style="display:none">
-        <input type="text" name="handleName" width="100%"
-          placeholder="「お知らせ」に表示する名前を入れてください"
-          onchange="config.handleName=this.value;alert(this.value+'に設定しました')"
-        />
+        <div class="fromto">
+          <label>From</label>
+          <input type="text" name="from" width="100%"
+            placeholder="ハンドルネームを入力"
+            onchange="config.handleName=this.value;localStorage.setItem('config',JSON.stringify(config));"
+          />
+        </div>
+        <div class="fromto">
+          <label>To</label>
+          <select name="to">
+            <option value="スタッフ全員">スタッフ全員</option>
+            <option value="本部">本部</option>
+            <option value="カレー担当">カレー担当</option>
+            <option value="校内探検担当">校内探検担当</option>
+            <option value="受付担当">受付担当</option>
+            <option value="金魚すくい担当">金魚すくい担当</option>
+            <option value="射的担当">射的担当</option>
+          </select>
+        </div>
+        <div>
+          <textarea name="message" rows="5" cols="40"></textarea>
+        </div>
+        <div class="submit">
+          <input type="button" value="送信" onclick="postMessage()" />  
+        </div>
       </div>
     </div>
     <div class="boardArea">

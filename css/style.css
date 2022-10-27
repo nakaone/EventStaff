@@ -26,7 +26,7 @@ div {margin:0px;padding:0px;}
   /*flex-wrap: wrap;*/
 }
 
-input {
+input, select {
   font-size: 1rem;
   margin-bottom: 0.5rem;
 }
@@ -122,6 +122,11 @@ nav li a {
   padding: 0.5rem;
   background-color: #deecc6;
 }
+#home .fromto label {
+  display: block;
+  float: left;
+  width: 4rem;
+}
 
 /* =========================================================
   参加者情報編集
@@ -172,7 +177,6 @@ nav li a {
   margin-left: 0.5rem;
   width: 5rem;
 }
-#editParticipant select {font-size: 1rem;}
 /*
 #editParticipant label {margin-left:2rem;}
 */

@@ -3,10 +3,10 @@ const config = {
   scanCode: false,    // スキャン実行フラグ。true時のみスキャン可
   GASwebAPId: null,   // GAS Web API の ID。"https://script.google.com/macros/s/〜/exec"
   passPhrase: null,   // GASとの共通鍵
-  handleName: null,   // お知らせに表示する自分の名前
+  handleName: '(未定義)',   // お知らせに表示する自分の名前
 }
 
-const definition = {
+const localDef = {
   schedule: // 進行予定表の元になるスプレッド
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vT4Y1RoJgfYOLuv4hfNJrf6aYdOaBy7eoSZKwwEibePe04XiLn91rLFGq6LO9_-R-vnPVCTM21RMitE/pubhtml?gid=0&single=true",
   editGuestTemplate: {tag:"div", class:"table", children:[

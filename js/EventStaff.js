@@ -13,9 +13,14 @@ const changeScreen = (scrId='home',titleStr='お知らせ') => {  // 表示画�
   }
   // 指定IDの画面は再表示
   document.querySelector('#'+scrId).style.display = 'flex';
+
   // メニューを隠す
   toggleMenu(false);
 
+  // 投稿欄に名前をセット
+  if( scrId === 'home' ){
+    document.querySelector('#home input[name="from"]').value = config.handleName;
+  }
   console.log("changeScreen end.");
 }
 
@@ -184,7 +189,7 @@ const editParticipant = (arg) => {  // 検索結果の内容編集
   });
 
   // 要素の作成とセット
-  let o = genChild(definition.editGuestTemplate,arg,'root');  // 全体の定義と'root'を渡す
+  let o = genChild(localDef.editGuestTemplate,arg,'root');  // 全体の定義と'root'を渡す
   if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
     throw o.result;
   } else if( o.append ){  // 追加フラグがtrue
