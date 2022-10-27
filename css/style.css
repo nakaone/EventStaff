@@ -23,7 +23,7 @@ div {margin:0px;padding:0px;}
   justify-content: flex-start;
   -webkit-align-items: flex-start;
   align-items: flex-start;
-  flex-wrap: wrap;
+  /*flex-wrap: wrap;*/
 }
 
 input {
