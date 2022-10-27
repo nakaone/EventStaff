@@ -64,6 +64,7 @@ const initialize = () => {  // 初期設定処理
 
   // 初期設定終了時の処理を定義
   const terminate = () => {
+    getMessages(1);  // 掲示板定期更新開始
     console.log("initialize end.",config);
     changeScreen();// ホーム画面表示
   }
@@ -273,7 +274,10 @@ const updateParticipant = () => {  // 参加者情報更新
 const postMessage = () => { // メッセージを投稿
   console.log('postMessage start.');
 
-  const location = '#home .postMessage [name="_"]';
+  // 投稿領域を閉める
+  document.querySelector('#home .postArea input').value = '投稿する';
+  document.querySelector('#home .postMessage').style.display = 'none';
+
   const msg = {
     timestamp: (()=>{
       const tObj = new Date();
@@ -291,6 +295,58 @@ const postMessage = () => { // メッセージを投稿
     console.log(response);
   });
   console.log('postMessage end.',JSON.stringify(msg));
+}
+
+const getMessages = (arg=0) => {
+  console.log('getMessages start.');
+
+  if( arg === 0 ){  // 定期的に実行される処理
+    const cTime = new Date();
+    console.log('getMessages periodical start: '+cTime.toLocaleString('ja-JP')+'.'+cTime.getMilliseconds());
+    if( config.getMessages && config.BoardIntervalId !== null){
+      // 掲示板スプレッドシートからデータを取得し、boardAreaに書き込む
+      doGet(config.BoardAPI,{func:'getMessages',data:{}},(response) => {
+        console.log('getMessages response='+JSON.stringify(response));
+        // 時系列にメッセージを並べ替え
+        response.sort((a,b) => a.timestamp < b.timestamp);
+        console.log(response);
+        // 掲示板領域に書き込むHTMLを msg として作成
+        let msg = '';
+        const t = '<p class="title">[_time] From:_from　To:_to</p><p>_message</p>';
+        for( let i=0 ; i<response.length ; i++ ){
+          const dt = new Date(response[i].timestamp);
+          const hms = ('0'+dt.getHours()).slice(-2)
+            + ':' + ('0'+dt.getMinutes()).slice(-2)
+            + ':' + ('0'+dt.getSeconds()).slice(-2);
+          const m = t.replace('_time',hms)
+            .replace('_from',response[i].from)
+            .replace('_to',response[i].to)
+            .replace('_message',response[i].message)
+            .replace(/\n/g,'<br>');
+          console.log('m='+m);
+          msg += m;
+        }
+        // 掲示板領域に書き込み
+        document.querySelector('#home .boardArea').innerHTML = msg;
+        console.log('getMessages periodical end: '+msg);
+      });
+    }
+  } else {  // 実行/停止指示
+    if( arg > 0 ){  // 定期巡回開始(再開)
+      config.getMessages = true;
+      config.BoardInterval = true;
+      console.log('config='+JSON.stringify(config));
+      config.BoardIntervalId = setInterval(getMessages,10000);
+//      config.BoardIntervalId = setInterval(getMessages,config.BoardInterval);
+      console.log('getMessages start. id='+config.BoardIntervalId);
+    } else {    // 定期巡回停止
+      clearInterval(config.BoardIntervalId);
+      config.getMessages = false;
+      config.BoardInterval = false;
+      console.log('getMessages stop. id='+config.BoardIntervalId);
+      config.BoardIntervalId = null;
+    }
+  }
 }
 
 const onThatDay = (arg) => { // 参加フォームURLのQRコード表示

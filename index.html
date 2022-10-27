@@ -243,6 +243,10 @@
     <hr />
     <input type="button" value="設定の参照" onclick="alert(localStorage.getItem('config'))" />
     <input type="button" value="設定のクリア" onclick="localStorage.removeItem('config');alert('clear!')" />
+    <hr />
+    <p>掲示板メッセージの定期取得</p>
+    <input type="button" value="再開" onclick="getMessages(1);alert('再開しました')" />
+    <input type="button" value="停止" onclick="getMessages(-1);alert('停止しました')" />
   </div>
 </body>
 <script src="js/jsQR.js" defer></script>
