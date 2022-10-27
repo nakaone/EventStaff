@@ -1083,6 +1083,90 @@ const postMessage = (arg) => {
 ### GASソース(全体)
 
 ```
+/**
+ * 文字を変換。全角英数字は半角、半角カナは全角、ひらがな<->カタカナは指定
+ * @param {string} str - 変換対象文字列
+ * @param {string} kana - true:ひらがな、false:カタカナ
+ * @returns {string} 変換結果
+ * 
+ * [JavaScript] 全角ひらがな⇔全角カタカナの文字列変換 [コピペ用のメモ]
+ * https://neko-note.org/javascript-hiragana-katakana/1024
+ * [JavaScript] 全角⇔半角の変換を行う（英数字、カタカナ）
+ * https://www.yoheim.net/blog.php?q=20191101
+ */
+ function convertCharacters(str,kana=true){ 
+  let rv = str;
+  // 全角英数字 -> 半角英数字
+  rv = rv.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => {
+    return String.fromCharCode(s.charCodeAt(0) - 65248);
+  });
+
+  // 半角カタカナ -> 全角カタカナ
+  const hankaku = (arg) => {
+    const kanaMap = {
+      'ｶﾞ': 'ガ', 'ｷﾞ': 'ギ', 'ｸﾞ': 'グ', 'ｹﾞ': 'ゲ', 'ｺﾞ': 'ゴ',
+      'ｻﾞ': 'ザ', 'ｼﾞ': 'ジ', 'ｽﾞ': 'ズ', 'ｾﾞ': 'ゼ', 'ｿﾞ': 'ゾ',
+      'ﾀﾞ': 'ダ', 'ﾁﾞ': 'ヂ', 'ﾂﾞ': 'ヅ', 'ﾃﾞ': 'デ', 'ﾄﾞ': 'ド',
+      'ﾊﾞ': 'バ', 'ﾋﾞ': 'ビ', 'ﾌﾞ': 'ブ', 'ﾍﾞ': 'ベ', 'ﾎﾞ': 'ボ',
+      'ﾊﾟ': 'パ', 'ﾋﾟ': 'ピ', 'ﾌﾟ': 'プ', 'ﾍﾟ': 'ペ', 'ﾎﾟ': 'ポ',
+      'ｳﾞ': 'ヴ', 'ﾜﾞ': 'ヷ', 'ｦﾞ': 'ヺ',
+      'ｱ': 'ア', 'ｲ': 'イ', 'ｳ': 'ウ', 'ｴ': 'エ', 'ｵ': 'オ',
+      'ｶ': 'カ', 'ｷ': 'キ', 'ｸ': 'ク', 'ｹ': 'ケ', 'ｺ': 'コ',
+      'ｻ': 'サ', 'ｼ': 'シ', 'ｽ': 'ス', 'ｾ': 'セ', 'ｿ': 'ソ',
+      'ﾀ': 'タ', 'ﾁ': 'チ', 'ﾂ': 'ツ', 'ﾃ': 'テ', 'ﾄ': 'ト',
+      'ﾅ': 'ナ', 'ﾆ': 'ニ', 'ﾇ': 'ヌ', 'ﾈ': 'ネ', 'ﾉ': 'ノ',
+      'ﾊ': 'ハ', 'ﾋ': 'ヒ', 'ﾌ': 'フ', 'ﾍ': 'ヘ', 'ﾎ': 'ホ',
+      'ﾏ': 'マ', 'ﾐ': 'ミ', 'ﾑ': 'ム', 'ﾒ': 'メ', 'ﾓ': 'モ',
+      'ﾔ': 'ヤ', 'ﾕ': 'ユ', 'ﾖ': 'ヨ',
+      'ﾗ': 'ラ', 'ﾘ': 'リ', 'ﾙ': 'ル', 'ﾚ': 'レ', 'ﾛ': 'ロ',
+      'ﾜ': 'ワ', 'ｦ': 'ヲ', 'ﾝ': 'ン',
+      'ｧ': 'ァ', 'ｨ': 'ィ', 'ｩ': 'ゥ', 'ｪ': 'ェ', 'ｫ': 'ォ',
+      'ｯ': 'ッ', 'ｬ': 'ャ', 'ｭ': 'ュ', 'ｮ': 'ョ',
+      '｡': '。', '､': '、', 'ｰ': 'ー', '｢': '「', '｣': '」', '･': '・'
+    };
+
+    const reg = new RegExp('(' + Object.keys(kanaMap).join('|') + ')', 'g');
+    return arg
+      .replace(reg, function (match) {
+          return kanaMap[match];
+      })
+      .replace(/ﾞ/g, '゛')
+      .replace(/ﾟ/g, '゜');
+  };
+  rv = hankaku(rv);
+
+  // 全角カタカナ <-> 全角ひらがな
+  const hRep = (x,offset,string) => { // offset:マッチした位置 string:文字列全部
+    //console.log('hRep start.',x,offset,string);
+    let rv = String.fromCharCode(x.charCodeAt(0) - 0x60);
+    //console.log('hRep end.',rv);
+    return rv;
+  }
+  const toHiragana = (t) => {
+    //console.log('toHiragana start.',typeof t, t);
+    let rv = t.replace(/[\u30A1-\u30FA]/g,hRep);
+    //console.log('toHiragana end.',typeof(rv),rv);
+    return rv;
+  };
+  
+  const kRep = (x,offset,string) => {
+    //console.log('kRep start.',x,offset,string);
+    let rv = String.fromCharCode(x.charCodeAt(0) + 0x60);
+    //console.log('kRep end.',rv);
+    return rv;
+  }
+  const toKatakana = (t) => {
+    //console.log('toKatakana start.',typeof t, t);
+    let rv = t.replace(/[\u3041-\u3096]/g,kRep);
+    //console.log('toKatakana end.',typeof(rv),rv);
+    return rv;
+  };
+  
+  rv = kana ? toHiragana(rv) : toKatakana(rv);
+  //console.log('convertCharacters end. rv=',rv);
+  return rv;
+}
+
 /** QRコード生成
  * @param {String} code_data QRコードに埋め込む文字列
  * @return {Blob} 画像のBLOB
@@ -1186,6 +1270,48 @@ function getSheetData(sheetName='マスタ'){
     sheet: rv.sheet || 'null',
   }));
   return rv;
+}
+
+/** オブジェクトの構造を分析
+ * @param {any} arg - 分析対象の変数
+ * @param {number} depth - 再帰階層の深さ。指定不要
+ */
+function inspect(arg,depth=0){ 
+  // エラー対策(RangeError: Maximum call stack size exceeded)
+  if( depth > 2 ){
+    return 'Err:depth>2';
+  }
+
+  // プリミティブ型または関数
+  const primitiveList = ['undefined','boolean','number','string','bigint','symbol','function'];
+  let i = primitiveList.indexOf(typeof arg);
+  if( i > -1 ){
+    return primitiveList[i];
+  }
+  // 配列またはハッシュ以外
+  const whichType = Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
+  if( whichType !== 'Array' && whichType !== 'Object' )
+    return whichType;
+
+  let rv = null;
+  if( whichType === 'Array' ){
+    // 配列の場合、順次再帰で呼び出し
+    rv = [];
+    for( let i=0 ; i<arg.length ; i++ ){
+      rv.push(inspect(arg[i],depth+1));
+    }
+  } else {
+    // ハッシュの場合、メンバ名つきの配列を作成
+    rv = {};
+    for( let x in arg ){
+      if( x.toUpperCase() === 'NONE' ){  // 'NONE'は調査対象から削除(循環参照？)
+        rv[x] = 'Err:label NONE';
+      } else {
+        rv[x] = inspect(arg[x],depth+1);
+      }
+    }
+  }
+  return depth === 0 ? JSON.stringify(rv) : rv;
 }
 
 /** シートの値を更新
