@@ -141,7 +141,7 @@ const inputSearchKey = () => {  // 参加者の検索キーを入力
   // キーワード入力欄の値が変わったら検索するよう設定
   document.querySelector('#inputSearchKey input[type="button"]')
   .addEventListener('click',() => {
-    const keyPhrase = strEl.value; //暫定：convertCharacters(strEl.value,'kata');
+    const keyPhrase = convertCharacters(strEl.value,false);
     console.log('keyPhrase: '+ strEl.value + ' -> ' + keyPhrase );
     callback(keyPhrase);
   });

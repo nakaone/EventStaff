@@ -13,7 +13,7 @@
  * [JavaScript] 全角⇔半角の変換を行う（英数字、カタカナ）
  * https://www.yoheim.net/blog.php?q=20191101
  */
-function convertCharacters(str,kana=true){ 
+ function convertCharacters(str,kana=true){ 
   let rv = str;
   // 全角英数字 -> 半角英数字
   rv = rv.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => {
@@ -21,7 +21,7 @@ function convertCharacters(str,kana=true){
   });
 
   // 半角カタカナ -> 全角カタカナ
-  rv = (rv) => {
+  const hankaku = (arg) => {
     const kanaMap = {
       'ｶﾞ': 'ガ', 'ｷﾞ': 'ギ', 'ｸﾞ': 'グ', 'ｹﾞ': 'ゲ', 'ｺﾞ': 'ゴ',
       'ｻﾞ': 'ザ', 'ｼﾞ': 'ジ', 'ｽﾞ': 'ズ', 'ｾﾞ': 'ゼ', 'ｿﾞ': 'ゾ',
@@ -45,37 +45,44 @@ function convertCharacters(str,kana=true){
     };
 
     const reg = new RegExp('(' + Object.keys(kanaMap).join('|') + ')', 'g');
-    return rv
+    return arg
       .replace(reg, function (match) {
           return kanaMap[match];
       })
       .replace(/ﾞ/g, '゛')
       .replace(/ﾟ/g, '゜');
   };
+  rv = hankaku(rv);
 
   // 全角カタカナ <-> 全角ひらがな
   const hRep = (x,offset,string) => { // offset:マッチした位置 string:文字列全部
     //console.log('hRep start.',x,offset,string);
-    const rv = String.fromCharCode(x.charCodeAt(0) - 0x60);
+    let rv = String.fromCharCode(x.charCodeAt(0) - 0x60);
     //console.log('hRep end.',rv);
     return rv;
   }
-  const toHiragana = (t) => t.replace(/[\u30A1-\u30FA]/g,hRep);
+  const toHiragana = (t) => {
+    //console.log('toHiragana start.',typeof t, t);
+    let rv = t.replace(/[\u30A1-\u30FA]/g,hRep);
+    //console.log('toHiragana end.',typeof(rv),rv);
+    return rv;
+  };
   
   const kRep = (x,offset,string) => {
     //console.log('kRep start.',x,offset,string);
-    const rv = String.fromCharCode(x.charCodeAt(0) + 0x60);
+    let rv = String.fromCharCode(x.charCodeAt(0) + 0x60);
     //console.log('kRep end.',rv);
     return rv;
   }
-  const toKatakana = (t) => t.replace(/[\u3041-\u3096]/g,kRep);
+  const toKatakana = (t) => {
+    //console.log('toKatakana start.',typeof t, t);
+    let rv = t.replace(/[\u3041-\u3096]/g,kRep);
+    //console.log('toKatakana end.',typeof(rv),rv);
+    return rv;
+  };
   
-  // テスト用
-  //a = 'ＡＢＣａｂｃ０１２ABCabc012ｱｲｳあいうアイウ'
-  //console.log(a+'\n'+toHiragana(a));
-  //console.log(a+'\n'+toKatakana(a));
-
   rv = kana ? toHiragana(rv) : toKatakana(rv);
+  //console.log('convertCharacters end. rv=',rv);
   return rv;
 }
 
