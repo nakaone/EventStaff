@@ -24,7 +24,7 @@ const changeScreen = (scrId='home',titleStr='お知らせ') => {  // 表示画�
   console.log("changeScreen end.");
 }
 
-const doGet = (postData,callback) => {  // GASのdoGetを呼び出し、結果を返す
+const doGet = (endpoint,postData,callback) => {  // GASのdoGetを呼び出し、結果を返す
   console.log("doGet start. ",postData,callback);
 
   // GASに渡すデータを作成
@@ -32,12 +32,12 @@ const doGet = (postData,callback) => {  // GASのdoGetを呼び出し、結果�
   dump('v',v);
 
   // エンドポイントを作成
-  const endpoint = 'https://script.google.com/macros/s/〜/exec'
-    .replace('〜',config.GASwebAPId) + '?v=' + v;
-  dump('endpoint',endpoint);
+  const ep = 'https://script.google.com/macros/s/〜/exec'
+    .replace('〜',endpoint) + '?v=' + v;
+  dump('ep',ep);
 
   // GASからの返信を受けたらcallbackを呼び出し
-  fetch(endpoint,{"method": "GET"})
+  fetch(ep,{"method": "GET"})
   .then(response => response.json())
   .then(data => {
     console.log("doGet end.",data);
@@ -116,7 +116,7 @@ const inputSearchKey = () => {  // 参加者の検索キーを入力
     config.scanCode = false;  // スキャンを停止
     document.querySelector('#inputSearchKey .scanner')
       .innerHTML = ''; // スキャナ用DIV内を除去
-    doGet({func:'search',data:{key:keyPhrase}},(data) => {
+    doGet(config.MasterAPI,{func:'search',data:{key:keyPhrase}},(data) => {
       if( data.length === 0 ){
         alert("該当する参加者は存在しませんでした");
       } else if( data.length > 1){
@@ -252,7 +252,7 @@ const updateParticipant = () => {  // 参加者情報更新
       value: f.options[f.selectedIndex].value,
     });
   }
-  doGet(postData,(data) => {
+  doGet(config.MasterAPI,postData,(data) => {
     // 結果表示
     let result = '<p>以下の変更を行いました。</p>';
     if( data.length > 0 ){
@@ -275,7 +275,10 @@ const postMessage = () => { // メッセージを投稿
 
   const location = '#home .postMessage [name="_"]';
   const msg = {
-    timestamp: new Date().getTime(),
+    timestamp: (()=>{
+      const tObj = new Date();
+      return tObj.toLocaleString('ja-JP') + '.' + tObj.getMilliseconds();
+    })(),
     from: document.querySelector('#home .postMessage [name="from"]').value,
     to: '',
     message: document.querySelector('#home .postMessage [name="message"]').value,
@@ -284,7 +287,7 @@ const postMessage = () => { // メッセージを投稿
   const toNum = toEl.selectedIndex;
   msg.to = toEl.options[toNum].value;
 
-  doGet({func:'postMessage',data:msg},(response) => {
+  doGet(config.BoardAPI,{func:'postMessage',data:msg},(response) => {
     console.log(response);
   });
   console.log('postMessage end.',JSON.stringify(msg));

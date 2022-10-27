@@ -135,7 +135,7 @@ const cipherTest = () => {
   }
 }
 
-const doGet = (func='post',data,callback) => {
+const doGet = (config.MasterAPI,func='post',data,callback) => {
   console.log("doGet start. ",func,data,callback);
 
   // GASに渡すデータを作成
@@ -147,7 +147,7 @@ const doGet = (func='post',data,callback) => {
   const endpoint =  //GASのAPIのURL
     api + '?v=' + postData;
     //"https://script.google.com/macros/s/〜/exec"
-    //.replace("〜",config.GASwebAPId)
+    //.replace("〜",config.MasterAPI)
     console.log('endpoint='+endpoint);
 
   // fetchのオプション指定

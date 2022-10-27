@@ -1,7 +1,8 @@
 const config = {
   DateOfExpiry: null, // config情報の有効期限
   scanCode: false,    // スキャン実行フラグ。true時のみスキャン可
-  GASwebAPId: null,   // GAS Web API の ID。"https://script.google.com/macros/s/〜/exec"
+  MasterAPI: null,    // 「回答」のGAS Web API の ID。"https://script.google.com/macros/s/〜/exec"
+  BoardAPI: null,     // 「掲示板」のGAS Web API のID
   passPhrase: null,   // GASとの共通鍵
   handleName: '(未定義)',   // お知らせに表示する自分の名前
 }
