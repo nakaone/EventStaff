@@ -140,5 +140,3 @@ const definition = {
     },
   },
 }
-
-//const definition = {a:'hoge'};

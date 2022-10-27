@@ -44,10 +44,6 @@ const doGet = (postData,callback) => {  // GASのdoGetを呼び出し、結果�
 const initialize = () => {  // 初期設定処理
   console.log("initialize start.");
 
-  const dummy = {};
-  Object.assign(definition,dummy);
-  console.log('l.69',definition);
-
   // お知らせ画面の「投稿する」ボタンの動作を定義
   const postButton = document.querySelector('#home .postArea input');
   postButton.addEventListener('click',() => {
