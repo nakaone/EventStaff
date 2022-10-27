@@ -127,7 +127,7 @@ nav li a {
   float: left;
   width: 4rem;
 }
-#home .fromto input {
+#home .fromto input, select {
   width: 8rem;
 }
 #home textarea {
