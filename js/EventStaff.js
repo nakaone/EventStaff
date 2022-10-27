@@ -270,6 +270,23 @@ const updateParticipant = () => {  // 参加者情報更新
   });
 }
 
+const postMessage = () => { // メッセージを投稿
+  console.log('postMessage start.');
+
+  const location = '#home .postMessage [name="_"]';
+  const msg = {
+    timestamp: new Date().getTime(),
+    from: document.querySelector('#home .postMessage [name="from"]').value,
+    to: '',
+    message: document.querySelector('#home .postMessage [name="message"]').value,
+  }
+  const toEl = document.querySelector('#home .postMessage [name="to"]');
+  const toNum = toEl.selectedIndex;
+  msg.to = toEl.options[toNum].value;
+
+  console.log('postMessage end.',JSON.stringify(msg));
+}
+
 const onThatDay = (arg) => { // 参加フォームURLのQRコード表示
   console.log("onThatDay start.",arg);
 
