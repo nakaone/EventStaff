@@ -6,7 +6,7 @@ const config = {
   handleName: '(未定義)',   // お知らせに表示する自分の名前
   BoardAPI: null,     // 「掲示板」のGAS Web API のID
   getMessages: false, // 掲示板データ取得フラグ。true時のみ実行可。
-  BoardInterval: 10000, // 掲示板巡回のインターバル。m秒
+  BoardInterval: 30000, // 掲示板巡回のインターバル。m秒
   BoardIntervalId: null,  // setIntervalのID
 }
 

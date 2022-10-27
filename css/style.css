@@ -26,7 +26,7 @@ div {margin:0px;padding:0px;}
   /*flex-wrap: wrap;*/
 }
 
-input, select {
+input, select, textarea {
   font-size: 1rem;
   margin-bottom: 0.5rem;
 }
@@ -126,6 +126,9 @@ nav li a {
   display: block;
   float: left;
   width: 4rem;
+}
+#home .fromto input {
+  width: 8rem;
 }
 #home .boardArea {
   width: 100%;

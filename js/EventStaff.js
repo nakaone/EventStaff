@@ -334,15 +334,17 @@ const getMessages = (arg=0) => {
   } else {  // 実行/停止指示
     if( arg > 0 ){  // 定期巡回開始(再開)
       config.getMessages = true;
-      config.BoardInterval = true;
+      //config.BoardInterval = true;
       console.log('config='+JSON.stringify(config));
-      config.BoardIntervalId = setInterval(getMessages,10000);
-//      config.BoardIntervalId = setInterval(getMessages,config.BoardInterval);
+      // 取得間隔は最低10秒。既定値30秒
+      const interval = Number(config.BoardInterval) > 9999 ? config.BoardInterval : 30000;
+//      config.BoardIntervalId = setInterval(getMessages,10000);
+      config.BoardIntervalId = setInterval(getMessages,interval);
       console.log('getMessages start. id='+config.BoardIntervalId);
     } else {    // 定期巡回停止
       clearInterval(config.BoardIntervalId);
       config.getMessages = false;
-      config.BoardInterval = false;
+      //config.BoardInterval = false;
       console.log('getMessages stop. id='+config.BoardIntervalId);
       config.BoardIntervalId = null;
     }
