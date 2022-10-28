@@ -89,120 +89,121 @@
   </div>
 
   <div id="editParticipant" class="screen"><!-- 参加者情報編集 -->
-    <div class="edit"></div>
-    <!-- div class="table">
-      <div class="tr entry"><!- 申請者情報 ->
-        <div class="td" name="entryNo"></div>
-        <div class="td">
-          <ruby><rb name="name"></rb><rt name="yomi"></rt></ruby>
+    <div class="edit">
+      <div class="table">
+        <div class="tr entry"><!- 申請者情報 ->
+          <div class="td" name="entryNo"></div>
+          <div class="td">
+            <ruby><rb name="name"></rb><rt name="yomi"></rt></ruby>
+          </div>
+          <div><input type="button" value="詳細" /></div>
         </div>
-        <div><input type="button" value="詳細" /></div>
+        <div class="tr detail"><!- 申請の詳細 ->
+          <div name="timestamp"></div>
+          <div name="email"></div>
+          <div name="tel"></div>
+          <div name="pickup"></div>
+          <div name="note"></div>
+          <div name="cancel"></div>
+          <div name="form">
+            <div>申込フォーム：</div>
+            <div class="qrcode"></div>
+            <input type="button" value="申込フォームの表示" />
+          </div>
+        </div>
+        <div class="tr participant"><!- 申請者の入退場・参加費 ->
+          <div></div><div></div><!- Noと名前のプレースホルダ ->
+          <div>
+            <label>入退場</label><!- 申請者のみ「未登録」は除外 ->
+            <select class="status" name="status00">
+              <option value="未入場">未入場</option>
+              <option value="入場済">入場済</option>
+              <option value="退場済">退場済</option>
+              <option value="不参加">不参加</option>
+            </select>
+          </div>
+          <div>
+            <label>参加費</label>
+            <select class="fee" name="fee00">
+              <option value="未収">未収</option>
+              <option value="既収">既収</option>
+              <option value="免除">免除</option>
+              <option value="無し">無し</option>
+            </select>
+          </div>
+          <hr />
+        </div>
+        <div class="tr participant"><!- 参加者① ->
+          <div>①</div>
+          <div name="name01"></div>
+          <div>
+            <label>入退場</label>
+            <select class="status" name="status01">
+              <option value="未入場">未入場</option>
+              <option value="入場済">入場済</option>
+              <option value="退場済">退場済</option>
+              <option value="不参加">不参加</option>
+              <option value="未登録">未登録</option>
+            </select>
+          </div>
+          <div>
+            <label>参加費</label>
+            <select class="fee" name="fee01">
+              <option value="未収">未収</option>
+              <option value="既収">既収</option>
+              <option value="免除">免除</option>
+              <option value="無し">無し</option>
+            </select>
+          </div>
+        </div>
+        <div class="tr participant"><!- 参加者② ->
+          <div>②</div>
+          <div name="name02"></div>
+          <div>
+            <label>入退場</label>
+            <select class="status" name="status02">
+              <option value="未入場">未入場</option>
+              <option value="入場済">入場済</option>
+              <option value="退場済">退場済</option>
+              <option value="不参加">不参加</option>
+              <option value="未登録">未登録</option>
+            </select>
+          </div>
+          <div>
+            <label>参加費</label>
+            <select class="fee" name="fee02">
+              <option value="未収">未収</option>
+              <option value="既収">既収</option>
+              <option value="免除">免除</option>
+              <option value="無し">無し</option>
+            </select>
+          </div>
+        </div>
+        <div class="tr participant"><!- 参加者③ ->
+          <div>③</div>
+          <div name="name03"></div>
+          <div>
+            <label>入退場</label>
+            <select class="status" name="status03">
+              <option value="未入場">未入場</option>
+              <option value="入場済">入場済</option>
+              <option value="退場済">退場済</option>
+              <option value="不参加">不参加</option>
+              <option value="未登録">未登録</option>
+            </select>
+          </div>
+          <div>
+            <label>参加費</label>
+            <select class="fee" name="fee03">
+              <option value="未収">未収</option>
+              <option value="既収">既収</option>
+              <option value="免除">免除</option>
+              <option value="無し">無し</option>
+            </select>
+          </div>
+        </div>
       </div>
-      <div class="tr detail"><!- 申請の詳細 ->
-        <div name="timestamp"></div>
-        <div name="email"></div>
-        <div name="tel"></div>
-        <div name="pickup"></div>
-        <div name="note"></div>
-        <div name="cancel"></div>
-        <div name="form">
-          <div>申込フォーム：</div>
-          <div class="qrcode"></div>
-          <input type="button" value="申込フォームの表示" />
-        </div>
-      </div>
-      <div class="tr participant"><!- 申請者の入退場・参加費 ->
-        <div></div><div></div><!- Noと名前のプレースホルダ ->
-        <div>
-          <label>入退場</label><!- 申請者のみ「未登録」は除外 ->
-          <select class="status" name="status00">
-            <option value="未入場">未入場</option>
-            <option value="入場済">入場済</option>
-            <option value="退場済">退場済</option>
-            <option value="不参加">不参加</option>
-          </select>
-        </div>
-        <div>
-          <label>参加費</label>
-          <select class="fee" name="fee00">
-            <option value="未収">未収</option>
-            <option value="既収">既収</option>
-            <option value="免除">免除</option>
-            <option value="無し">無し</option>
-          </select>
-        </div>
-        <hr />
-      </div>
-      <div class="tr participant"><!- 参加者① ->
-        <div>①</div>
-        <div name="name01"></div>
-        <div>
-          <label>入退場</label>
-          <select class="status" name="status01">
-            <option value="未入場">未入場</option>
-            <option value="入場済">入場済</option>
-            <option value="退場済">退場済</option>
-            <option value="不参加">不参加</option>
-            <option value="未登録">未登録</option>
-          </select>
-        </div>
-        <div>
-          <label>参加費</label>
-          <select class="fee" name="fee01">
-            <option value="未収">未収</option>
-            <option value="既収">既収</option>
-            <option value="免除">免除</option>
-            <option value="無し">無し</option>
-          </select>
-        </div>
-      </div>
-      <div class="tr participant"><!- 参加者② ->
-        <div>②</div>
-        <div name="name02"></div>
-        <div>
-          <label>入退場</label>
-          <select class="status" name="status02">
-            <option value="未入場">未入場</option>
-            <option value="入場済">入場済</option>
-            <option value="退場済">退場済</option>
-            <option value="不参加">不参加</option>
-            <option value="未登録">未登録</option>
-          </select>
-        </div>
-        <div>
-          <label>参加費</label>
-          <select class="fee" name="fee02">
-            <option value="未収">未収</option>
-            <option value="既収">既収</option>
-            <option value="免除">免除</option>
-            <option value="無し">無し</option>
-          </select>
-        </div>
-      </div>
-      <div class="tr participant"><!- 参加者③ ->
-        <div>③</div>
-        <div name="name03"></div>
-        <div>
-          <label>入退場</label>
-          <select class="status" name="status03">
-            <option value="未入場">未入場</option>
-            <option value="入場済">入場済</option>
-            <option value="退場済">退場済</option>
-            <option value="不参加">不参加</option>
-            <option value="未登録">未登録</option>
-          </select>
-        </div>
-        <div>
-          <label>参加費</label>
-          <select class="fee" name="fee03">
-            <option value="未収">未収</option>
-            <option value="既収">既収</option>
-            <option value="免除">免除</option>
-            <option value="無し">無し</option>
-          </select>
-        </div>
-      </div>
-    </div -->
+    </div>
     <div>
       <input value="更新" type="button" onclick="updateParticipant()" />
       <input value="破棄" type="button" onclick="changeScreen()" />
