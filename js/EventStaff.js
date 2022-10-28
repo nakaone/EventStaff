@@ -70,6 +70,8 @@ const initialize = () => {  // 初期設定処理
   document.querySelector("#schedule iframe").src = config.TableURL;
   // 06. 校内案内図
   document.querySelector("#shimokitaMap iframe").src = config.MapURL;
+  // 07. サイト案内
+  document.querySelector('nav .noticeSite').href = config.SiteURL;
   
   // [03] グローバル変数 config 設定
   // 01. 初期設定終了時の処理を事前に定義

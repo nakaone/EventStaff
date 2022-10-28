@@ -1,7 +1,7 @@
 const config = {
   // 分類A
   FormURL: "https://docs.google.com/forms/d/e/1FAIpQLSfIJ4IFsBI5pPXsLz2jlTBczzIn8QZQL4r6QHqxZmSeDOhwUA/viewform",
-  SiteURL: "",
+  SiteURL: "https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97",
   MapURL: "materials/map.html",
   TableURL: "materials/timetable/WBS.html",
   EnqueteURL: "",
