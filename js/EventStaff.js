@@ -322,6 +322,7 @@ const postMessage = () => { // メッセージを投稿
 
   doGet(config.BoardAPI,{func:'postMessage',data:msg},(response) => {
     console.log(response);
+    getMessages(0); // 掲示板を更新
   });
   console.log('postMessage end.',JSON.stringify(msg));
 }

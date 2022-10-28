@@ -147,6 +147,7 @@ nav li a {
   margin-bottom: 0.5rem;
 }
 #boardArea p.date {
+  padding-left: 1rem;
   background-color: forestgreen;
   color: white;  
 }
