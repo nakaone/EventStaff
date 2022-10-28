@@ -5,18 +5,63 @@ const config = {
   MapURL: "materials/map.html",
   TableURL: "materials/timetable/WBS.html",
   EnqueteURL: "https://docs.google.com/forms/d/16r3luYQRiLVmI9xqaD4FuaSlUqTRGvI8nAGrjGcg8lc/viewform",
+  map: {  // シート上の項目名 <-> HTML上のname 対応表
+    sheet: {
+      "受付番号 ":"entryNo",
+      "氏名 ":"name",
+      "読み ":"yomi",
+      "登録日時 ":"timestamp",
+      "メール ":"email",
+      "連絡先 ":"tel",
+      "引取者 ":"pickup",
+      "備考 ":"note",
+      "取消 ":"cancel",
+      "状態 ":"status00",
+      "参加費 ":"fee00",
+      "①氏名":"name01",
+      "①状態":"status01",
+      "①参加費":"fee01",
+      "②氏名":"name02",
+      "②状態":"status02",
+      "②参加費":"fee02",
+      "③氏名":"name03",
+      "③状態":"status03",
+      "③参加費":"fee03",
+    },
+    name: {
+      "entryNo":"受付番号 ",
+      "name":"氏名 ",
+      "yomi":"読み ",
+      "timestamp":"登録日時 ",
+      "email":"メール ",
+      "tel":"連絡先 ",
+      "pickup":"引取者 ",
+      "note":"備考 ",
+      "cancel":"取消 ",
+      "status00":"状態 ",
+      "fee00":"参加費 ",
+      "name01":"①氏名",
+      "status01":"①状態",
+      "fee01":"①参加費",
+      "name02":"②氏名",
+      "status02":"②状態",
+      "fee02":"②参加費",
+      "name03":"③氏名",
+      "status03":"③状態",
+      "fee03":"③参加費",
+    },
+  },
   // 分類B
+  MasterAPI: null,        // 「回答」のGAS Web API の ID。"https://script.google.com/macros/s/〜/exec"
+  BoardAPI: null,         // 「掲示板」のGAS Web API のID
+  passPhrase: null,       // GASとの共通鍵(Master, Board共通)
+  DateOfExpiry: null,     // config情報の有効期限
+  BoardInterval: 30000,   // 掲示板巡回のインターバル。m秒
   // 分類C
+  handleName: '(未定義)',  // お知らせに表示する自分の名前
   // 分類D
-  DateOfExpiry: null, // config情報の有効期限
-  MasterAPI: null,    // 「回答」のGAS Web API の ID。"https://script.google.com/macros/s/〜/exec"
-  passPhrase: null,   // GASとの共通鍵(Master, Board共通)
-  handleName: '(未定義)',   // お知らせに表示する自分の名前
-  BoardAPI: null,     // 「掲示板」のGAS Web API のID
-  BoardInterval: 30000, // 掲示板巡回のインターバル。m秒
-  // --- ステータス管理
-  scanCode: false,    // スキャン実行フラグ。true時のみスキャン可
-  getMessages: false, // 掲示板データ取得フラグ。true時のみ実行可。
+  scanCode: false,        // スキャン実行フラグ。true時のみスキャン可
+  getMessages: false,     // 掲示板データ取得フラグ。true時のみ実行可。
   BoardIntervalId: null,  // setIntervalのID
   // --- メソッド
   set: (label,value) => { // 値のセット＋localStorageへの格納
@@ -121,52 +166,7 @@ const localDef = {
       ]},
     ]},
   ]},
-  map: {  // シート上の項目名 <-> HTML上のname 対応表
-    sheet: {
-      "受付番号 ":"entryNo",
-      "氏名 ":"name",
-      "読み ":"yomi",
-      "登録日時 ":"timestamp",
-      "メール ":"email",
-      "連絡先 ":"tel",
-      "引取者 ":"pickup",
-      "備考 ":"note",
-      "取消 ":"cancel",
-      "状態 ":"status00",
-      "参加費 ":"fee00",
-      "①氏名":"name01",
-      "①状態":"status01",
-      "①参加費":"fee01",
-      "②氏名":"name02",
-      "②状態":"status02",
-      "②参加費":"fee02",
-      "③氏名":"name03",
-      "③状態":"status03",
-      "③参加費":"fee03",
-    },
-    name: {
-      "entryNo":"受付番号 ",
-      "name":"氏名 ",
-      "yomi":"読み ",
-      "timestamp":"登録日時 ",
-      "email":"メール ",
-      "tel":"連絡先 ",
-      "pickup":"引取者 ",
-      "note":"備考 ",
-      "cancel":"取消 ",
-      "status00":"状態 ",
-      "fee00":"参加費 ",
-      "name01":"①氏名",
-      "status01":"①状態",
-      "fee01":"①参加費",
-      "name02":"②氏名",
-      "status02":"②状態",
-      "fee02":"②参加費",
-      "name03":"③氏名",
-      "status03":"③状態",
-      "fee03":"③参加費",
-    },
-  },
+  
 }
 
 const changeScreen = (scrId='home',titleStr='お知らせ') => {  // 表示画面の切り替え
