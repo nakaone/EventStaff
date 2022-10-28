@@ -1235,6 +1235,13 @@ No | 変更 | 設定元 | 保存 | 分類 | メンバ名 | 概要
 
 ## EventStaff.js
 
+### initialize
+
+お知らせ領域では末尾を表示
+
+- [JavaScript：要素の中身が変化した時にイベントを起こしたい](https://at.sachi-web.com/blog-entry-1516.html)
+- [overflow:scrollさせた要素を1番下にスクロール！位置座標を調整してチャットに使えるUIにしよう！](https://tech.amefure.com/js-scroll)
+
 ### genChild
 
 ```

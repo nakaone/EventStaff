@@ -66,6 +66,23 @@ const initialize = () => {  // 初期設定処理
       post.style.display = 'none';
     }
   });
+  // 新規のお知らせが来たら末尾を表示
+  // https://at.sachi-web.com/blog-entry-1516.html
+  const msgArea = document.getElementById('boardArea');
+  const mo = new MutationObserver(() => {
+    console.log('mutation detected');
+    msgArea.scrollTop = msgArea.scrollHeight;
+  });
+  mo.observe(msgArea,{
+    childList: true,
+    attributes: true,
+    characterData: true,
+    subtree: true,//孫以降のノードの変化も検出
+    attributeOldValue: true,//変化前の属性データを記録する
+    characterDataOldValue: true,//変化前のテキストノードを記録する
+    attributeFilter: [],//配列で記述した属性だけを見張る
+  });
+
   // 05. 進行予定画面
   document.querySelector("#schedule iframe").src = config.TableURL;
   // 06. 校内案内図
@@ -339,7 +356,7 @@ const getMessages = (arg=0) => {
           msg += m;
         }
         // 掲示板領域に書き込み
-        const msgEl = document.querySelector('#home .boardArea');
+        const msgEl = document.getElementById('boardArea');
         msgEl.innerHTML = msg;
         msgEl.scrollIntoView(false);
         console.log('getMessages periodical end: '+msg);
