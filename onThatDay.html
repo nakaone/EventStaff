@@ -1,0 +1,130 @@
+<!DOCTYPE html><html lang="ja">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <meta http-equiv="Content-Script-Type" content="text/javascript">
+  <title>当日申請用紙</title>
+  <style>
+    html {font-size:10pt;  /* 基本となる文字サイズ */}
+    body {box-sizing: border-box;}  /* 枠線は要素サイズに含める */
+    div {margin:0px;padding:0px;}
+
+    .page {
+      page-break-after: always;
+    }
+
+    div {
+      width: 100%;
+      display: -webkit-flex;
+      display: flex;
+      flex-direction: column;  /* row:横並び */
+      -webkit-justify-content: flex-start;
+      justify-content: flex-start;
+      -webkit-align-items: flex-start;
+      align-items: flex-start;
+      border: solid 1px red;
+    }
+    .category {
+      flex-direction: row;  /* row:横並び */
+    }
+    .category span {
+      width: 3rem;
+      text-decoration: underline;
+    }
+    @media print{
+
+    }
+    div.box {
+      display: inline-block;
+      border-bottom: solid 1px #000;
+    }
+    div.name {width: 5rem;}
+    div.grade {width: 2rem;}
+
+    @page {
+      size: A5;
+      margin: 20mm;
+    }
+  </style>
+</head>
+
+<body>
+</body>
+<script type="text/javascript">
+
+const template = `
+<div class="page">
+    <div class="header">
+      <div class="title">
+        <p>こどもまつり202x</p>
+        <h1>当日参加受付票</h1>
+      </div>
+      <div id="qr::num::"></div>
+    </div>
+    
+    <div class="members">
+      <h2>参加者氏名</h2>
+      <div class="member">
+        <div>①氏名：<div class="box name"></div></div>
+        <div class="category">
+          <div>□ <div class="box grade"></div>年</div>
+          <div>□ 未就学児</div>
+          <div>□ 保護者</div>
+          <div>□ 卒業生</div>
+        </div>
+      </div>
+      <div class="member">
+        <div>②氏名：<div class="box name"></div></div>
+        <div class="category">
+          <div>□ <div class="box grade"></div>年</div>
+          <div>□ 未就学児</div>
+          <div>□ 保護者</div>
+          <div>□ 卒業生</div>
+        </div>
+      </div>
+      <div class="member">
+        <div>③氏名：<span class="name"></span></div>
+        <div class="category">
+          <div>□ <span></span>年</div>
+          <div>□ 未就学児</div>
+          <div>□ 保護者</div>
+          <div>□ 卒業生</div>
+        </div>
+      </div>
+      <div class="member">
+        <div>④氏名：<span class="name"></span></div>
+        <div class="category">
+          <div>□ <span></span>年</div>
+          <div>□ 未就学児</div>
+          <div>□ 保護者</div>
+          <div>□ 卒業生</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="contact">
+      <h2>緊急連絡先</h2>
+      <span></span>※TELまたはe-mail</div>
+    </div>
+    
+    <div class="fee">
+      <h2>参加費</h2>
+      <p>※未就学児は無料</p>
+      <p>＠500円 ✕ <span></span>名 ＝ 計<span></span>円</p>
+    </div>
+    
+    <hr />
+    
+    <div class="registration">
+      <div>
+        <h2>受付番号</h2>
+        <span></span>
+      </div>
+    </div>  
+  </div>
+`;
+
+document.querySelector('body').innerHTML = template;
+
+</script>
+</html>
