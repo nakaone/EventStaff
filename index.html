@@ -54,7 +54,7 @@
           <label>From</label>
           <input type="text" name="from" width="100%"
             placeholder="ハンドルネームを入力"
-            onchange="config.handleName=this.value;localStorage.setItem('config',JSON.stringify(config));"
+            onchange="config.set('handleName',this.value);"
           />
         </div>
         <div class="fromto">
@@ -241,8 +241,9 @@
     <div><a href="prototype/inspect.html" target="_blank">prototype::inspect</a></div>
     <div><a href="prototype/convertCharacters.html" target="_blank">prototype::convertCharacters</a></div>
     <hr />
-    <input type="button" value="設定の参照" onclick="alert(localStorage.getItem('config'))" />
-    <input type="button" value="設定のクリア" onclick="localStorage.removeItem('config');alert('clear!')" />
+    <input type="button" value="設定の参照(グローバル変数)" onclick="alert(JSON.stringify(config))" />
+    <input type="button" value="設定の参照(localStorage)" onclick="alert(localStorage.getItem('config'))" />
+    <input type="button" value="localStorageのクリア" onclick="localStorage.removeItem('config');alert('clear!')" />
     <hr />
     <p>掲示板メッセージの定期取得</p>
     <input type="button" value="再開" onclick="getMessages(1);alert('再開しました')" />
