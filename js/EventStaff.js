@@ -69,7 +69,7 @@ const initialize = () => {  // 初期設定処理
   // 05. 進行予定画面
   document.querySelector("#schedule iframe").src = config.TableURL;
   // 06. 校内案内図
-  document.querySelector("#shimokitaMap iframe").src = config.MapURL;
+  document.querySelector("#VenueMap iframe").src = config.MapURL;
   // 07. サイト案内　※Googleのサイトはiframe不可
   document.querySelector('nav .noticeSite').href = config.SiteURL;
   // 08. アンケート

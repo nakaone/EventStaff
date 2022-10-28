@@ -243,14 +243,14 @@ nav li a {
 /* =========================================================
   校内案内図
 ========================================================= */
-#shimokitaMap {
+#VenueMap {
   width: 80%;
   padding: 0 10%;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
 }
-#shimokitaMap img {
+#VenueMap img {
   display: block;
   margin: auto;
   width: 100%;
