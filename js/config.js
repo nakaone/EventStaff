@@ -2,8 +2,8 @@ const config = {
   // 分類A
   FormURL: "https://docs.google.com/forms/d/e/1FAIpQLSfIJ4IFsBI5pPXsLz2jlTBczzIn8QZQL4r6QHqxZmSeDOhwUA/viewform",
   SiteURL: "",
-  MapURL: "materials/timetable/WBS.html",
-  TableURL: "",
+  MapURL: "materials/map.html",
+  TableURL: "materials/timetable/WBS.html",
   EnqueteURL: "",
   // 分類B
   // 分類C
