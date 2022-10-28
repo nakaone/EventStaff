@@ -341,9 +341,14 @@ const getMessages = (arg=0) => {
         console.log(response);
         // 掲示板領域に書き込むHTMLを msg として作成
         let msg = '';
+        let lastMesDate = '1900/01/01';
         const t = '<p class="title">[_time] From:_from　To:_to</p><p>_message</p>';
         for( let i=0 ; i<response.length ; i++ ){
           const dt = new Date(response[i].timestamp);
+          if( dt.toLocaleDateString('ja-JP') !== lastMesDate ){
+            lastMesDate = dt.toLocaleDateString();
+            msg += '<p class="date">' + lastMesDate + '</p>';
+          }
           const hms = ('0'+dt.getHours()).slice(-2)
             + ':' + ('0'+dt.getMinutes()).slice(-2)
             + ':' + ('0'+dt.getSeconds()).slice(-2);

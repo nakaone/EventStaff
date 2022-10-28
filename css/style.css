@@ -142,11 +142,15 @@ nav li a {
   overflow: auto;
 }
 #boardArea p {
+  width: 100%;
   margin-top: 0;
   margin-bottom: 0.5rem;
 }
+#boardArea p.date {
+  background-color: forestgreen;
+  color: white;  
+}
 #boardArea p.title {
-  width: 100%;
   margin-bottom: 0.2rem;
   background-color: #a0c238;
   font-size: 0.8rem;
