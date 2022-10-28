@@ -17,15 +17,37 @@
       width: 100%;
       display: -webkit-flex;
       display: flex;
-      flex-direction: column;  /* row:横並び */
-      -webkit-justify-content: flex-start;
       justify-content: flex-start;
       -webkit-align-items: flex-start;
       align-items: flex-start;
       border: solid 1px red;
     }
+    div.title {
+      width: 80vw;
+    }
+    div.page {
+      flex-direction: column;  /* row:横並び */
+      -webkit-justify-content: flex-start;
+    }
+    div.box {
+      height: 1rem;
+    }
+    div.members {
+      flex-direction: column;  /* row:横並び */
+      -webkit-justify-content: flex-start;
+    }
+    div.member:first-child {
+      width: 10rem;
+    }
+    div.member .name {
+      width: 10rem;
+    }
     .category {
-      flex-direction: row;  /* row:横並び */
+      width: auto;
+      flex-direction: row;
+    }
+    .category div {
+      width: 6rem;
     }
     .category span {
       width: 3rem;
@@ -83,18 +105,18 @@ const template = `
         </div>
       </div>
       <div class="member">
-        <div>③氏名：<span class="name"></span></div>
+        <div>③氏名：<div class="box name"></div></div>
         <div class="category">
-          <div>□ <span></span>年</div>
+          <div>□ <div class="box grade"></div>年</div>
           <div>□ 未就学児</div>
           <div>□ 保護者</div>
           <div>□ 卒業生</div>
         </div>
       </div>
       <div class="member">
-        <div>④氏名：<span class="name"></span></div>
+        <div>④氏名：<div class="box name"></div></div>
         <div class="category">
-          <div>□ <span></span>年</div>
+          <div>□ <div class="box grade"></div>年</div>
           <div>□ 未就学児</div>
           <div>□ 保護者</div>
           <div>□ 卒業生</div>
