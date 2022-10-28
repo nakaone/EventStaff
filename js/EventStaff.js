@@ -79,8 +79,6 @@ const config = {
   },
 }
 
-// --- 要保存 and 設定変更不可
-
 const changeScreen = (scrId='home',titleStr='お知らせ') => {  // 表示画面の切り替え
   console.log("changeScreen start. scrId="+scrId+', titleStr='+titleStr);
 
@@ -289,7 +287,7 @@ const editParticipant = (arg) => {  // 検索結果の内容編集
   const editArea = document.querySelector('#editParticipant .edit');
   editArea.innerHTML = '';
 
-  // データクレンジング
+  // [01] データクレンジング
   arg['受付番号'] = ('000'+arg['受付番号']).slice(-4);  // 0パディング
   arg['登録日時'] = new Date(arg['登録日時']).toLocaleString('ja-JP');
   // 「取消」の文字列が入っていればtrue
@@ -300,6 +298,8 @@ const editParticipant = (arg) => {  // 検索結果の内容編集
     if( arg[x+'参加費'].length === 0 )
       arg[x+'参加費'] = arg[x+'氏名'].length === 0 ? '無し' : '未収';
   });
+
+  // [02] 各要素への値設定
 
   // 要素の作成とセット
   let o = genChild(localDef.editGuestTemplate,arg,'root');  // 全体の定義と'root'を渡す
