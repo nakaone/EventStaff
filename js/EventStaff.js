@@ -49,6 +49,10 @@ const doGet = (endpoint,postData,callback) => {  // GASのdoGetを呼び出し�
 const initialize = () => {  // 初期設定処理
   console.log("initialize start.");
 
+  // [01] 初期設定処理の画面を表示
+  changeScreen('initialize',"初期化処理");
+
+  // [02] イベント定義の設定
   // お知らせ画面の「投稿する」ボタンの動作を定義
   const postButton = document.querySelector('#home .postArea input');
   postButton.addEventListener('click',() => {
@@ -62,20 +66,23 @@ const initialize = () => {  // 初期設定処理
     }
   });
 
-  // 初期設定終了時の処理を定義
+  // [03] グローバル変数 config 設定
+  // 01. 初期設定終了時の処理を事前に定義
   const terminate = () => {
     getMessages(1);  // 掲示板定期更新開始
     console.log("initialize end.",config);
     changeScreen();// ホーム画面表示
   }
 
-  // localStorageにconfigが保存されていたら読み込み
+  // 02. localStorageから読み込み
   let confStr = localStorage.getItem('config');
   if( confStr ){
     confObj = JSON.parse(confStr);
     if( confObj.DateOfExpiry < new Date() ){
       // 有効期限が切れていたら無効化＋localStorageから削除
       localStorage.removeItem('config');
+      // ハンドルネームだけは従来の設定を引き継ぐ
+      config.set('handleName',confObj.handleName);  // 分類C
     } else {
       // 有効期限内ならセットして以後の処理はスキップ
       Object.assign(config,confObj);
@@ -84,23 +91,19 @@ const initialize = () => {  // 初期設定処理
     }
   }
 
-  // 初期設定処理の画面を表示
-  changeScreen('initialize',"初期化処理");
-
-  // QRコード読み取り
+  // 03. 分類B : シートからQRコードを読み込んで設定する変数
   config.scanCode = true;
   scanCode((code) => {
-    const o = JSON.parse(code);
+    const o = JSON.parse(code); // QRコード優先分は書き換え
     for( let x in o ){ // グローバル変数configに値を設定
-      config[x] = o[x];
+      config.set(x,o[x]);
     }
-    localStorage.setItem('config',JSON.stringify(config));
     alert('初期設定は正常に終了しました');
     terminate();
   },{
     selector:'#initialize .scanner',  // 設置位置指定
     RegExp:new RegExp('^{.+}$'),  // JSON文字列であること
-    alert: true,  // 読み込み時、内容をalert表示する
+    alert: false,  // 読み込み時、内容をalert表示しない
   });
 }
 
@@ -358,7 +361,8 @@ const onThatDay = (arg) => { // 参加フォームURLのQRコード表示
 
   // 申請フォームのQRコードをセット
   setQRcode('#onThatDay .qrcode',{
-    text: "https://docs.google.com/forms/d/" + config.formId + "/edit",
+    //text: "https://docs.google.com/forms/d/" + config.formId + "/edit",
+    text: config.FormURL,
   });
 
   // QRコード表示/非表示ボタンにイベント設定
