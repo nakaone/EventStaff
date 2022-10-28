@@ -74,7 +74,7 @@ const initialize = () => {  // 初期設定処理
   document.querySelector('nav .noticeSite').href = config.SiteURL;
   // 08. アンケート
   setQRcode('#enquete .qrcode',{text:config.SiteURL});
-  
+
   // [03] グローバル変数 config 設定
   // 01. 初期設定終了時の処理を事前に定義
   const terminate = () => {
@@ -136,7 +136,7 @@ const inputSearchKey = () => {  // 参加者の検索キーを入力
         selectParticipant(data);  // 該当が複数件なら選択画面へ
       } else {
         editParticipant(data[0]);  // 該当が1件のみなら編集画面へ
-      }  
+      }
     });
   };
 

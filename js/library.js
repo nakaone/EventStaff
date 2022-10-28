@@ -7,13 +7,13 @@
  * @param {string} str - 変換対象文字列
  * @param {string} kana - true:ひらがな、false:カタカナ
  * @returns {string} 変換結果
- * 
+ *
  * [JavaScript] 全角ひらがな⇔全角カタカナの文字列変換 [コピペ用のメモ]
  * https://neko-note.org/javascript-hiragana-katakana/1024
  * [JavaScript] 全角⇔半角の変換を行う（英数字、カタカナ）
  * https://www.yoheim.net/blog.php?q=20191101
  */
- function convertCharacters(str,kana=true){ 
+ function convertCharacters(str,kana=true){
   let rv = str;
   // 全角英数字 -> 半角英数字
   rv = rv.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => {
@@ -67,7 +67,7 @@
     //console.log('toHiragana end.',typeof(rv),rv);
     return rv;
   };
-  
+
   const kRep = (x,offset,string) => {
     //console.log('kRep start.',x,offset,string);
     let rv = String.fromCharCode(x.charCodeAt(0) + 0x60);
@@ -80,7 +80,7 @@
     //console.log('toKatakana end.',typeof(rv),rv);
     return rv;
   };
-  
+
   rv = kana ? toHiragana(rv) : toKatakana(rv);
   //console.log('convertCharacters end. rv=',rv);
   return rv;
@@ -331,7 +331,7 @@ const scanCode = (callback, arg={}) => { /* QRコードのスキャン
     } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
       scanner.appendChild(o.result);
     }
-  }  
+  }
 
   const video = document.querySelector(opt.selector+' .video video');
   const camera = document.querySelector(opt.selector+' .camera input');
@@ -399,7 +399,7 @@ const scanCode = (callback, arg={}) => { /* QRコードのスキャン
 
 const setQRcode = (selector,opt) => {  // QRコードを指定位置にセット
   // https://saitodev.co/article/QRCode.js%E3%82%92%E8%A9%A6%E3%81%97%E3%81%A6%E3%81%BF%E3%81%9F/
-  
+
   const qrDiv = document.querySelector(selector);
   qrDiv.innerHTML = ""; // Clear
   new QRCode(qrDiv,{  // 第一引数のqrcodeはCSSセレクタ
