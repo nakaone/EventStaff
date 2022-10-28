@@ -1198,6 +1198,43 @@ function whichType(arg){
 
 # Ⅳ.スタッフ用画面(html)
 
+## config.js
+
+No | 変更 | 設定元 | 保存 | 分類 | メンバ名 | 概要
+--: | :-- | :-- | :-- | :--: | :-- | :--
+1 | 無 | ソース | 否 | A | FormURL | 申請フォームのURL
+2 | 無 | ソース | 否 | A | SiteURL | 募集要項・詳細のURL
+3 | 無 | ソース | 否 | A | MapURL | 案内図のURL
+4 | 無 | ソース | 否 | A | TableURL | 進行予定表のURL
+5 | 無 | ソース | 否 | A | EnqueteURL | アンケートのURL
+6 | 無 | ソース | 否 | A | editGuestTemplate | 参加者情報入力画面の定義
+7 | 無 | ソース | 否 | A | map | シート上の項目名 <-> HTML上のname 対応表
+8 | 無 | シート | 要 | B | MasterAPI | 「回答」のGAS Web API の ID<br>"https://script.google.com/macros/s/〜/exec"
+9 | 無 | シート | 要 | B | BoardAPI | 「掲示板」のGAS Web API のID
+10 | 無 | シート | 要 | B | passPhrase | GASとの共通鍵(Master, Board共通)
+11 | 無 | シート | 要 | B | DateOfExpiry | シートが優先される設定情報の有効期限
+12 | 無 | シート | 要 | B | BoardInterval | 掲示板データ取得の間隔。ミリ秒
+13 | 有 | 手動 | 要 | C | handleName | お知らせに表示する自分の名前
+14 | 有 | 自動 | 否 | D | scanCode | スキャン実行フラグ。true時のみスキャン可
+15 | 有 | 自動 | 否 | D | getMessages | 掲示板データ取得フラグ。true時のみ実行可
+16 | 有 | 自動 | 否 | D | BoardIntervalId | お知らせデータの定期取得で設定されるsetInterval()のID
+
+- 「変更」は、プログラム実行中に値が変化するかどうか。
+- 「設定元」は、その値がどこで設定されるか。
+  - ソース：プログラムソース(config.js)
+  - シート：GoogleスプレッドからQRで読み込み
+  - 手動：ユーザが手動設定
+  - 自動：プログラムで自動的に設定
+- 「保存」はlocalStorageへの保存要否
+
+### 初期設定時の処理
+
+- 分類A,D：ソース(config.js)で設定される初期値のまま(何もしない)
+- 分類B：シートから読み込んだ値(QRコード)をグローバル変数とlocalStorage両方に格納する
+- 分類C：localStorageから読み込んだ値をグローバル変数にセット
+
+## EventStaff.js
+
 ### genChild
 
 ```
