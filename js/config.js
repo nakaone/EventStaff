@@ -1,18 +1,42 @@
 const config = {
+  // 分類A
+  FormURL: "https://docs.google.com/forms/d/e/1FAIpQLSfIJ4IFsBI5pPXsLz2jlTBczzIn8QZQL4r6QHqxZmSeDOhwUA/viewform",
+  SiteURL: "",
+  MapURL: "materials/timetable/WBS.html",
+  TableURL: "",
+  EnqueteURL: "",
+  // 分類B
+  // 分類C
+  // 分類D
   DateOfExpiry: null, // config情報の有効期限
-  scanCode: false,    // スキャン実行フラグ。true時のみスキャン可
   MasterAPI: null,    // 「回答」のGAS Web API の ID。"https://script.google.com/macros/s/〜/exec"
-  passPhrase: null,   // GASとの共通鍵
+  passPhrase: null,   // GASとの共通鍵(Master, Board共通)
   handleName: '(未定義)',   // お知らせに表示する自分の名前
   BoardAPI: null,     // 「掲示板」のGAS Web API のID
-  getMessages: false, // 掲示板データ取得フラグ。true時のみ実行可。
   BoardInterval: 30000, // 掲示板巡回のインターバル。m秒
+  // --- ステータス管理
+  scanCode: false,    // スキャン実行フラグ。true時のみスキャン可
+  getMessages: false, // 掲示板データ取得フラグ。true時のみ実行可。
   BoardIntervalId: null,  // setIntervalのID
+  // --- メソッド
+  set: (label,value) => { // 値のセット＋localStorageへの格納
+    console.log('config.set start. label='+label+', value='+JSON.stringify(value));
+    config[label] = value;
+    let sv = {};
+    for( let x in config ){
+      if( typeof config[x] !== 'function' ){
+	      sv[x] = config[x];
+      }
+    }
+    sv = JSON.stringify(sv);
+    localStorage.setItem('config',sv)
+    console.log('config.set end. sv='+sv);
+  },
 }
 
+// --- 要保存 and 設定変更不可
+
 const localDef = {
-  schedule: // 進行予定表の元になるスプレッド
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vT4Y1RoJgfYOLuv4hfNJrf6aYdOaBy7eoSZKwwEibePe04XiLn91rLFGq6LO9_-R-vnPVCTM21RMitE/pubhtml?gid=0&single=true",
   editGuestTemplate: {tag:"div", class:"table", children:[
     {tag:"div", class:"tr entry", children:[
       {tag:"div", class:"td entryNo", variable:"受付番号"},

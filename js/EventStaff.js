@@ -52,8 +52,9 @@ const initialize = () => {  // 初期設定処理
   // [01] 初期設定処理の画面を表示
   changeScreen('initialize',"初期化処理");
 
-  // [02] イベント定義の設定
-  // お知らせ画面の「投稿する」ボタンの動作を定義
+  // [02] 画面・イベント定義の設定
+  // 01. お知らせ画面
+  // 「投稿する」ボタンの動作を定義
   const postButton = document.querySelector('#home .postArea input');
   postButton.addEventListener('click',() => {
     const post = document.querySelector('#home .postMessage');
@@ -65,7 +66,9 @@ const initialize = () => {  // 初期設定処理
       post.style.display = 'none';
     }
   });
-
+  // 05. 進行予定画面
+  document.querySelector("#schedule iframe").src = config.MapURL;
+  
   // [03] グローバル変数 config 設定
   // 01. 初期設定終了時の処理を事前に定義
   const terminate = () => {
