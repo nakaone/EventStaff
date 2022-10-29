@@ -91,7 +91,7 @@ const decrypt = (arg,passPhrase) => { // 対象を復号化
   const decodePath = decodeURIComponent(arg);
   const data = CryptoJS.enc.Base64
     .parse(decodePath.toString()).toString(CryptoJS.enc.Latin1);
-  const bytes = CryptoJS.AES.decrypt(data, this.passPhrase)
+  const bytes = CryptoJS.AES.decrypt(data, passPhrase)
     .toString(CryptoJS.enc.Utf8)
 
   let rv = null;
