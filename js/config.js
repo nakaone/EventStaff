@@ -37,7 +37,7 @@ const config = {
 // --- 要保存 and 設定変更不可
 
 const localDef = {
-  editGuestTemplate: {tag:"div", class:"table", children:[
+  editParticipant: {tag:"div", class:"table", children:[
     {tag:"div", class:"tr entry", children:[
       {tag:"div", class:"td entryNo", variable:"受付番号"},
       {tag:"div", class:"td name", children:[

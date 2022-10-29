@@ -1207,7 +1207,7 @@ No | 変更 | 設定元 | 保存 | 分類 | メンバ名 | 概要
 3 | 無 | ソース | 否 | A | MapURL | 案内図のURL
 4 | 無 | ソース | 否 | A | TableURL | 進行予定表のURL
 5 | 無 | ソース | 否 | A | EnqueteURL | アンケートのURL
-6 | 無 | ソース | 否 | A | editGuestTemplate | 参加者情報入力画面の定義
+6 | 無 | ソース | 否 | A | editParticipant | 参加者情報入力画面の定義
 7 | 無 | ソース | 否 | A | map | シート上の項目名 <-> HTML上のname 対応表
 8 | 無 | シート | 要 | B | MasterAPI | 「回答」のGAS Web API の ID<br>"https://script.google.com/macros/s/〜/exec"
 9 | 無 | シート | 要 | B | BoardAPI | 「掲示板」のGAS Web API のID
