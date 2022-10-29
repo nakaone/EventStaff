@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Style-Type" content="text/css">
   <meta http-equiv="Content-Script-Type" content="text/javascript">
   <script src="../js/crypto-js.3.3.0.min.js"></script>
-  <title>script test</title>
+  <title>cipher</title>
   <style>
     /* =========================================================
     ========================================================= */
@@ -18,16 +18,10 @@
 <body>
   <div id="crypto">
     <h1>指定文字列の暗号化/復号</h1>
-    <p><label>暗号鍵</label><input type="text" name="key" onchange="convert()" value="Oct.22,2022" /></p>
-    <p><label>文字列</label><input type="text" name="str" onchange="convert()" /></p>
-    <div class="passPhrase"></div>
-    <div class="str"></div>
-    <div class="utf8_plain"></div>
-    <div class="encrypted"></div>
-    <div class="encryptResult"></div>
-    <div class="decrypted"></div>
-    <div class="txt_dexrypted"></div>
-    <div id="result"></div>
+    <p><label>暗号鍵</label><input type="text" id="key" value="Oct.29,2022" /></p>
+    <p><label>文字列</label><input type="text" id="str" /></p>
+    <div id="encrypted"></div>
+    <div id="decrypted"></div>
   </div>
 </body>
 <script type="text/javascript">
@@ -35,170 +29,79 @@
   AES暗号化 (javascript)
   https://chakkari.org/blog/2020/05/03/aes-encrypt-with-javascript/
 */
-const api = 'https://script.google.com/macros/s/AKfycby_3JoBIesmrm9G-CG4RzTh8bjilPR2rHaNkN5LRKTbLgZfhxy9zIT2to6Ra9d8CfceQA/exec';
-const convert = () => {
 
-  const v = {};
-
-  // パスフレーズ（暗号鍵）
-  v.passPhrase = document.querySelector('#crypto input[name="key"]').value;
-
-  // 暗号化・復号化対象文字列
-  v.str = document.querySelector('#crypto input[name="str"]').value;
-  v.utf8_plain = CryptoJS.enc.Utf8.parse(v.str);
-
-  // 暗号化
-  v.encrypted = CryptoJS.AES.encrypt( v.utf8_plain, v.passPhrase );  // Obj
-  v.encryptResult = v.encrypted.toString(); // toString()で文字列化
-
-  // 復号化
-  v.decrypted = CryptoJS.AES.decrypt( v.str , v.passPhrase );
-  v.txt_dexrypted = v.decrypted.toString(CryptoJS.enc.Utf8);
-
-  for( let x in v ){
-    console.log(x,v[x]);
-    const e = document.querySelector('#crypto .'+x);
-    e.innerHTML = '<p style="color:red">_1 : _2</p>'.replace('_1',x).replace('_2',v[x]);
-    e.innerHTML += '<p>type : _</p>'.replace('_',whichType(v[x]));
-    e.innerHTML += '<p>length : _</p>'.replace('_',v[x].length);
-    try {
-      e.innerHTML += '<p>json : _</p>'.replace('_',JSON.stringify(v[x]));
-    } catch(e) {
-      //console.error(e);
-    }
-  }
-
+const cipher = () => {
+  const passPhrase = document.getElementById('key').value;
+  const arg = document.getElementById('str').value;
+  document.getElementById('encrypted').innerText = encrypt(arg,passPhrase);
+  document.getElementById('decrypted').innerText = decrypt(arg,passPhrase);
 }
+
+const encrypt = (arg,passPhrase) => { // 対象を暗号化
+  const str = JSON.stringify(arg);
+  /*console.log('encript start.\ntype='+whichType(arg)
+    + '\n' + str + '\npassPhrase='+passPhrase);*/
+
+  //const utf8_plain = CryptoJS.enc.Utf8.parse(str);
+  const encrypted = CryptoJS.AES.encrypt( str, passPhrase );  // Obj
+  // crypto-jsで複合化するとMalformed UTF-8 data になった件
+  // https://zenn.dev/naonao70/articles/a2f7df87f9f736
+  const encryptResult = CryptoJS.enc.Base64
+    .stringify(CryptoJS.enc.Latin1.parse(encrypted.toString()));
+
+  //console.log("encript end.\n"+encryptResult);
+  return encryptResult;
+};
+
+const decrypt = (arg,passPhrase) => { // 対象を復号化
+  //console.log('decrypt start.\n'+arg);
+  const decodePath = decodeURIComponent(arg);
+  //console.log('decodePath',decodePath);
+  const data = CryptoJS.enc.Base64
+    .parse(decodePath.toString()).toString(CryptoJS.enc.Latin1);
+  //console.log('data',data);
+  const bytes = CryptoJS.AES.decrypt(data, passPhrase)
+    .toString(CryptoJS.enc.Utf8)
+  //console.log('bytes',bytes);
+
+  let rv = null;
+  try {
+    rv = JSON.parse(bytes);
+  } catch(e) {
+    rv = bytes;
+  } finally {
+    //console.log('decrypt end.\ntype='+whichType(rv)+'\n',rv);
+    return rv;
+  }
+};
 
 const whichType = (arg = undefined) => {
   return arg === undefined ? 'undefined'
    : Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
 }
 
-class cipher {  // 変数をAES暗号化文字列に変換
-
-  constructor(passPhrase){
-    this.passPhrase = passPhrase;
-  }
-
-  encrypt(arg){
-    const str = JSON.stringify(arg);
-    console.log('cipher.encript start.\ntype='+whichType(arg)+'\n'+str);
-
-    //const utf8_plain = CryptoJS.enc.Utf8.parse(str);
-    const encrypted = CryptoJS.AES.encrypt( str, this.passPhrase );  // Obj
-    // crypto-jsで複合化するとMalformed UTF-8 data になった件
-    // https://zenn.dev/naonao70/articles/a2f7df87f9f736
-    const encryptResult = CryptoJS.enc.Base64
-      .stringify(CryptoJS.enc.Latin1.parse(encrypted.toString()));
-
-    console.log("cipher.encript end.\n"+encryptResult);
-    return encryptResult;
-  }
-
-  decrypt(arg){
-    console.log('cipher.decrypt start.\n'+arg);
-    const decodePath = decodeURIComponent(arg);
-    const data = CryptoJS.enc.Base64
-      .parse(decodePath.toString()).toString(CryptoJS.enc.Latin1);
-    const bytes = CryptoJS.AES.decrypt(data, this.passPhrase)
-      .toString(CryptoJS.enc.Utf8)
-
-    let rv = null;
-    try {
-      rv = JSON.parse(bytes);
-    } catch(e) {
-      rv = bytes;
-    } finally {
-      console.log('cipher.decrypt end.\ntype='+whichType(rv)+'\n',rv);
-      return rv;
-    }
-
-    /*const decrypted = CryptoJS.AES.decrypt( arg , this.passPhrase );
-    const txt_dexrypted = decrypted.toString(CryptoJS.enc.Utf8);
-    return txt_dexrypted;*/
-  }
-}
-
 // 以下 cipher 用テスト
-const cipherTestData = [0,'abc',true,[1,2,3],{a:10,b:20},new Date()];
-const passPhrase = 'Oct.22,2022';
 const cipherTest = () => {
+  const cipherTestData = [0,'abc',true,[1,2,3],{a:10,b:20},new Date()];
+  const passPhrase = 'Oct.22,2022';
   for( let x in cipherTestData ){
-    const o = new cipher(passPhrase);
-    const e = o.encrypt(cipherTestData[x]);
-    //console.log('encrypt',cipherTestData[x],e,whichType(e));
-    const d = o.decrypt(e);
-    //console.log('decrypt',cipherTestData[x],d,whichType(d));
+    const e = encrypt(cipherTestData[x],passPhrase);
+    console.log('encrypt',cipherTestData[x],e,whichType(e));
+    const d = decrypt(e,passPhrase);
+    console.log('decrypt',cipherTestData[x],d,whichType(d));
     //const j = JSON.parse(d);
     //console.log('json',cipherTestData[x],j,whichType(j));
   }
 }
 
-const doGet = (config.MasterAPI,func='post',data,callback) => {
-  console.log("doGet start. ",func,data,callback);
+window.addEventListener('DOMContentLoaded', function(){ // 主処理
+  //cipherTest();
+  document.getElementById('key').addEventListener('change',cipher);
+  document.getElementById('str').addEventListener('change',cipher);
+});
 
-  // GASに渡すデータを作成
-  const cObj = new cipher(passPhrase);
-  const postData = cObj.encrypt({func:func,data:data});
-  console.log('postData('+whichType(postData)+' '+postData.length+')='+postData);
 
-  // エンドポイントを作成
-  const endpoint =  //GASのAPIのURL
-    api + '?v=' + postData;
-    //"https://script.google.com/macros/s/〜/exec"
-    //.replace("〜",config.MasterAPI)
-    console.log('endpoint='+endpoint);
 
-  // fetchのオプション指定
-  // MDN fetch() : https://developer.mozilla.org/en-US/docs/Web/API/fetch
-  // GoogleスプレッドシートをGASとJavaScriptで取得してサイトに表示する方法
-  // https://ayumitk.com/ja/blog/fetch-and-display-google-sheets-data-on-your-website-with-gas-and-javascript/
-  const opt = {
-    "method": "GET",
-    //"mode": "no-cors",
-    //"Accept": "application/json",
-    //"headers": {
-      //"Content-Type": "text/plane",
-      //"Content-Type": "application/x-www-form-urlencoded",
-    //},
-    //"body":
-  }
-
-  // GASからの返信を元にcallbackを呼び出し
-  fetch(endpoint,opt)
-  .then(response => {
-    const rv = response.json();
-    console.log(response,rv);
-    return rv;
-  })
-  .then(data => {
-    console.log(data);
-    callback(data);
-  });  // 成功した処理
-
-  console.log("doGet end.");
-}
-const doGetTestData = [
-  {from:'あ',to:'xyz',message:'じゅげむ'},
-  {from:'い',to:'え',message:'ふが'},
-  {from:'う',to:'/+!',message:'ほげ'},
-  {from:'abc',to:'-',message:'いくら丼'},
-  {from:'0123',to:'スタッフ',message:'食べたい'},
-]
-const doGetTest = () => {
-  for( let i=0 ; i<doGetTestData.length ; i++ ){
-    console.log(doGetTestData[i]);
-    doGet('post',doGetTestData[i],r => {
-      console.log('GAS result',r);
-      const e = document.getElementById('result');
-      e.innerHTML += '<p>' + JSON.stringify(r) + '</p><hr />';
-    });
-  }
-}
-
-//cipherTest();
-doGetTest();
 
 </script>
 </html>
