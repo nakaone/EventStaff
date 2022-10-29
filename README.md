@@ -123,18 +123,32 @@ sequenceDiagram
 
   guest->>form    : 必要事項を記入
   form->>+answer   : 記入内容を<br>そのまま保存
-  Note right of answer: onFormSubmit()
-  answer->>+gas    : 受付番号
-  Note right of gas: createQrCode ()
-  gas->>-answer    : QRコード
-  answer->>guest  : 返信メール
+  answer->>+gas    : onFormSubmitを起動
+  gas->>answer : 編集用URL、パスコード
+  answer->>gas : 受付番号
+  Note right of gas: onFormSubmit()
+  gas->>-guest    : 受付番号とパスコード付き返信メール。<br>以下をクエリパラメータとする参加者画面URL<br>①共通鍵で暗号化された受付番号<br>②パスコードで暗号化されたGAS APIのURL
+  Note right of guest: パスコードは別便で送付？ 100通制限があるけど...
   guest->>git      : リクエスト
-  git->>+guest      : ダウンロード
-  Note right of guest: 緊急連絡先(暗号鍵)入力で<br>受付番号保存
-  guest->>-gas     : 一斉通知送信要求
-  gas->>guest      : 滞留分一斉通知
-  guest->>form     : 登録内容確認・メンバ変更
-  form->>answer    : メンバ変更情報
+  git->>guest      : ダウンロード
+  guest->>guest: パスコード入力、②を復号してGAS URLを取得
+  guest->>gas  : ①と③パスコードで暗号化した受付番号を送信
+  gas->>gas : ①を共通鍵で復号、受付番号を取得
+  gas->>answer : 受付番号
+  answer->>answer : 試行回数と試行日時を更新
+  answer->>gas : パスコード、試行回数、試行日時
+  gas->>gas : パスコードで③を復号、一致するか確認
+  alt パスコードが一致かつ試行回数も適切
+    gas->>guest : 共通鍵を送信
+    guest->>gas     : 一斉通知送信要求
+    gas->>guest      : 滞留分一斉通知
+    guest->>form     : 登録内容確認・メンバ変更
+    form->>answer    : メンバ変更情報
+  else パスコードが一致しないまたは試行回数が不適切
+    gas->>guest : NGを送信
+    guest->>guest : 再試行 or 会場でQRコード対応
+  end
+  
 ```
 
 「回答」はマスタとなるスプレッドシートを指す。
