@@ -18,10 +18,11 @@ const changeScreen = (scrId='home',titleStr='お知らせ') => {  // 表示画�
   toggleMenu(false);
 
   // 投稿欄に名前をセット
+  /* !! EventStaff Only !!
   if( scrId === 'home' ){
     document.querySelector('#home input[name="from"]').value = config.handleName;
   }
-  console.log("changeScreen end.");
+  console.log("changeScreen end.");*/
 }
 
 const doGet = (endpoint,postData,callback) => {  // GASのdoGetを呼び出し、結果を返す

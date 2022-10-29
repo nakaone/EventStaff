@@ -298,6 +298,8 @@ const scanCode = (callback, arg={}) => { /* QRコードのスキャン
   // スキャン実行フラグが立っていなかったら終了
   if( !config.scanCode )  return;
 
+  console.log('scanCode start. arg='+JSON.stringify(arg));
+  
   const opt = {   // 未指定設定値に既定値を設定
     selector: arg.selector || '#scanCode',  // 親要素のCSSセレクタ文字列
     video   : arg.video || false,    // 動画枠の表示/非表示

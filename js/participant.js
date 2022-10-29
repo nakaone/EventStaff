@@ -40,18 +40,6 @@ const initialize = () => {  // 初期設定処理
 
   // [02] 画面・イベント定義の設定
   // 01. お知らせ画面
-  // 「投稿する」ボタンの動作を定義
-  const postButton = document.querySelector('#home .postArea input');
-  postButton.addEventListener('click',() => {
-    const post = document.querySelector('#home .postMessage');
-    if( postButton.value === '投稿する' ){
-      postButton.value = '閉じる';
-      post.style.display = 'block';
-    } else {
-      postButton.value = '投稿する';
-      post.style.display = 'none';
-    }
-  });
   // 新規のお知らせが来たら末尾を表示
   // https://at.sachi-web.com/blog-entry-1516.html
   const msgArea = document.getElementById('boardArea');
@@ -93,8 +81,6 @@ const initialize = () => {  // 初期設定処理
     if( confObj.DateOfExpiry < new Date() ){
       // 有効期限が切れていたら無効化＋localStorageから削除
       localStorage.removeItem('config');
-      // ハンドルネームだけは従来の設定を引き継ぐ
-      config.set('handleName',confObj.handleName);  // 分類C
     } else {
       // 有効期限内ならセットして以後の処理はスキップ
       Object.assign(config,confObj);
@@ -123,6 +109,6 @@ window.addEventListener('DOMContentLoaded', function(){ // 主処理
   // Err: "Uncaught ReferenceError: jsQR is not defined"
   // -> DOMが構築されたときに初期化処理が行われるように設定
   // https://pisuke-code.com/jquery-is-not-defined-solution/
-  console.log("EventStaff start.",config);
+  console.log("participant start.",config);
   initialize();
 });
