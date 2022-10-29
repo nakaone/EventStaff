@@ -1,0 +1,77 @@
+<!DOCTYPE html><html lang="ja">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <meta http-equiv="Content-Script-Type" content="text/javascript">
+  <title>participant</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <header>
+    <div class="icon"><img src="img/stamp.png" /></div>
+    <div class="title"></div>
+    <div class="menu" onclick="toggleMenu()">
+      <img src="img/menu1.svg" class="openIcon" />
+      <img src="img/menu2.svg" class="closeIcon" />
+    </div>
+  </header>
+  <nav class="menu">
+    <ul>
+      <li onclick="changeScreen()">お知らせ</li>
+
+      <li>受付番号確認</li>
+
+      <li onclick="changeScreen('schedule','進行予定')">進行予定</a></li>
+      <li onclick="changeScreen('VenueMap','校内案内図')">校内案内図</li>
+      <li><a class="noticeSite" target="_blank">募集要項</a></li><!-- ※Googleのサイトはiframe不可 -->
+      <li onclick="changeScreen('enquete','アンケート')">アンケート</li>
+      <li onclick="changeScreen('system','システム設定')">システム設定</li>
+
+    </ul>
+  </nav>
+
+  <div id="loading" class="screen"><!-- ローディング中 -->
+    <img src="img/loading.gif" />
+  </div>
+
+  <div id="initialize" class="screen"><!-- 初期化処理画面 -->
+  </div>
+
+  <div id="home" class="screen"><!-- ホーム画面 -->
+    <div id="boardArea">
+    </div>
+  </div>
+
+  <div id="schedule" class="screen"><!-- 進行予定表 -->
+    <iframe></iframe>
+  </div>
+
+  <div id="VenueMap" class="screen"><!-- 校内案内図 -->
+    <iframe></iframe>
+  </div>
+
+  <div id="enquete" class="screen"><!-- アンケート -->
+    <p>本日参加された感想を是非以下にお寄せください。</p>
+    <div class="qrcode"></div>
+  </div>
+
+  <div id="showSummary" class="screen"><!-- 集計表の表示画面 -->
+  </div>
+
+  <div id="system" class="screen"><!-- システム画面 -->
+    <input type="button" value="設定の参照(グローバル変数)" onclick="alert(JSON.stringify(config))" />
+    <input type="button" value="設定の参照(localStorage)" onclick="alert(localStorage.getItem('config'))" />
+    <input type="button" value="localStorageのクリア" onclick="localStorage.removeItem('config');alert('clear!')" />
+    <hr />
+    <p>掲示板メッセージの定期取得</p>
+    <input type="button" value="再開" onclick="getMessages(1);alert('再開しました')" />
+    <input type="button" value="停止" onclick="getMessages(-1);alert('停止しました')" />
+  </div>
+</body>
+<script src="js/jsQR.js" defer></script>
+<script src="js/qrcode.min.js" defer></script>
+<script src="js/crypto-js.3.3.0.min.js"></script>
+<script src="js/library.js"></script>
+<script src="js/participant.js"></script>
+</html>
