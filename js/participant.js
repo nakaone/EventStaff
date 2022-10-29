@@ -89,6 +89,13 @@ const initialize = () => {  // 初期設定処理
     }
   }
 
+  // 03. パスコード入力
+  document.querySelector('#initialize input[type="submit"]')
+  .addEventListener('click',() => {
+
+  });
+  alert('input passcord');
+
   // 03. 分類B : シートからQRコードを読み込んで設定する変数
   config.scanCode = true;
   scanCode((code) => {
