@@ -1,0 +1,51 @@
+<!DOCTYPE html><html lang="ja">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <meta http-equiv="Content-Script-Type" content="text/javascript">
+  <title></title>
+  <style>
+    /* =========================================================
+    ========================================================= */
+    html {font-size:10pt;  /* 基本となる文字サイズ */}
+    body {box-sizing: border-box;}  /* 枠線は要素サイズに含める */
+    div {margin:0px;padding:0px;}
+  </style>
+</head>
+
+<body>
+
+</body>
+<script type="text/javascript">
+/*
+MDN [URL](https://developer.mozilla.org/ja/docs/Web/API/URL)
+MDN [URLSearchParams](https://developer.mozilla.org/ja/docs/Web/API/URLSearchParams)
+
+file:///Users/ena.kaon/Desktop/GitHub/EventStaff/prototype/query.html?a=25&b=
+
+*/
+
+
+
+// 現在のURLからURLオブジェクトを生成（例として、https://example.com上で以下Javascriptを実行しているとする）
+const url = new URL(window.location.href);
+console.log(url.href); // https://example.com
+
+const params = url.searchParams.get('v');
+console.log('params='+JSON.stringify(params));
+
+/*
+// キーを指定し、クエリパラメータを付与
+url.searchParams.set('addParam', 'test');
+console.log(url.href); // https://example.com?addParam=test
+
+// キーを指定し、クエリパラメータを取得
+const addParam = url.searchParams.get('addParam');
+console.log(addParam); // test
+
+// キーを指定し、クエリパラメータを削除
+url.searchParams.delete('addParam');
+console.log(url.href); // https://example.com
+*/
+</script>
+</html>
