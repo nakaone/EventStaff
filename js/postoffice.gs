@@ -58,14 +58,10 @@ function postMail(arg){ /*
   */
   // テンプレートをシートから取得
   const dObj = szLib.getSheetData(arg.template);
-  dObj.data = () => {
-    const rv = {};
-    for( let i=1 ; i<dObj.rows.length ; i++ ){
-      rv[dObj.rows[i][0]] = dObj.rows[i][1];
-    }
-    return rv;
-  };
   console.log('dObj.data='+JSON.stringify(dObj.data));
+  const subject = dObj.data.filter(x => {x.parameters === 'subject'});
+  console.log('subject='+JSON.stringify(subject));
+
 
   const post = {  // szLib.sendGmail()の引数を作成
     recipient: arg.recipient,

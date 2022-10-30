@@ -235,6 +235,7 @@ function getSheetData(sheetName='マスタ'){
   });
   const rv = {rows:rows, keys:keys, data:data, sheet:sheet};
   console.log('getSheetData end.\n'+JSON.stringify({
+    // 配列が大きいと表示し切れないので、rows,dataは最初の1行のみサンプル表示
     rows: [rv.rows[0] || 'null'],
     keys: rv.keys || 'null',
     data: [rv.data[0] || 'null'],
