@@ -123,24 +123,36 @@ sequenceDiagram
   participant git as HTML置き場<br>(GitHub)
 
   guest->>form    : 必要事項を記入
-  form->>+answer   : 記入内容を<br>そのまま保存
+  form->>answer   : 記入内容を<br>そのまま保存
   answer->>+gas    : onFormSubmitを起動
   Note right of gas: onFormSubmit()
   gas->>answer : 編集用URL、パスコード
   answer->>gas : 受付番号
-  gas->>post : メールアドレス、<br>受付番号(共通鍵)
-  post->>guest : 返信メール(GitURL＋受付番号(共通鍵))
+  gas->>-post : メール情報＋GitURL
+  post->>guest : 返信メール＋GitURL
   guest->>git : リクエスト
   git->>guest : ダウンロード
-  gas->>guest : パスコード(平文)＋システムAPI(パスコード＋時刻)
-  guest->>gas : 受付番号(共通鍵)＋パスコード(パスコード＋時刻)
-  answer->>gas : 受付番号、パスコード<br>試行回数、試行日時
-  gas->>guest : 共通鍵他初期設定項目(パスコード＋時刻)
+  guest->>gas : 受付番号
+
+  gas->>post : 受付番号(共通鍵)＋パスコード
+  post->>guest : GitURL＋受付番号(共通鍵)＋パスコード(平文)
+  guest->>+gas : 受付番号(共通鍵)＋パスコード(トークン)
+  gas->>gas : 受付番号復号
+  gas->>answer : 受付番号
+  answer->>gas : パスコード、試行回数、試行日時
+  alt OK
+    gas->>guest : 共通鍵他初期設定項目(トークン)
+  else NG
+    gas->>-guest : null
+  end
 
 ```
 
-- 時刻は10分単位。10/30 05:26:02 -> 1030052
-- 復号時は処理時点と前後1スパンずつ試行する -> 1030052, 1030051 , 1030053
+- 伝送説明文の末尾の括弧は、暗号化する際の鍵。「受付番号(共通鍵)」は「受付番号を共通鍵で暗号化した文字列」の意味
+- トークンはパスコードと時刻を基に生成されるワンタイムパスワード(TOTP)
+  - パスコードは6桁の数字、時刻は10分単位で採番したものをハッシュ化して復元不能にする。<br>
+    パスコード 123456 ＋ 2022/10/30 05:26:02 -> 12345620221030052
+  - 端末・サーバ間の時刻のずれやネットワークの遅延を考慮し、復号時は処理時点と前後1スパンを許容<br>-> 1030052, 1030051 , 1030053
 
 ```mermaid
 
