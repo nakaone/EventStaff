@@ -111,6 +111,8 @@ sequenceDiagram
 
 ## Ⅱ.2.フォームでの参加申込
 
+### 登録
+
 ```mermaid
 
 sequenceDiagram
@@ -120,103 +122,76 @@ sequenceDiagram
   participant answer as 回答(Sheet)
   participant gas as システム(GAS)
   participant post as 郵便局
-  participant git as HTML置き場<br>(GitHub)
 
   guest->>form    : 必要事項を記入
   form->>answer   : 記入内容を<br>そのまま保存
   answer->>+gas    : onFormSubmitを起動
   Note right of gas: onFormSubmit()
-  gas->>answer : 編集用URL、パスコード
+  gas->>answer : 編集用URL
   answer->>gas : 受付番号
   gas->>-post : メール情報＋GitURL
-  post->>guest : 返信メール＋GitURL
-  guest->>git : リクエスト
-  git->>guest : ダウンロード
-  guest->>gas : 受付番号
-
-  gas->>post : 受付番号(共通鍵)＋パスコード
-  post->>guest : GitURL＋受付番号(共通鍵)＋パスコード(平文)
-  guest->>+gas : 受付番号(共通鍵)＋パスコード(トークン)
-  gas->>gas : 受付番号復号
-  gas->>answer : 受付番号
-  answer->>gas : パスコード、試行回数、試行日時
-  alt OK
-    gas->>guest : 共通鍵他初期設定項目(トークン)
-  else NG
-    gas->>-guest : null
-  end
+  post->>guest : 返信メール(受付番号＋GitURL)
 
 ```
 
-- 伝送説明文の末尾の括弧は、暗号化する際の鍵。「受付番号(共通鍵)」は「受付番号を共通鍵で暗号化した文字列」の意味
-- トークンはパスコードと時刻を基に生成されるワンタイムパスワード(TOTP)
-  - パスコードは6桁の数字、時刻は10分単位で採番したものをハッシュ化して復元不能にする。<br>
-    パスコード 123456 ＋ 2022/10/30 05:26:02 -> 12345620221030052
-  - 端末・サーバ間の時刻のずれやネットワークの遅延を考慮し、復号時は処理時点と前後1スパンを許容<br>-> 1030052, 1030051 , 1030053
+- 「回答」はマスタとなるスプレッドシートを指す。
+- メールはGASのメール100通/日の制限を回避するため、複数のアカウントに送信専用APIを用意し、順次使用する。
+
+- 返信メールには以下の内容を記載する。
+  - 受付番号
+  - GitHub URL
+
+### 認証
 
 ```mermaid
 
 sequenceDiagram
   autonumber
-  actor guest as 参加者
+  actor mail as 参加者メール
+  actor html as 参加者画面
   participant form as 申込フォーム
   participant answer as 回答(Sheet)
   participant gas as システム(GAS)
+  participant post as 郵便局
   participant git as HTML置き場<br>(GitHub)
 
-  guest->>form    : 必要事項を記入
-  form->>+answer   : 記入内容を<br>そのまま保存
-  answer->>+gas    : onFormSubmitを起動
-  gas->>answer : 編集用URL、パスコード
-  answer->>gas : 受付番号
-  Note right of gas: onFormSubmit()
-  gas->>-guest    : 受付番号とパスコード付き返信メール。<br>以下をクエリパラメータとする参加者画面URL<br>①共通鍵で暗号化された受付番号<br>②パスコードで暗号化されたGAS APIのURL
-  Note right of guest: パスコードは別便で送付？ 100通制限があるけど...
-  guest->>git      : リクエスト
-  git->>guest      : ダウンロード
-  guest->>guest: パスコード入力、②を復号してGAS URLを取得
-  guest->>gas  : ①と③パスコードで暗号化した受付番号を送信
-  gas->>gas : ①を共通鍵で復号、受付番号を取得
-  gas->>answer : 受付番号
-  answer->>answer : 試行回数と試行日時を更新
-  answer->>gas : パスコード、試行回数、試行日時
-  gas->>gas : パスコードで③を復号、一致するか確認
-  alt パスコードが一致かつ試行回数も適切
-    gas->>guest : 共通鍵を送信
-    guest->>gas     : 一斉通知送信要求
-    gas->>guest      : 滞留分一斉通知
-    guest->>form     : 登録内容確認・メンバ変更
-    form->>answer    : メンバ変更情報
-  else パスコードが一致しないまたは試行回数が不適切
-    gas->>guest : NGを送信
-    guest->>guest : 再試行 or 会場でQRコード対応
+  html->>git : 返信メールorブックマークからリクエスト
+  git->>html : ダウンロード、画面表示
+
+  html->>+gas : 受付番号(平文)
+  Note right of gas : login1()
+  gas->>answer : 試行ログ要求
+  answer->>gas : 試行ログ
+  alt 1時間以内に3回以上失敗
+    gas->>html : エラーメッセージ(ログイン不可)
   end
-  
+  gas->>answer : 受付番号、パスコード、有効期限(30分)
+  gas->>-post : メールアドレス、パスコード
+
+  post->>mail : パスコード(平文)
+  mail->>html : パスコード入力
+
+  html->>+gas : 受付番号(平文)＋パスコード(トークン)
+  Note right of gas : login2()
+  gas->>answer : 受付番号
+  answer->>gas : パスコード、有効期限
+  gas->>gas : パスコード復号＋比較、有効期限確認
+  gas->>answer : 試行結果、ログ記録
+  alt OK
+    gas->>html : 共通鍵他初期設定項目(トークン)
+  else NG
+    gas->>-html : エラーメッセージ(パスコード不一致or有効期限切れ)
+  end
+
 ```
 
-「回答」はマスタとなるスプレッドシートを指す。
-
-返信メールには以下の内容を記載する。
-- 受付番号
-- QRコード(受付番号)
-- フォーム修正サイトへの誘導(URL/ボタン)
-- 参加者サイトへの誘導(URL/ボタン)
-- GitHub URL
-- 暗号鍵
-
-
-受付番号をID、緊急連絡先をパスワードとして、localStorageに保存。
-
-初期化では以下の作業を行う。
-1. 返信メールに記載するリクエストURLは受付番号をクエリとして付加
-1. 最初の画面で「本人確認のため緊急連絡先の下4桁を入力してください」表示
-1. 緊急連絡先が正しければ、localStorageに受付番号を保存
-
-リマインドメールはGASのメール100通/日の制限を回避するため、手動で送る。このため文面を同じにせざるを得ず、二段階認証用の鍵は変則的に返信メールで先に通知する。
-
-EventGuest.html初期処理として暗号鍵の入力を行い、受付番号をlocalStorageに保存する。
-
-なお一斉配信の配信対象に変動がある可能性があるため、フォームで修正の都度、改めて返信メールを送る。
+- 伝送説明文の末尾の括弧は、暗号化する際の鍵。「受付番号(共通鍵)」は「受付番号を共通鍵で暗号化した文字列」の意味
+- トークンは受付番号・パスコードと時刻を基に生成されるワンタイムパスワード(TOTP)
+  - パスコードは6桁の数字、時刻は10分単位で採番したものをハッシュ化して復元不能にする。<br>
+    受付番号 1234 ＋ パスコード 567890 ＋ 2022/10/30 05:26:02 -> 123456789020221030052
+  - 端末・サーバ間の時刻のずれやネットワークの遅延を考慮し、復号時は処理時点と前後1スパンを許容<br>-> 1030052, 1030051 , 1030053
+- 認証は参加者画面を開く都度行う(localStorageへの保存は行わない)
+- 参加者画面(html)は、クエリパラメータが存在しなければ受付番号入力(＋QRコードスキャン)画面を、存在すればそれを共通鍵で暗号化された受付番号と見做しパスコード入力画面を表示する
 
 
 ## Ⅱ.3.フォーム登録済参加者の受付
