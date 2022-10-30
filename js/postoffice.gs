@@ -56,37 +56,62 @@ function postMail(arg){ /*
   }
   console.log('postMail start. arg='+JSON.stringify(arg));
   */
-  // テンプレートをシートから取得
-  const dObj = szLib.getSheetData(arg.template);
-  console.log('dObj.data='+JSON.stringify(dObj.data));
-  const subject = dObj.data.filter(x => {x.parameters === 'subject'});
-  console.log('subject='+JSON.stringify(subject));
 
-
-  const post = {  // szLib.sendGmail()の引数を作成
-    recipient: arg.recipient,
-    subject: dObj.data.subject,
-    body: {
-      template: dObj.data.template,
-      variables : arg.variables,
-      html : dObj.data.html,
-
-    },
-    options: {
-      attachments: dObj.data.attachments,
-      bcc: dObj.data.bcc,
-      cc: dObj.data.cc,
-      from: dObj.data.from,
-      inlineImages: dObj.data.inlineImages,
-      name: dObj.data.name,
-      noReply: dObj.data.noReply,
-      replyTo: dObj.data.replyTo,
-      htmlBody: dObj.data.htmlBody,
-    },
-  }
-  console.log('post='+JSON.stringify(post));
-
+  // メールを作成(sendGmailで送る際の引数Obj)
+  const mail = mailMerge(arg);
+  const rv = szLib.sendGmail(mail);
+  console.log('postMail end. rv='+JSON.stringify(rv));
+  return rv;
   // 使用する配達用アカウント(URL)を特定
   // 
   // 配達用アカウント(URL)にメール送付を指示
+}
+
+function mailMerge(arg){  /* 差込印刷でメールの文面を作成
+  postMailから渡された実データをシートで定義しているテンプレートに差し込み、
+  sendEmail()に渡すメールオブジェクトを作成する。
+  */
+  console.log('mailMerge start. arg='+JSON.stringify(arg));
+
+  // テンプレートをシートから取得
+  const dObj = szLib.getSheetData(arg.template);
+  //console.log('dObj.data='+JSON.stringify(dObj.data));
+
+  // 	内部関数定義：dObjから指定ラベルを持つ値を取得
+  const lookup = (label) => {
+    return dObj.data.filter(x => {
+      return x.parameters === label;
+    })[0].value;
+  };
+
+  const mail = {  // メールオブジェクトの雛形
+    recipient: arg.recipient,
+    subject: lookup('subject'),
+    body: lookup('template'),
+    options: {
+      //未対応 attachments: lookup('attachments'),
+      bcc: lookup('bcc') || undefined,
+      cc: lookup('cc') || undefined,
+      from: lookup('from') || undefined,
+      //未対応 inlineImages: lookup('inlineImages'),
+      name: lookup('name') || undefined,
+      noReply: lookup('noReply') || undefined,
+      replyTo: lookup('replyTo') || undefined,
+      //htmlBody: lookup('htmlBody'),
+    },
+  }
+  console.log('mail prototype = '+JSON.stringify(mail));
+
+  // 本文のプレースホルダを引数で渡された実値で置換
+  for( let x in arg.variables ){
+    mail.body = mail.body.replace(new RegExp('::' + x + '::','g'),arg.variables[x]);
+  }
+
+  // HTMLメールならoptions.htmlBodyをセット
+  if( lookup('html') ){
+    mail.options.htmlBody = mail.body;
+  }
+
+  console.log('mailMerge end. mail='+JSON.stringify(mail));
+  return mail;
 }
