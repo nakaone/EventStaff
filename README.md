@@ -873,360 +873,61 @@ function postMessage(data){
 - アロー関数は`TypeError: xxx is not a function.`となる(原因不明)ので、関数は`function xxx(){〜}`で定義する。
 - JSDocの書き方：[param](https://jsdoc.app/tags-param.html), [return](https://jsdoc.app/tags-returns.html)
 
-### GASソース(全体)
+### sendGmail
+
+基本的に「GAS公式 Class GmailApp [sendEmail](https://developers.google.com/apps-script/reference/gmail/gmail-app#sendEmail(String,String,String,Object))」に準拠しているが、bodyのみ手が加えられている。
 
 ```
-/**
- * 文字を変換。全角英数字は半角、半角カナは全角、ひらがな<->カタカナは指定
- * @param {string} str - 変換対象文字列
- * @param {string} kana - true:ひらがな、false:カタカナ
- * @returns {string} 変換結果
- * 
- * [JavaScript] 全角ひらがな⇔全角カタカナの文字列変換 [コピペ用のメモ]
- * https://neko-note.org/javascript-hiragana-katakana/1024
- * [JavaScript] 全角⇔半角の変換を行う（英数字、カタカナ）
- * https://www.yoheim.net/blog.php?q=20191101
- */
- function convertCharacters(str,kana=true){ 
-  let rv = str;
-  // 全角英数字 -> 半角英数字
-  rv = rv.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => {
-    return String.fromCharCode(s.charCodeAt(0) - 65248);
-  });
-
-  // 半角カタカナ -> 全角カタカナ
-  const hankaku = (arg) => {
-    const kanaMap = {
-      'ｶﾞ': 'ガ', 'ｷﾞ': 'ギ', 'ｸﾞ': 'グ', 'ｹﾞ': 'ゲ', 'ｺﾞ': 'ゴ',
-      'ｻﾞ': 'ザ', 'ｼﾞ': 'ジ', 'ｽﾞ': 'ズ', 'ｾﾞ': 'ゼ', 'ｿﾞ': 'ゾ',
-      'ﾀﾞ': 'ダ', 'ﾁﾞ': 'ヂ', 'ﾂﾞ': 'ヅ', 'ﾃﾞ': 'デ', 'ﾄﾞ': 'ド',
-      'ﾊﾞ': 'バ', 'ﾋﾞ': 'ビ', 'ﾌﾞ': 'ブ', 'ﾍﾞ': 'ベ', 'ﾎﾞ': 'ボ',
-      'ﾊﾟ': 'パ', 'ﾋﾟ': 'ピ', 'ﾌﾟ': 'プ', 'ﾍﾟ': 'ペ', 'ﾎﾟ': 'ポ',
-      'ｳﾞ': 'ヴ', 'ﾜﾞ': 'ヷ', 'ｦﾞ': 'ヺ',
-      'ｱ': 'ア', 'ｲ': 'イ', 'ｳ': 'ウ', 'ｴ': 'エ', 'ｵ': 'オ',
-      'ｶ': 'カ', 'ｷ': 'キ', 'ｸ': 'ク', 'ｹ': 'ケ', 'ｺ': 'コ',
-      'ｻ': 'サ', 'ｼ': 'シ', 'ｽ': 'ス', 'ｾ': 'セ', 'ｿ': 'ソ',
-      'ﾀ': 'タ', 'ﾁ': 'チ', 'ﾂ': 'ツ', 'ﾃ': 'テ', 'ﾄ': 'ト',
-      'ﾅ': 'ナ', 'ﾆ': 'ニ', 'ﾇ': 'ヌ', 'ﾈ': 'ネ', 'ﾉ': 'ノ',
-      'ﾊ': 'ハ', 'ﾋ': 'ヒ', 'ﾌ': 'フ', 'ﾍ': 'ヘ', 'ﾎ': 'ホ',
-      'ﾏ': 'マ', 'ﾐ': 'ミ', 'ﾑ': 'ム', 'ﾒ': 'メ', 'ﾓ': 'モ',
-      'ﾔ': 'ヤ', 'ﾕ': 'ユ', 'ﾖ': 'ヨ',
-      'ﾗ': 'ラ', 'ﾘ': 'リ', 'ﾙ': 'ル', 'ﾚ': 'レ', 'ﾛ': 'ロ',
-      'ﾜ': 'ワ', 'ｦ': 'ヲ', 'ﾝ': 'ン',
-      'ｧ': 'ァ', 'ｨ': 'ィ', 'ｩ': 'ゥ', 'ｪ': 'ェ', 'ｫ': 'ォ',
-      'ｯ': 'ッ', 'ｬ': 'ャ', 'ｭ': 'ュ', 'ｮ': 'ョ',
-      '｡': '。', '､': '、', 'ｰ': 'ー', '｢': '「', '｣': '」', '･': '・'
-    };
-
-    const reg = new RegExp('(' + Object.keys(kanaMap).join('|') + ')', 'g');
-    return arg
-      .replace(reg, function (match) {
-          return kanaMap[match];
-      })
-      .replace(/ﾞ/g, '゛')
-      .replace(/ﾟ/g, '゜');
-  };
-  rv = hankaku(rv);
-
-  // 全角カタカナ <-> 全角ひらがな
-  const hRep = (x,offset,string) => { // offset:マッチした位置 string:文字列全部
-    //console.log('hRep start.',x,offset,string);
-    let rv = String.fromCharCode(x.charCodeAt(0) - 0x60);
-    //console.log('hRep end.',rv);
-    return rv;
-  }
-  const toHiragana = (t) => {
-    //console.log('toHiragana start.',typeof t, t);
-    let rv = t.replace(/[\u30A1-\u30FA]/g,hRep);
-    //console.log('toHiragana end.',typeof(rv),rv);
-    return rv;
-  };
-  
-  const kRep = (x,offset,string) => {
-    //console.log('kRep start.',x,offset,string);
-    let rv = String.fromCharCode(x.charCodeAt(0) + 0x60);
-    //console.log('kRep end.',rv);
-    return rv;
-  }
-  const toKatakana = (t) => {
-    //console.log('toKatakana start.',typeof t, t);
-    let rv = t.replace(/[\u3041-\u3096]/g,kRep);
-    //console.log('toKatakana end.',typeof(rv),rv);
-    return rv;
-  };
-  
-  rv = kana ? toHiragana(rv) : toKatakana(rv);
-  //console.log('convertCharacters end. rv=',rv);
-  return rv;
-}
-
-/** QRコード生成
- * @param {String} code_data QRコードに埋め込む文字列
- * @return {Blob} 画像のBLOB
- */
-function createQrCode(
-  code_data){ 
-  let url = 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=' + code_data;
-  let option = {
-      method: "get",
-      muteHttpExceptions: true
-    };
-  let ajax = UrlFetchApp.fetch(url, option);
-  console.log(ajax.getBlob())
-  return ajax.getBlob();
-}
-
-/** 文字列を復号(＋オブジェクト化)
- * @param {Object} arg 暗号化された文字列
- * @param {String} passPhrase 共通暗号鍵
- * @return {String} 復号化された文字列・オブジェクト
- */
-function decrypt(arg,passPhrase){
-  console.log('decrypt start.\n'+arg);
-  const decodePath = decodeURIComponent(arg);
-  dump('decodePath',decodePath);
-  const data = CryptoJS.enc.Base64
-    .parse(decodePath.toString()).toString(CryptoJS.enc.Latin1);
-  dump('data',data);
-  const bytes = CryptoJS.AES.decrypt(data, passPhrase)
-    .toString(CryptoJS.enc.Utf8)
-  dump('bytes',bytes);
-
-  let rv = null;
-  try {
-    rv = JSON.parse(bytes);
-  } catch(e) {
-    rv = bytes;
-  } finally {
-    console.log('decrypt end.\ntype='+whichType(rv)+'\n',rv);
-    return rv;
-  }
-}
-
-/** 変数の型と値をコンソールに出力。デバッグ用
- * @param {string} label 変数名
- * @param {any} variable 変数
- * @return {void} なし
- */
-function dump(label,variable){ 
-  console.log(label+' (type='+whichType(variable)+')\n',variable);
-}
-
-/** 文字列・オブジェクトを暗号化
- * @param {Object} arg 暗号化する文字列・オブジェクト
- * @param {String} passPhrase 共通暗号鍵
- * @return {String} 暗号化された文字列
- */
-function encrypt(arg,passPhrase){
-  const str = JSON.stringify(arg);
-  console.log('encript start.\ntype='+whichType(arg)+'\n'+str);
-
-  //const utf8_plain = CryptoJS.enc.Utf8.parse(str);
-  const encrypted = CryptoJS.AES.encrypt( str, passPhrase );  // Obj
-  // crypto-jsで複合化するとMalformed UTF-8 data になった件
-  // https://zenn.dev/naonao70/articles/a2f7df87f9f736
-  const encryptResult = CryptoJS.enc.Base64
-    .stringify(CryptoJS.enc.Latin1.parse(encrypted.toString()));
-
-  console.log("encript end.\n"+encryptResult);
-  return encryptResult;
-}
-
-/** 指定シートから全データ取得
- * @param {string}} sheetName 取得対象シート名
- * @return {Object} 取得したシートのデータ
- *   rows : 取得した生データ(二次元配列)
- *   keys : ヘッダ行(1行目固定)の一次元配列
- *   data : データ行を[{ラベル1:値, ラベル2:値, ..},{..},..]形式にした配列
- *   sheet: getSheetで取得したシートのオブジェクト
- */
-function getSheetData(sheetName='マスタ'){
-  console.log('getSheetData start. sheetName='+sheetName);
-
-  const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
-  // JSONオブジェクトに変換する
-  const rows = sheet.getDataRange().getValues()
-    .filter(row => row[0]);  // 空白行は削除
-  const keys = rows.splice(0, 1)[0];  // ヘッダを一次元配列で取得
-  const data = rows.map(row => {  // [{ラベル1:値, ラベル2:値, ..},{..},..]形式
-    const obj = {};
-    row.map((item, index) => {
-      obj[String(keys[index])] = String(item);
-    });
-    return obj;
-  });
-  const rv = {rows:rows, keys:keys, data:data, sheet:sheet};
-  console.log('getSheetData end.\n'+JSON.stringify({
-    rows: [rv.rows[0] || 'null'],
-    keys: rv.keys || 'null',
-    data: [rv.data[0] || 'null'],
-    sheet: rv.sheet || 'null',
-  }));
-  return rv;
-}
-
-/** オブジェクトの構造を分析
- * @param {any} arg - 分析対象の変数
- * @param {number} depth - 再帰階層の深さ。指定不要
- */
-function inspect(arg,depth=0){ 
-  // エラー対策(RangeError: Maximum call stack size exceeded)
-  if( depth > 2 ){
-    return 'Err:depth>2';
-  }
-
-  // プリミティブ型または関数
-  const primitiveList = ['undefined','boolean','number','string','bigint','symbol','function'];
-  let i = primitiveList.indexOf(typeof arg);
-  if( i > -1 ){
-    return primitiveList[i];
-  }
-  // 配列またはハッシュ以外
-  const whichType = Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
-  if( whichType !== 'Array' && whichType !== 'Object' )
-    return whichType;
-
-  let rv = null;
-  if( whichType === 'Array' ){
-    // 配列の場合、順次再帰で呼び出し
-    rv = [];
-    for( let i=0 ; i<arg.length ; i++ ){
-      rv.push(inspect(arg[i],depth+1));
-    }
-  } else {
-    // ハッシュの場合、メンバ名つきの配列を作成
-    rv = {};
-    for( let x in arg ){
-      if( x.toUpperCase() === 'NONE' ){  // 'NONE'は調査対象から削除(循環参照？)
-        rv[x] = 'Err:label NONE';
-      } else {
-        rv[x] = inspect(arg[x],depth+1);
-      }
-    }
-  }
-  return depth === 0 ? JSON.stringify(rv) : rv;
-}
-
-/** シートの値を更新
- * @param {Object} dObj - 取得対象シート名
- * @param {Object} post - 更新データ
- * @param {Object} post.target - 更新対象の特定情報
- * @param {string} post.target.key - 更新対象の項目名(キー項目)
- * @param {any} post.target.value - キー値
- * @param {Object[]} post.revice - 1セルの更新情報
- * @param {string} post.revice.key - 更新対象の項目名
- * @param {any} post.revice.value - 更新後の値
- * @param {Object} opt - オプション
- * 
- * post = {  更新の場合
- *   target: {
- *     key: 更新対象の項目名(キー項目)
- *     value: キー値
- *   },
- *   revice: [{
- *     key: 更新対象の項目名
- *     value: 更新後の値
- *   },{..},..]
- * }
- * 
- * post = [{　　追加の場合
- *   key: 追加対象の項目名
- *   value: 項目の値
- * },{..},..]
- * 
- * opt = {
- *   append: {boolean} キー値が存在しない場合、追加を許すならtrue
- * }
- * @returns {Object[]} 更新結果。変更された項目のみ。
- * result = [{
- *   column: 更新対象項目
- *   before: 更新前の値
- *   after: 更新後の値
- * },{},..]
- */
-function updateSheetData(dObj,post,opt={append:true}){
-  console.log('updateSheetData start.',JSON.stringify(post));
-  const log = [];
-
-  const doUpdate = () => {
-    // 1.何行目のデータを更新するか特定する
-    const map = dObj.data.map(x => x[post.target.key]);
-    const rowNum = map.indexOf(String(post.target.value)) + 2;
-
-    // 2.更新対象行のデータをuArrに保存する
-    const uArr = dObj.rows[rowNum-2];
-    console.log('uArr = '+JSON.stringify(uArr));
-
-    // 3.uArrのデータを順次更新しながらログに記録、更新範囲をメモ
-    let maxColumn = 0;
-    let minColumn = 99999;
-    for( let i=0 ; i<post.revice.length ; i++ ){
-      // (1) 更新対象項目の列番号を特定、columnに保存
-      const column = dObj.keys.indexOf(post.revice[i].key);
-      // (2) >maxColumn or <minColumn ならmax/minを更新
-      maxColumn = column > maxColumn ? column : maxColumn;
-      minColumn = column < minColumn ? column : minColumn;
-      // (3) logに更新対象項目/更新前の値/更新後の値を保存
-      if( uArr[column] !== post.revice[i].value ){
-        log.push({
-          column: post.revice[i].key,
-          before: uArr[column],
-          after: post.revice[i].value,
-        });
-      }
-      // (4) uArr[column]の値を更新
-      uArr[column] = post.revice[i].value;
-    }
-    console.log('uArr = '+JSON.stringify(uArr));
-
-    // uArrから更新範囲のデータを切り出して更新
-    const range = dObj.sheet.getRange(rowNum, minColumn+1, 1, maxColumn-minColumn+1);
-    const sv = uArr.splice(minColumn, maxColumn-minColumn+1);
-    console.log('sv = '+JSON.stringify(sv));
-    range.setValues([sv]);
-  }
-
-  const doAppend = () => {
-    // 追加対象行のデータをaArrとして作成
-    const aArr = [];
-    const rv = {};
-    for( let i=0 ; i<dObj.keys.length ; i++ ){
-      rv[dObj.keys[i]] = post[dObj.keys[i]] || '';
-      aArr.push(rv[dObj.keys[i]]);
-    }
-    dObj.sheet.appendRow(aArr);
-    log.push(rv);
-    console.log('aArr = '+JSON.stringify(aArr));
-    console.log('rv = '+JSON.stringify(rv));
-  }
-
-  if( post.hasOwnProperty('target') ){
-    console.log('doUpdate');
-    doUpdate();
-  } else if( opt.append ){
-    console.log('doAppend');
-    doAppend();
-  }
-
-  console.log('updateSheetData end.'+JSON.stringify(log));
-  return log;
-}
-
-/** 変数の型を判定
- * @param {any} arg - 判定対象の変数
- * @returns {string} - 型の名前
- */
-function whichType(arg){
-  return arg === undefined ? 'undefined'
-   : Object.prototype.toString.call(arg)
-    .match(/^\[object\s(.*)\]$/)[1];
-}
-
-//== https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.3.0/crypto-js.min.js
-(後略)
+  recipient	String	受信者のアドレス
+  subject	String	件名（最大 250 文字）
+  ★body	Object || String	メールの本文。Stringの場合はテンプレートによる置換は行わない。
+    template: テンプレート
+    variables: {label:value,..},
+    html: HTMLメールならtrue
+  options	Object	高度なパラメータを指定する JavaScript オブジェクト
+    attachments	BlobSource[]	メールで送信するファイルの配列
+    bcc	String	BCC 宛てのメールアドレスのカンマ区切りリスト
+    cc	String	Cc に含めるメールアドレスのカンマ区切りリスト
+    from	String	メールの送信元のアドレス（getAliases() によって返された値のいずれか）
+    htmlBody	String	設定すると、HTML をレンダリングできるデバイスでは、必須の本文引数の代わりに、HTML をレンダリングします。メールのインライン画像がある場合は、HTML 本文にオプションの inlineImages フィールドを追加できます。
+    inlineImages	Object	画像キー（String）から画像データ（BlobSource）へのマッピングを含む JavaScript オブジェクト。これは、htmlBody パラメータが使用され、これらの画像への参照が <img src="cid:imageKey" /> 形式で含まれていることを前提としています。
+    name	String	メールの送信者の名前（デフォルト: ユーザーの名前）
+    noReply	Boolean	true: 受信者がメールに返信しないように、返信しない汎用的なメールアドレスからメールを送信する場合に必要です。このオプションは、Gmail ユーザーではなく、Google Workspace アカウントでのみ使用可能です。
+    replyTo	String	デフォルトの返信先アドレスとして使用するメールアドレス（デフォルト: ユーザーのメールアドレス）
 ```
 
+<details><summary>sendGmail test source</summary>
 
+```
+function sendGmailTest(){
+  const testData = [
+    /*{
+      recipient:'nakaone.kunihiro@gmail.com',
+      subject:'sendGmail test',
+      body:'this is test mail.',
+      options:{},
+    },*/
+    {
+      recipient:'nakaone.kunihiro@gmail.com',
+      subject:'sendGmail test',
+      body:{
+        template: '<p>これは::from::からのHTMLメールのテストです</p><img src="cid:qr_code" />',
+        variables:{from:'自分'},
+        html: true,
+      },
+      options:{
+        inlineImages:{qr_code: createQrCode('https://developers.google.com/apps-script/guides/web')},
+      },
+    },
+  ];
+
+  for( let i=0 ; i<testData.length ; i++ ){
+    sendGmail(testData[i]);
+  }
+}
+```
+
+</details>
 
 # Ⅳ.スタッフ用画面(html)
 

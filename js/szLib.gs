@@ -1,4 +1,59 @@
-/**
+/* ====================================================================
+  GAS専用ライブラリ
+==================================================================== */
+
+function sendGmailTest(){
+  const testData = [
+    /*{
+      recipient:'nakaone.kunihiro@gmail.com',
+      subject:'sendGmail test',
+      body:'this is test mail.',
+      options:{},
+    },*/
+    {
+      recipient:'nakaone.kunihiro@gmail.com',
+      subject:'sendGmail test',
+      body:{
+        template: '<p>これは::from::からのHTMLメールのテストです</p><img src="cid:qr_code" />',
+        variables:{from:'自分'},
+        html: true,
+      },
+      options:{
+        inlineImages:{qr_code: createQrCode('https://developers.google.com/apps-script/guides/web')},
+      },
+    },
+  ];
+
+  for( let i=0 ; i<testData.length ; i++ ){
+    sendGmail(testData[i]);
+  }
+}
+
+function sendGmail(arg){  // HTMLメールの送信
+
+  let body = '';
+  if( whichType(arg.body) === 'Object' ){
+    // 本文の編集
+    body = arg.body.template;
+    for( let x in arg.body.variables ){
+      body = body.replace(new RegExp('::' + x + '::','g'),arg.body.variables[x]);
+    }
+    if( arg.body.html ){
+      arg.options.htmlBody = body;
+    }
+  } else {  // HTMLメールではない場合
+    body = arg.body;
+  }
+
+  GmailApp.sendEmail(arg.recipient,arg.subject,body,arg.options);
+
+}
+
+/* ====================================================================
+  汎用ライブラリ
+==================================================================== */
+
+/** 文字を変換。全角英数字は半角、半角カナは全角、ひらがな<->カタカナは指定
  * 文字を変換。全角英数字は半角、半角カナは全角、ひらがな<->カタカナは指定
  * @param {string} str - 変換対象文字列
  * @param {string} kana - true:ひらがな、false:カタカナ
