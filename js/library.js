@@ -414,6 +414,20 @@ const setQRcode = (selector,opt) => {  // QRコードを指定位置にセット
   });
 }
 
+/**
+ * テキストをsha256でハッシュ化
+ * @param {string} text - 暗号化対象のテキスト
+ * @param {function} callback 
+ */
+function sha256(text,callback){
+  const sha = async (text) => {
+    const uint8  = new TextEncoder().encode(text)
+    const digest = await crypto.subtle.digest('SHA-256', uint8)
+    return Array.from(new Uint8Array(digest)).map(v => v.toString(16).padStart(2,'0')).join('')
+  }
+  sha(text).then((hash) => callback(hash));
+}
+
 const toggleMenu = (arg=null,opt={}) => {  // メニューの開閉
   // 引数は指定無し(単純開閉切換)またはtrue(強制オープン)
   console.log('toggleMenu start.',arg);
