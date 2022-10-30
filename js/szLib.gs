@@ -223,8 +223,8 @@ function getSheetData(sheetName='マスタ'){
   const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
   // JSONオブジェクトに変換する
   const rows = sheet.getDataRange().getValues();
-  console.log('rows='+JSON.stringify(rows));
-    //.filter(row => row[0]);  // 空白行は削除
+  console.log('rows='+JSON.stringify(rows))
+    .filter(row => row.join('').length > 0);  // 空白行は削除
   const keys = rows.splice(0, 1)[0];  // ヘッダを一次元配列で取得
   const data = rows.map(row => {  // [{ラベル1:値, ラベル2:値, ..},{..},..]形式
     const obj = {};
