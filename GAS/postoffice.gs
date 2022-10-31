@@ -4,24 +4,6 @@ const passPhrase = "Oct.22,2022"; // テスト用共通鍵
 // トリガー関数
 // ===========================================================
 
-const doPostTest = () => {
-  const endpoint = 'https://script.google.com/macros/s/AKfycbzFjRSbS4jpM61KMYfCk5iuk8oHxYN9tYAS3dkLxNZLG24eMIWfga2sUYc9W1nARWzg/exec';
-  const data = {
-    'name': 'shimazu',
-    'hobby': 'javascript',
-  };
-  const options = {
-    'method': 'post',
-    'headers': {
-      'contentType': 'application/json',
-    },
-    'payload': data, // =>  parameter: { hobby: 'javascript', name: 'shimazu' },
-      // JSON.stringify(data), => parameter: { '{"name":"shimazu","hobby":"javascript"}': '' },
-  }
-  const response = UrlFetchApp.fetch(endpoint,options);
-  console.log(response.getContentText());
-}
-
 const doGetTest = () => {
   const testData = [
     //{func:'test',data:{from:'嶋津',to:'スタッフ',message:'ふがふが'}},
@@ -79,8 +61,9 @@ function postMail(arg){ /*
   const mail = mailMerge(arg);
 
   // 配達員に配送指示
-  const endpoint = 'https://script.google.com/macros/s/AKfycbyRrDkEBRMObjP5xfmZMdQHiOEAFNivJZ5xJx7RVspB_tWrcpstTE1dzFYOkdfdv1wO/exec';
+  const endpoint = 'https://script.google.com/macros/s/AKfycbw4P6syLIYnNbnNJPpBX_yfaB31ViCn8FhZpLZiExxdAYglqJCVngtBQfpw0e1RssKh/exec';
   const data = {
+    passPhrase  : passPhrase,
     recipient   : arg.recipient,
     subject     : mail.subject,
     body        : mail.body,
