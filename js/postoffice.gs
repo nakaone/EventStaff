@@ -4,6 +4,24 @@ const passPhrase = "Oct.22,2022"; // テスト用共通鍵
 // トリガー関数
 // ===========================================================
 
+const doPostTest = () => {
+  const endpoint = 'https://script.google.com/macros/s/AKfycbzFjRSbS4jpM61KMYfCk5iuk8oHxYN9tYAS3dkLxNZLG24eMIWfga2sUYc9W1nARWzg/exec';
+  const data = {
+    'name': 'shimazu',
+    'hobby': 'javascript',
+  };
+  const options = {
+    'method': 'post',
+    'headers': {
+      'contentType': 'application/json',
+    },
+    'payload': data, // =>  parameter: { hobby: 'javascript', name: 'shimazu' },
+      // JSON.stringify(data), => parameter: { '{"name":"shimazu","hobby":"javascript"}': '' },
+  }
+  const response = UrlFetchApp.fetch(endpoint,options);
+  console.log(response.getContentText());
+}
+
 const doGetTest = () => {
   const testData = [
     //{func:'test',data:{from:'嶋津',to:'スタッフ',message:'ふがふが'}},
@@ -54,22 +72,45 @@ function postMail(arg){ /*
     recipient string : 宛先メールアドレス
     variables object : テンプレートで置換する{変数名:実値}オブジェクト
   }
-  console.log('postMail start. arg='+JSON.stringify(arg));
   */
+  console.log('postMail start. arg='+JSON.stringify(arg));
 
   // メールを作成(sendGmailで送る際の引数Obj)
   const mail = mailMerge(arg);
-  const rv = szLib.sendGmail(mail);
-  console.log('postMail end. rv='+JSON.stringify(rv));
-  return rv;
-  // 使用する配達用アカウント(URL)を特定
-  // 
-  // 配達用アカウント(URL)にメール送付を指示
+
+  // 配達員に配送指示
+  const endpoint = 'https://script.google.com/macros/s/AKfycbyRrDkEBRMObjP5xfmZMdQHiOEAFNivJZ5xJx7RVspB_tWrcpstTE1dzFYOkdfdv1wO/exec';
+  const data = {
+    recipient   : arg.recipient,
+    subject     : mail.subject,
+    body        : mail.body,
+    // 以下options
+    //attachments : mail.attachments || undefined,
+    bcc         : mail.options.bcc || undefined,
+    cc          : mail.options.cc || undefined,
+    //from        : mail.options.from || undefined,
+    //inlineImages: mail.options.inlineImages,
+    name        : mail.options.name || undefined,
+    noReply     : mail.options.noReply || undefined,
+    replyTo     : mail.options.replyTo || undefined,
+    htmlBody    : mail.options.htmlBody || undefined,
+  };
+  const options = {
+    'method': 'post',
+    'headers': {
+      'contentType': 'application/json',
+    },
+    'payload': data,
+  }
+  const response = UrlFetchApp.fetch(endpoint,options);
+  console.log(response.getContentText());
 }
 
 function mailMerge(arg){  /* 差込印刷でメールの文面を作成
   postMailから渡された実データをシートで定義しているテンプレートに差し込み、
   sendEmail()に渡すメールオブジェクトを作成する。
+  GmailApp.sendEmail() :
+  https://developers.google.com/apps-script/reference/gmail/gmail-app#sendEmail(String,String,String,Object)
   */
   console.log('mailMerge start. arg='+JSON.stringify(arg));
 
@@ -110,6 +151,7 @@ function mailMerge(arg){  /* 差込印刷でメールの文面を作成
   // HTMLメールならoptions.htmlBodyをセット
   if( lookup('html') ){
     mail.options.htmlBody = mail.body;
+    mail.body = mail.body.replace(/<[^<>]+?>/g,'');
   }
 
   console.log('mailMerge end. mail='+JSON.stringify(mail));
