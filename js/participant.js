@@ -90,6 +90,7 @@ const initialize = () => {  // 初期設定処理
   }
 
   // 03. パスコード入力
+  /*
   document.querySelector('#initialize input[type="submit"]')
   .addEventListener('click',() => {
 
@@ -110,6 +111,7 @@ const initialize = () => {  // 初期設定処理
     RegExp:new RegExp('^{.+}$'),  // JSON文字列であること
     alert: false,  // 読み込み時、内容をalert表示しない
   });
+  */
 }
 
 window.addEventListener('DOMContentLoaded', function(){ // 主処理
