@@ -74,10 +74,10 @@ const initialize = () => {  // 初期設定処理
     changeScreen();// ホーム画面表示
   }
 
-  //terminate();  // 暫定
   // 受付番号の取得
   config.entryNo = Number(location.search.match(/n=(\d+)/)[1]);
   console.log('l.80',config);
+  terminate();  // 暫定
 
   /* 以下は認証機能実装後に復活
   // 02. localStorageから読み込み
