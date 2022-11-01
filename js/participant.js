@@ -6,7 +6,7 @@ const config = {
   TableURL: "materials/timetable/WBS.html",
   EnqueteURL: "https://docs.google.com/forms/d/16r3luYQRiLVmI9xqaD4FuaSlUqTRGvI8nAGrjGcg8lc/viewform",
   // 分類B　※プリセットは認証実装までの暫定
-  BoardAPI: "https://script.google.com/macros/s/AKfycbwyslqOvzOB6vnV7LSb-un6fa39uZKPrccSdMCNm3mjPOt_UJw7XBBivvGxnVxqUpiH3w/exec",         // 「掲示板」のGAS Web API のID
+  BoardAPI: "AKfycbwyslqOvzOB6vnV7LSb-un6fa39uZKPrccSdMCNm3mjPOt_UJw7XBBivvGxnVxqUpiH3w",         // 「掲示板」のGAS Web API のID
   passPhrase: "Oct.22,2022",       // GASとの共通鍵(Master, Board共通)
   DateOfExpiry: new Date(new Date().getTime()+86400000),     // config情報の有効期限
   BoardInterval: 30000,   // 掲示板巡回のインターバル。m秒
