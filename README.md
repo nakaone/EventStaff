@@ -149,8 +149,9 @@ sequenceDiagram
   autonumber
   actor mail as 参加者メール
   actor html as 参加者画面
-  participant CA as 認証局
-  %% CA = Certificate Authority (GAS API)
+  participant CAApi as 認証局<br>API
+  participant CASht as 認証局<br>シート
+  %% CAApi = Certificate Authority (GAS API)
   participant mApi as 管理局<br>API
   %% mApi = master API
   participant mSht as 管理局<br>シート
@@ -161,18 +162,18 @@ sequenceDiagram
   mail->>git : 返信メールorブックマークからリクエスト(クエリパラメータで受付番号添付)
   git->>html : ダウンロード、画面表示
 
-  html ->> CA : ログイン要求(受付番号)
-  activate CA
-  Note right of CA : authA1()
-  CA->>mSht : 試行ログ要求
-  mSht->>CA : 試行ログ
+  html ->> CAApi : ログイン要求(受付番号)
+  activate CAApi
+  Note right of CAApi : authA1()
+  CAApi->>CASht : 試行ログ要求
+  CASht->>CAApi : 試行ログ
   alt 1時間以内に3回以上失敗
-    CA->>html : エラーメッセージ(ログイン不可)
+    CAApi->>html : エラーメッセージ(ログイン不可)
   end
-  CA ->> mApi : パスコード送付要求
-  deactivate CA
+  CAApi ->> mApi : パスコード送付要求
+  deactivate CAApi
   activate mApi
-  Note right of mApi : authB1()
+  Note right of mApi : authA2()
   mApi ->> mApi : パスコード(数字6桁)生成
   mApi ->> mSht : 受付番号＋パスコード
   mSht ->> mSht : パスコード・有効期限格納<br>前回試行結果クリア
@@ -183,10 +184,10 @@ sequenceDiagram
   post ->> mail : パスコード
   deactivate post
   mail ->> html : パスコード入力
-  html ->> CA : 受付番号(平文)＋トークン
-  activate CA
-  Note right of CA : authA2()
-  CA ->> mApi : 受付番号＋トークン
+  html ->> CAApi : 受付番号(平文)＋トークン
+  activate CAApi
+  Note right of CAApi : authB1()
+  CAApi ->> mApi : 受付番号＋トークン
   activate mApi
   Note right of mApi : authB2()
   mApi ->> mSht : 受付番号
@@ -194,14 +195,14 @@ sequenceDiagram
   mApi ->> mApi : トークンの内容・有効期限確認
   mApi ->> mSht : 受付番号＋試行結果
   alt トークンの内容が正当
-    mApi ->> CA : 編集用URL、個別鍵、放送用URL
-    CA ->> html : 編集用URL、個別鍵、放送用URL
+    mApi ->> CAApi : 編集用URL、個別鍵、放送用URL
+    CAApi ->> html : 編集用URL、個別鍵、放送用URL
   else トークンの内容が不当
-    mApi ->> CA : エラー通知
+    mApi ->> CAApi : エラー通知
     deactivate mApi
-    CA ->> html : エラー通知
+    CAApi ->> html : エラー通知
   end
-  deactivate CA
+  deactivate CAApi
 
 ```
 
