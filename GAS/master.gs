@@ -1,4 +1,5 @@
 const passPhrase = "Oct.22,2022"; // テスト用共通鍵
+const postoffice = "https://script.google.com/macros/s/AKfycbxLsm58FzWqC789J8GHzRElSYHv4WUoRoRJXFimKwKW_kAMrmSutdlEH4Ev244I1lP8/exec";
 
 // ===========================================================
 // トリガー関数

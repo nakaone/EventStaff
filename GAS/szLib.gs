@@ -138,12 +138,13 @@ function sendGmail(arg){  // HTMLメールの送信
 }
 
 /** QRコード生成
- * @param {String} code_data QRコードに埋め込む文字列
+ * @param {String} code_data - QRコードに埋め込む文字列
+ * @param {number} size - QRコードのサイズ。既定値200x200
  * @return {Blob} 画像のBLOB
  */
 function createQrCode(
-  code_data){ 
-  let url = 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=' + code_data;
+  code_data,size=200){ 
+  let url = 'https://chart.googleapis.com/chart?chs='+size+'x'+size+'&cht=qr&chl=' + code_data;
   let option = {
       method: "get",
       muteHttpExceptions: true

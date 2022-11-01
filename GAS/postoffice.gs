@@ -13,6 +13,7 @@ const doGetTest = () => {
       {key:'参加費',value:'既収'},
     ]}},*/
     {func:'post',data:{
+      passPhrase : 'hoge',
       template: '申込への返信',
       recipient: 'nakaone.kunihiro@gmail.com',
       variables: {name:'嶋津　邦浩',entryNo:'0025'},
@@ -50,12 +51,18 @@ function doGet(e) {
 
 function postMail(arg){ /*
   arg = {
+    passPhrase string : 共通鍵
     template  string : テンプレート名。郵便局スプレッドシートのシート名
     recipient string : 宛先メールアドレス
     variables object : テンプレートで置換する{変数名:実値}オブジェクト
   }
   */
   console.log('postMail start. arg='+JSON.stringify(arg));
+
+  if( arg.passPhrase !== passPhrase ){
+    console.log('共通鍵が一致しません: '+arg.passPhrase+'(arg) !== '+passPhrase);
+    return new Error('共通鍵が一致しません');
+  }
 
   // メールを作成(sendGmailで送る際の引数Obj)
   const mail = mailMerge(arg);
