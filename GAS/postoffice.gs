@@ -66,7 +66,7 @@ function postMail(arg){ /*
   console.log(delivery);
   const endpoint = delivery.endpoint;
 
-  // 文面の作成と配達指示
+  // 配達員に渡すパラメータの作成と配達指示
   const data = {
     passPhrase  : passPhrase,
     recipient   : arg.recipient,
@@ -149,7 +149,10 @@ function mailMerge(arg){  /* 差込印刷でメールの文面を作成
   // HTMLメールならoptions.htmlBodyをセット
   if( lookup('html') ){
     mail.options.htmlBody = mail.body;
-    mail.body = mail.body.replace(/<[^<>]+?>/g,'');
+    mail.body = mail.body
+    .replace(/[\s\S]+<body>([\s\S]+?)<\/body>[\s\S]+/,'$1')   // body内部のみ抽出
+    .replace(/<a href="([^"]+?)".*?>([^<]+?)<\/a>/g,'$2($1)') // hrefはアドレス表示
+    .replace(/<[^<>]+?>/g,'');  // HTMLのタグは削除
   }
 
   console.log('mailMerge end. mail='+JSON.stringify(mail));
