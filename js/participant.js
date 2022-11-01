@@ -5,10 +5,10 @@ const config = {
   MapURL: "materials/map.html",
   TableURL: "materials/timetable/WBS.html",
   EnqueteURL: "https://docs.google.com/forms/d/16r3luYQRiLVmI9xqaD4FuaSlUqTRGvI8nAGrjGcg8lc/viewform",
-  // 分類B
-  BoardAPI: null,         // 「掲示板」のGAS Web API のID
-  passPhrase: null,       // GASとの共通鍵(Master, Board共通)
-  DateOfExpiry: null,     // config情報の有効期限
+  // 分類B　※プリセットは認証実装までの暫定
+  BoardAPI: "https://script.google.com/macros/s/AKfycbwyslqOvzOB6vnV7LSb-un6fa39uZKPrccSdMCNm3mjPOt_UJw7XBBivvGxnVxqUpiH3w/exec",         // 「掲示板」のGAS Web API のID
+  passPhrase: "Oct.22,2022",       // GASとの共通鍵(Master, Board共通)
+  DateOfExpiry: new Date(new Date().getTime()+86400000),     // config情報の有効期限
   BoardInterval: 30000,   // 掲示板巡回のインターバル。m秒
   // 分類C
   //handleName: '(未定義)',  // お知らせに表示する自分の名前
@@ -36,7 +36,7 @@ const initialize = () => {  // 初期設定処理
   console.log("initialize start.");
 
   // [01] 初期設定処理の画面を表示
-  changeScreen('initialize',"初期化処理");
+  changeScreen();
 
   // [02] 画面・イベント定義の設定
   // 01. お知らせ画面
@@ -74,6 +74,12 @@ const initialize = () => {  // 初期設定処理
     changeScreen();// ホーム画面表示
   }
 
+  //terminate();  // 暫定
+  // 受付番号の取得
+  config.entryNo = Number(location.search.match(/n=(\d+)/)[1]);
+  console.log('l.80',config);
+
+  /* 以下は認証機能実装後に復活
   // 02. localStorageから読み込み
   let confStr = localStorage.getItem('config');
   if( confStr ){
@@ -90,7 +96,6 @@ const initialize = () => {  // 初期設定処理
   }
 
   // 03. パスコード入力
-  /*
   document.querySelector('#initialize input[type="submit"]')
   .addEventListener('click',() => {
 

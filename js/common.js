@@ -97,6 +97,7 @@ const getMessages = (arg=0) => {
       const interval = Number(config.BoardInterval) > 9999 ? config.BoardInterval : 30000;
 //      config.BoardIntervalId = setInterval(getMessages,10000);
       config.BoardIntervalId = setInterval(getMessages,interval);
+      getMessages(0);
       console.log('getMessages start. id='+config.BoardIntervalId);
     } else {    // 定期巡回停止
       clearInterval(config.BoardIntervalId);
