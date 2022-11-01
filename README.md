@@ -149,39 +149,59 @@ sequenceDiagram
   autonumber
   actor mail as 参加者メール
   actor html as 参加者画面
-  participant form as 申込フォーム
-  participant answer as 回答(Sheet)
-  participant gas as システム(GAS)
+  participant CA as 認証局
+  %% CA = Certificate Authority (GAS API)
+  participant mApi as 管理局<br>API
+  %% mApi = master API
+  participant mSht as 管理局<br>シート
+  %% mSht = master sheet
   participant post as 郵便局
   participant git as HTML置き場<br>(GitHub)
 
-  html->>git : 返信メールorブックマークからリクエスト
+  mail->>git : 返信メールorブックマークからリクエスト(クエリパラメータで受付番号添付)
   git->>html : ダウンロード、画面表示
 
-  html->>+gas : 受付番号(平文)
-  Note right of gas : login1()
-  gas->>answer : 試行ログ要求
-  answer->>gas : 試行ログ
+  html ->> CA : ログイン要求(受付番号)
+  activate CA
+  Note right of CA : authA1()
+  CA->>mSht : 試行ログ要求
+  mSht->>CA : 試行ログ
   alt 1時間以内に3回以上失敗
-    gas->>html : エラーメッセージ(ログイン不可)
+    CA->>html : エラーメッセージ(ログイン不可)
   end
-  gas->>answer : 受付番号、パスコード、有効期限(30分)
-  gas->>-post : メールアドレス、パスコード
-
-  post->>mail : パスコード(平文)
-  mail->>html : パスコード入力
-
-  html->>+gas : 受付番号(平文)＋パスコード(トークン)
-  Note right of gas : login2()
-  gas->>answer : 受付番号
-  answer->>gas : パスコード、有効期限
-  gas->>gas : パスコード復号＋比較、有効期限確認
-  gas->>answer : 試行結果、ログ記録
-  alt OK
-    gas->>html : 共通鍵他初期設定項目(トークン)
-  else NG
-    gas->>-html : エラーメッセージ(パスコード不一致or有効期限切れ)
+  CA ->> mApi : パスコード送付要求
+  deactivate CA
+  activate mApi
+  Note right of mApi : authB1()
+  mApi ->> mApi : パスコード(数字6桁)生成
+  mApi ->> mSht : 受付番号＋パスコード
+  mSht ->> mSht : パスコード・有効期限格納<br>前回試行結果クリア
+  mSht ->> mApi : メアド
+  mApi ->> post : メール送付要求(メアド＋パスコード)
+  deactivate mApi
+  activate post
+  post ->> mail : パスコード
+  deactivate post
+  mail ->> html : パスコード入力
+  html ->> CA : 受付番号(平文)＋トークン
+  activate CA
+  Note right of CA : authA2()
+  CA ->> mApi : 受付番号＋トークン
+  activate mApi
+  Note right of mApi : authB2()
+  mApi ->> mSht : 受付番号
+  mSht ->> mApi : パスコード＋有効期限
+  mApi ->> mApi : トークンの内容・有効期限確認
+  mApi ->> mSht : 受付番号＋試行結果
+  alt トークンの内容が正当
+    mApi ->> CA : 編集用URL、個別鍵、放送用URL
+    CA ->> html : 編集用URL、個別鍵、放送用URL
+  else トークンの内容が不当
+    mApi ->> CA : エラー通知
+    deactivate mApi
+    CA ->> html : エラー通知
   end
+  deactivate CA
 
 ```
 
