@@ -2,53 +2,6 @@
   GAS専用ライブラリ
 ==================================================================== */
 
-function sendGmailTest(){
-  const testData = [
-    /*{
-      recipient:'nakaone.kunihiro@gmail.com',
-      subject:'sendGmail test',
-      body:'this is test mail.',
-      options:{},
-    },*/
-    {
-      recipient:'nakaone.kunihiro@gmail.com',
-      subject:'sendGmail test',
-      body:{
-        template: '<p>これは::from::からのHTMLメールのテストです</p><img src="cid:qr_code" />',
-        variables:{from:'自分'},
-        html: true,
-      },
-      options:{
-        inlineImages:{qr_code: createQrCode('https://developers.google.com/apps-script/guides/web')},
-      },
-    },
-  ];
-
-  for( let i=0 ; i<testData.length ; i++ ){
-    sendGmail(testData[i]);
-  }
-}
-
-function sendGmail(arg){  // HTMLメールの送信
-
-  let body = '';
-  if( whichType(arg.body) === 'Object' ){
-    // 本文の編集
-    body = arg.body.template;
-    for( let x in arg.body.variables ){
-      body = body.replace(new RegExp('::' + x + '::','g'),arg.body.variables[x]);
-    }
-    if( arg.body.html ){
-      arg.options.htmlBody = body;
-    }
-  } else {  // HTMLメールではない場合
-    body = arg.body;
-  }
-
-  GmailApp.sendEmail(arg.recipient,arg.subject,body,arg.options);
-
-}
-
 /* ====================================================================
   汎用ライブラリ
 ==================================================================== */
@@ -138,13 +91,12 @@ function sendGmail(arg){  // HTMLメールの送信
 }
 
 /** QRコード生成
- * @param {String} code_data - QRコードに埋め込む文字列
- * @param {number} size - QRコードのサイズ。既定値200x200
+ * @param {String} code_data QRコードに埋め込む文字列
  * @return {Blob} 画像のBLOB
  */
 function createQrCode(
-  code_data,size=200){ 
-  let url = 'https://chart.googleapis.com/chart?chs='+size+'x'+size+'&cht=qr&chl=' + code_data;
+  code_data){ 
+  let url = 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=' + code_data;
   let option = {
       method: "get",
       muteHttpExceptions: true
@@ -223,8 +175,7 @@ function getSheetData(sheetName='マスタ'){
 
   const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
   // JSONオブジェクトに変換する
-  const rows = sheet.getDataRange().getValues();
-  console.log('rows='+JSON.stringify(rows))
+  const rows = sheet.getDataRange().getValues()
     .filter(row => row.join('').length > 0);  // 空白行は削除
   const keys = rows.splice(0, 1)[0];  // ヘッダを一次元配列で取得
   const data = rows.map(row => {  // [{ラベル1:値, ラベル2:値, ..},{..},..]形式
