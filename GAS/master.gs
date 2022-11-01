@@ -98,98 +98,34 @@ function onFormSubmit(  // メールの自動返信
   // 2.4.シートに編集用URLを保存
   sheet.getRange("T"+e.range.rowStart).setValue(editURL); // 編集用URLはT列
 
-  // 3.本文の編集
-  const firstName = e.namedValues['申請者氏名'][0].match(/^([^　]+)/)[1];
-  const body = 'dummy';
-
-  // 3.2.htmlメールの編集
-  const options = {
-    name: '下北沢小学校おやじの会',
-    replyTo: 'shimokitasho.oyaji@gmail.com',
-    //attachments: createQrCode(entryNo),
-    htmlBody: htmlPattern
-      .replace("::firstName::",firstName)
-      .replace("::entryNo::",entryNo)
-      .replace("::editURL::",editURL),
-    inlineImages: {
-      qr_code: createQrCode(entryNo),
+  /* 3. 返信メールの送付
+    v = {func:'post',data:{
+      passPhrase string : 共通鍵
+      template  string : テンプレート名。郵便局スプレッドシートのシート名
+      recipient string : 宛先メールアドレス
+      variables {        テンプレートで置換する{変数名:実値}オブジェクト
+        name string    : 申請者名
+        entryNo string : 受付番号(0パディングした4桁の数字)
+      }
+    }}
+  */
+  const vObj = {
+    func: 'post',
+    data: {
+      passPhrase : passPhrase,
+      template   : '申込への返信',
+      recipient  : e.namedValues['メールアドレス'][0],
+      variables  : {
+        name     : e.namedValues['申請者氏名'][0].match(/^([^　]+)/)[1],  // 姓のみ
+        entryNo  : entryNo,
+      }
     }
-  }
+  };
+  const endpoint = postoffice + '?v=' + szLib.encrypt(vObj,passPhrase);
 
-  GmailApp.sendEmail(
-    e.namedValues['メールアドレス'][0],  // to
-    '【完了】QR受付テストへの登録',     // subject
-    body,
-    options
-  );
+  const response = UrlFetchApp.fetch(endpoint).getContentText();
+  console.log('onFormSubmit end. response='+response);
 }
-
-const htmlPattern = `
-<p>::firstName:: 様</p>
-
-<p>下北沢小学校おやじの会です。この度は参加登録、ありがとうございました。</p>
-
-<p>当日は検温後に受付に行き、以下を受付担当者にお示しください。</p>
-<div style="
-  position: relative;
-  margin: 2rem;
-  padding: 0.5rem 1rem;
-  border: solid 4px #95ccff;
-  border-radius: 8px;
-">
-  <span style="
-    position: absolute;
-    display: inline-block;
-    top: calc(-0.5rem - 2px);
-    left: 2rem;
-    padding: 0 0.5rem;
-    line-height: 1;
-    background: #fff;
-    color: #95ccff;
-    font-weight: bold;
-  ">受付番号</span>
-  <p style="
-    text-align:center;
-    font-size: 3rem;
-    font-weight: bold;
-  ">
-    ::entryNo::
-  </p>
-  <p style="text-align: center;">
-    <img src='cid:qr_code' />
-  </p>
-</div>
-
-<p>もし登録いただいた参加メンバの追加・欠席、または申込みのキャンセルがあった場合、
-以下から修正してください。</p>
-
-<p><a href="::editURL::" style="
-  display: inline-block;
-  padding: 20px 50px 20px 50px;
-  text-decoration: none;
-  color: white;
-  background: blue;
-  font-weight: bold;
-  border: solid 4px blue;
-  border-radius: 8px;">参加申込の修正</a></p>
-
-<p>なお当日の注意事項・持ち物リストは適宜追加されることがありますので、
-イベント前日に「<a href="::boardURL::">開催案内</a>」のページで
-再度ご確認いただけますようお願い申し上げます。</p>
-
-<p>当日のお越しをお待ちしております。</p>
-`;
-
-const createQrCode = (code_data) => { // QRコード生成
-  let url = 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=' + code_data;
-  let option = {
-      method: "get",
-      muteHttpExceptions: true
-    };
-  let ajax = UrlFetchApp.fetch(url, option);
-  console.log(ajax.getBlob())
-  return ajax.getBlob();
-};
 
 const onFormSubmitTest = () => {
   const testData = [
