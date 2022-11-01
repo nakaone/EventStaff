@@ -60,8 +60,13 @@ function postMail(arg){ /*
   // メールを作成(sendGmailで送る際の引数Obj)
   const mail = mailMerge(arg);
 
-  // 配達員に配送指示
-  const endpoint = 'https://script.google.com/macros/s/AKfycbw4P6syLIYnNbnNJPpBX_yfaB31ViCn8FhZpLZiExxdAYglqJCVngtBQfpw0e1RssKh/exec';
+  // 配達員の選定とAPIの取得
+  const delivery = szLib.getSheetData('配達員').data.filter(x => {
+    return x.next.toLowerCase() === 'true'})[0];
+  console.log(delivery);
+  const endpoint = delivery.endpoint;
+
+  // 文面の作成と配達指示
   const data = {
     passPhrase  : passPhrase,
     recipient   : arg.recipient,
@@ -87,6 +92,16 @@ function postMail(arg){ /*
   }
   const response = UrlFetchApp.fetch(endpoint,options);
   console.log(response.getContentText());
+
+  // 配達記録への追記
+  const tObj = new Date();
+  SpreadsheetApp.getActive().getSheetByName('配達記録').appendRow([
+    tObj.toLocaleString('ja-JP') + '.' + tObj.getMilliseconds(),  // timestamp
+    arg,  // arg
+    delivery.account,  // delivery
+    'OK'  // result。本来は配達員から結果を受け取るが、エラーの切り分けができないため無視
+  ]);
+
 }
 
 function mailMerge(arg){  /* 差込印刷でメールの文面を作成
