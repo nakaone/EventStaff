@@ -193,7 +193,7 @@ sequenceDiagram
   mApi ->> mSht : 受付番号
   mSht ->> mApi : パスコード＋有効期限
   mApi ->> mApi : トークンの内容・有効期限確認
-  mApi ->> mSht : 受付番号＋試行結果
+  mApi ->> CASht : 受付番号＋試行結果
   alt トークンの内容が正当
     mApi ->> CAApi : 編集用URL、個別鍵、放送用URL
     CAApi ->> html : 編集用URL、個別鍵、放送用URL

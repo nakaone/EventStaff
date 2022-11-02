@@ -1,15 +1,17 @@
-const getEntryNo = () => {
-  // https://hazime-style.com/?p=1473
-  // endpoint,postData,callback
+const getEntryNo = () => {  // 受付番号入力時処理
+  console.log('getEntryNo start.');
+
   const endpoint = config.AuthURL;
-  const sendData = {
+  const entryNo = document.querySelector('#entryNo input').value;
+  const sendData = {  // 認証局へ受付番号をPOSTで送る
     func: 'authA1',
     data: {
-      entryNo: document.querySelector('#entryNo input').value,
+      entryNo: entryNo,
     }
   };
   doPost(endpoint,sendData,(response) => {
     console.log('getEntryNo response = '+JSON.stringify(response));
+    document.querySelector('#entryNo').innerHTML = response.message;
   });
 }
 

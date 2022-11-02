@@ -5,6 +5,57 @@ const postoffice = "https://script.google.com/macros/s/AKfycbxLsm58FzWqC789J8GHz
 // トリガー関数
 // ===========================================================
 
+function doPost(e){
+  console.log('管理局.doPost start. e.parameter='+JSON.stringify(e.parameter));
+
+  let rv = null;
+  if( e.parameter.passPhrase === passPhrase ){
+    // 共通鍵が一致したら処理分岐
+    switch( e.parameter.func ){
+      case 'authA2':
+        rv = authA2(Number(e.parameter.entryNo));
+        break;
+    }
+  } else {
+    // 共通鍵が一致しなければ配送拒否
+    console.error('共通鍵が一致しません');
+    rv = new Error('共通鍵が一致しません');
+  }
+  /*
+  if( e.parameter.passPhrase === passPhrase ){
+    // 共通鍵が一致したらメール配送
+    const mail = {
+      recipient: e.parameter.recipient,
+      subject: e.parameter.subject,
+      body: e.parameter.body,
+      options: {
+        attachments: e.parameter.attachments || undefined,
+        bcc: e.parameter.bcc || undefined,
+        cc: e.parameter.cc || undefined,
+        from: e.parameter.from || undefined,
+        inlineImages: e.parameter.inlineImages || undefined,
+        name: e.parameter.name || undefined,
+        noReply: e.parameter.noReply || undefined,
+        replyTo: e.parameter.replyTo || undefined,
+        htmlBody: e.parameter.htmlBody || undefined,
+      }
+    };
+    console.log(JSON.stringify(mail));
+
+    rv = GmailApp.sendEmail(mail.recipient, mail.subject, mail.body, mail.options);
+
+  } else {
+    // 共通鍵が一致しなければ配送拒否
+    rv = new Error('共通鍵が一致しません');
+  }
+  */
+
+  console.log('管理局.doPost end. rv='+rv);
+  return ContentService
+  .createTextOutput(JSON.stringify(rv,null,2))
+  .setMimeType(ContentService.MimeType.JSON);
+}
+
 const doGetTest = () => {
   const testData = [
     //{func:'test',data:{from:'嶋津',to:'スタッフ',message:'ふがふが'}},
@@ -20,11 +71,11 @@ const doGetTest = () => {
 };
 
 function doGet(e) {
-  console.log('doGet start.',e);
+  console.log('管理局.doGet start.',e);
 
   // 'v'で渡されたクエリを復号
   arg = decrypt(e.parameter.v,passPhrase);
-  console.log('arg',whichType(arg),arg);
+  console.log('管理局.arg',whichType(arg),arg);
 
   let rv = [];
   switch( arg.func ){  // 処理指定により分岐
@@ -44,7 +95,7 @@ function doGet(e) {
 
   // 結果をJSON化して返す
   rv = JSON.stringify(rv,null,2);
-  console.log('doGet end.',rv);
+  console.log('管理局.doGet end.',rv);
   return ContentService
   .createTextOutput(rv)
   .setMimeType(ContentService.MimeType.JSON);
@@ -56,7 +107,7 @@ function doGet(e) {
 function onFormSubmit(  // メールの自動返信
   e={namedValues:{'メールアドレス':['nakaone.kunihiro@gmail.com']}} // テスト用既定値
 ) {
-  console.log(e.namedValues);
+  console.log('管理局.onFormSubmit start. e.namedValues='+JSON.stringify(e.namedValues));
 
   // 1.受付番号の採番
   // 「回答」シート上で書き込まれた行番号＋「当日」上のデータ件数−ヘッダ1行×2シート
@@ -74,7 +125,7 @@ function onFormSubmit(  // メールの自動返信
   /* 以下だと秒単位でミリ秒が無いためフォームと一致しない
   const sKey = new Date(e.namedValues['タイムスタンプ'][0]).getTime()
     + e.namedValues['メールアドレス'][0]; */
-  console.log('sKey = '+sKey);
+  console.log('管理局.sKey = '+sKey);
 
   // 2.2.フォームデータを全件読み込み
   // FormIdはフォームの編集画面。入力画面、回答後の「回答を記録しました」画面とは異なる。
@@ -88,12 +139,12 @@ function onFormSubmit(  // メールの自動返信
       + formData[i].getRespondentEmail();
     console.log(i,fKey);
     if( sKey === fKey ){
-      console.log('formData',formData[i]);
+      console.log('管理局.formData',formData[i]);
       editURL = formData[i].getEditResponseUrl();
       break;
     }
   }
-  console.log('editURL = '+editURL);
+  console.log('管理局.editURL = '+editURL);
 
   // 2.4.シートに編集用URLを保存
   sheet.getRange("T"+e.range.rowStart).setValue(editURL); // 編集用URLはT列
@@ -124,7 +175,7 @@ function onFormSubmit(  // メールの自動返信
   const endpoint = postoffice + '?v=' + szLib.encrypt(vObj,passPhrase);
 
   const response = UrlFetchApp.fetch(endpoint).getContentText();
-  console.log('onFormSubmit end. response='+response);
+  console.log('管理局.onFormSubmit end. response='+response);
 }
 
 const onFormSubmitTest = () => {
@@ -151,42 +202,79 @@ const onFormSubmitTest = () => {
 // トリガーから呼ばれる関数・定義
 // ===========================================================
 
+const authA2 = (entryNo) => {
+  console.log('管理局.authA2 start. entryNo='+entryNo);
+  const passCode = Math.floor(Math.random() * 1000000);
+  console.log('管理局.passCode='+passCode);
+  const dObj = szLib.getSheetData('マスタ');
+  const post = {
+    target: {key:'受付番号',value:Number(entryNo)},
+    revice: [
+      {key:'パスコード',value:passCode},
+      {key:'有効期限',value:new Date(new Date().getTime()+3600000)}, // 1時間
+      {key:'認証成否',value:''},
+    ]
+  };
+  console.log('管理局.post='+JSON.stringify(post));
+  szLib.updateSheetData(dObj,post);
+
+  // メール送信要求
+  const participant = dObj.data.filter(x => {return Number(x['受付番号']) === Number(entryNo)});
+  console.log('管理局.participant='+JSON.stringify(participant));
+  const vObj = {
+    func: 'post',
+    data: {
+      passPhrase : passPhrase,
+      template   : 'パスコード通知',
+      recipient  : participant['メールアドレス'],
+      variables  : {
+        passCode : passCode,
+      }
+    }
+  };
+  console.log('管理局.vObj='+JSON.stringify(vObj));
+  const endpoint = postoffice + '?v=' + szLib.encrypt(vObj,passPhrase);
+  const response = UrlFetchApp.fetch(endpoint).getContentText();
+  return response;
+
+}
+
 const candidates = (data) => {  // 該当者リストの作成
-  console.log('candidates start.',data);
+  console.log('管理局.candidates start.',data);
 
   const dObj = getSheetData('マスタ'); // データをシートから取得
   let result = [];
   const sKey = String(data.key);
   if( sKey.match(/^[0-9]+$/) ){
-    console.log('number='+Number(sKey));
+    console.log('管理局.number='+Number(sKey));
     result = dObj.data.filter(x => {return Number(x['受付番号']) === Number(sKey)});
   } else if( sKey.match(/^[ァ-ヾ　]+$/) ){
-    console.log('kana='+sKey);
+    console.log('管理局.kana='+sKey);
     result = dObj.data.filter(x => {return x['読み'].indexOf(sKey) === 0});
   }
 
-  console.log('candidates end. result='+JSON.stringify(result));
+  console.log('管理局.candidates end. result='+JSON.stringify(result));
   return result;
 };
 
 const updateParticipant = (data) => { // 参加者情報を更新
-  console.log('updateParticipant start.',data);
+  console.log('管理局.updateParticipant start.',data);
 
   const dObj = getSheetData('マスタ'); // データをシートから取得
   const rv = updateSheetData(dObj,data);
 
-  console.log('updateParticipant end.',rv);
+  console.log('管理局.updateParticipant end.',rv);
   return rv;
 }
 
 const postMessage = (arg) => {
-  console.log('postMessage start. arg='+JSON.stringify(arg));
+  console.log('管理局.postMessage start. arg='+JSON.stringify(arg));
   const v = {
     timestamp: new Date().toLocaleString('ja-JP'),
     from: arg.from,
     to: arg.to,
     message: arg.message,
   }
-  console.log('postMessage end. v='+JSON.stringify(v));  
+  console.log('管理局.postMessage end. v='+JSON.stringify(v));  
   return v;
 };

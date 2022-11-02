@@ -1,6 +1,6 @@
 const config = {
   // 分類A
-  AuthURL: "https://script.google.com/macros/s/AKfycbwIiw2w7ub_t3BlhgIdJC5vPlzV3bgj2-t2EUcaHQICtv_uEiMnd1B5ANU2nfFMirQXYQ/exec",
+  AuthURL: "https://script.google.com/macros/s/AKfycbzfemgLh6VEBHUuVrq54btyWYsM8MvNlM0NoGOIl9Fesi_L1SL1pjuBYOSzMkQXllWNnw/exec",
   FormURL: "https://docs.google.com/forms/d/e/1FAIpQLSfIJ4IFsBI5pPXsLz2jlTBczzIn8QZQL4r6QHqxZmSeDOhwUA/viewform",
   SiteURL: "https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97",
   MapURL: "materials/map.html",
