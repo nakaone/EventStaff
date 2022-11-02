@@ -343,7 +343,7 @@ GCPの無料枠に収めるため、送受信の情報量・頻度は極力絞�
 - 回答の編集を許可する：ON
 
 
-## Ⅲ.2.回答(スプレッドシート)
+## Ⅲ.2.管理局(スプレッドシート)
 
 ### 「回答」シート
 
@@ -358,7 +358,7 @@ QRコード作成時の注意： MDN「[JSON.parse() は末尾のカンマを許
 ⇒ d列に"label:'value',"の文字列を作成し、arrayformula(concatenate(d:d))とすると末尾にカンマが入る。
 ついでに単一引用符も許されないので、要注意。
 
-## Ⅲ.3.回答(GAS)
+## Ⅲ.3.管理局(GAS)
 
 ### GASソース(全体)
 
@@ -812,13 +812,13 @@ getEditResponseUrl()他のメソッドの詳細については、Google公式 [C
 
 ### whichType: 渡された変数の型を判定
 
-## Ⅲ.4.掲示板(スプレッドシート)
+## Ⅲ.4.放送局(スプレッドシート)
 
 ### 「ログ」シート
 
 ### 「掲示板」シート
 
-## Ⅲ.5.掲示板(Apps Script)
+## Ⅲ.5.放送局(Apps Script)
 
 ```
 const passPhrase = "Oct.22,2022"; // テスト用共通鍵
@@ -875,6 +875,33 @@ function postMessage(data){
   return rv;
 }
 ```
+
+## 郵便局
+
+### シート
+
+### GASコンテナ
+
+```mermaid
+
+sequenceDiagram
+  autonumber
+  actor mail as 参加者メール
+  participant mApi as 管理局<br>API
+  participant pApi as 郵便局<br>API
+  participant pSht as 郵便局<br>シート
+  participant delv as 配達員<br>API
+  
+  mApi ->> pApi : 共通鍵/テンプレート/メアド/実引数
+  pApi ->> pSht : 問合せ
+  pSht ->> pApi : テンプレート、次回配達員
+  pApi ->> pApi : テンプレートに実引数を埋め込み
+  pApi ->> delv : メアド、文面
+  delv ->> mail : メール
+  pApi ->> pSht : 配達記録
+
+```
+
 
 ## Ⅲ.6.szLib(GASライブラリ)
 
