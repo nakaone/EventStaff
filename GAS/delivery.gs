@@ -16,7 +16,7 @@ const authorization = () => {
 // ===========================================================
 
 function doPost(e){
-  console.log('doPost start. e.parameter='+JSON.stringify(e.parameter));
+  console.log('配達員.doPost start. e.parameter='+JSON.stringify(e.parameter));
 
   let rv = null;
   if( e.parameter.passPhrase === passPhrase ){
@@ -46,7 +46,7 @@ function doPost(e){
     rv = new Error('共通鍵が一致しません');
   }
 
-  console.log('doPost end. rv='+rv);
+  console.log('配達員.doPost end. rv='+rv);
   return ContentService
   .createTextOutput(JSON.stringify(rv,null,2))
   .setMimeType(ContentService.MimeType.JSON);

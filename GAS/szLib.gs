@@ -60,33 +60,33 @@
 
   // 全角カタカナ <-> 全角ひらがな
   const hRep = (x,offset,string) => { // offset:マッチした位置 string:文字列全部
-    //console.log('hRep start.',x,offset,string);
+    //console.log('szLib.hRep start.',x,offset,string);
     let rv = String.fromCharCode(x.charCodeAt(0) - 0x60);
-    //console.log('hRep end.',rv);
+    //console.log('szLib.hRep end.',rv);
     return rv;
   }
   const toHiragana = (t) => {
-    //console.log('toHiragana start.',typeof t, t);
+    //console.log('szLib.toHiragana start.',typeof t, t);
     let rv = t.replace(/[\u30A1-\u30FA]/g,hRep);
-    //console.log('toHiragana end.',typeof(rv),rv);
+    //console.log('szLib.toHiragana end.',typeof(rv),rv);
     return rv;
   };
   
   const kRep = (x,offset,string) => {
-    //console.log('kRep start.',x,offset,string);
+    //console.log('szLib.kRep start.',x,offset,string);
     let rv = String.fromCharCode(x.charCodeAt(0) + 0x60);
-    //console.log('kRep end.',rv);
+    //console.log('szLib.kRep end.',rv);
     return rv;
   }
   const toKatakana = (t) => {
-    //console.log('toKatakana start.',typeof t, t);
+    //console.log('szLib.toKatakana start.',typeof t, t);
     let rv = t.replace(/[\u3041-\u3096]/g,kRep);
-    //console.log('toKatakana end.',typeof(rv),rv);
+    //console.log('szLib.toKatakana end.',typeof(rv),rv);
     return rv;
   };
   
   rv = kana ? toHiragana(rv) : toKatakana(rv);
-  //console.log('convertCharacters end. rv=',rv);
+  //console.log('szLib.convertCharacters end. rv=',rv);
   return rv;
 }
 
@@ -112,7 +112,7 @@ function createQrCode(
  * @return {String} 復号化された文字列・オブジェクト
  */
 function decrypt(arg,passPhrase){
-  console.log('decrypt start.\n'+arg);
+  console.log('szLib.decrypt start.\n'+arg);
   const decodePath = decodeURIComponent(arg);
   dump('decodePath',decodePath);
   const data = CryptoJS.enc.Base64
@@ -128,7 +128,7 @@ function decrypt(arg,passPhrase){
   } catch(e) {
     rv = bytes;
   } finally {
-    console.log('decrypt end.\ntype='+whichType(rv)+'\n',rv);
+    console.log('szLib.decrypt end.\ntype='+whichType(rv)+'\n',rv);
     return rv;
   }
 }
@@ -149,7 +149,7 @@ function dump(label,variable){
  */
 function encrypt(arg,passPhrase){
   const str = JSON.stringify(arg);
-  console.log('encript start.\ntype='+whichType(arg)+'\n'+str);
+  console.log('szLib.encript start.\ntype='+whichType(arg)+'\n'+str);
 
   //const utf8_plain = CryptoJS.enc.Utf8.parse(str);
   const encrypted = CryptoJS.AES.encrypt( str, passPhrase );  // Obj
@@ -171,7 +171,7 @@ function encrypt(arg,passPhrase){
  *   sheet: getSheetで取得したシートのオブジェクト
  */
 function getSheetData(sheetName='マスタ'){
-  console.log('getSheetData start. sheetName='+sheetName);
+  console.log('szLib.getSheetData start. sheetName='+sheetName);
 
   const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
   // JSONオブジェクトに変換する
@@ -186,7 +186,7 @@ function getSheetData(sheetName='マスタ'){
     return obj;
   });
   const rv = {rows:rows, keys:keys, data:data, sheet:sheet};
-  console.log('getSheetData end.\n'+JSON.stringify({
+  console.log('szLib.getSheetData end.\n'+JSON.stringify({
     // 配列が大きいと表示し切れないので、rows,dataは最初の1行のみサンプル表示
     rows: [rv.rows[0] || 'null'],
     keys: rv.keys || 'null',
@@ -276,7 +276,7 @@ function inspect(arg,depth=0){
  * },{},..]
  */
 function updateSheetData(dObj,post,opt={append:true}){
-  console.log('updateSheetData start.',JSON.stringify(post));
+  console.log('szLib.updateSheetData start.',JSON.stringify(post));
   const log = [];
 
   const doUpdate = () => {
@@ -286,7 +286,7 @@ function updateSheetData(dObj,post,opt={append:true}){
 
     // 2.更新対象行のデータをuArrに保存する
     const uArr = dObj.rows[rowNum-2];
-    console.log('uArr = '+JSON.stringify(uArr));
+    console.log('szLib.uArr = '+JSON.stringify(uArr));
 
     // 3.uArrのデータを順次更新しながらログに記録、更新範囲をメモ
     let maxColumn = 0;
@@ -308,12 +308,12 @@ function updateSheetData(dObj,post,opt={append:true}){
       // (4) uArr[column]の値を更新
       uArr[column] = post.revice[i].value;
     }
-    console.log('uArr = '+JSON.stringify(uArr));
+    console.log('szLib.uArr = '+JSON.stringify(uArr));
 
     // uArrから更新範囲のデータを切り出して更新
     const range = dObj.sheet.getRange(rowNum, minColumn+1, 1, maxColumn-minColumn+1);
     const sv = uArr.splice(minColumn, maxColumn-minColumn+1);
-    console.log('sv = '+JSON.stringify(sv));
+    console.log('szLib.sv = '+JSON.stringify(sv));
     range.setValues([sv]);
   }
 
@@ -327,19 +327,19 @@ function updateSheetData(dObj,post,opt={append:true}){
     }
     dObj.sheet.appendRow(aArr);
     log.push(rv);
-    console.log('aArr = '+JSON.stringify(aArr));
-    console.log('rv = '+JSON.stringify(rv));
+    console.log('szLib.aArr = '+JSON.stringify(aArr));
+    console.log('szLib.rv = '+JSON.stringify(rv));
   }
 
   if( post.hasOwnProperty('target') ){
-    console.log('doUpdate');
+    console.log('szLib.doUpdate');
     doUpdate();
   } else if( opt.append ){
-    console.log('doAppend');
+    console.log('szLib.doAppend');
     doAppend();
   }
 
-  console.log('updateSheetData end.'+JSON.stringify(log));
+  console.log('szLib.updateSheetData end.'+JSON.stringify(log));
   return log;
 }
 
