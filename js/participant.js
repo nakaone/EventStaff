@@ -64,7 +64,8 @@ const initialize = () => {  // 初期設定処理
   // 07. サイト案内　※Googleのサイトはiframe不可
   document.querySelector('nav .noticeSite').href = config.SiteURL;
   // 08. アンケート
-  setQRcode('#enquete .qrcode',{text:config.SiteURL});
+  document.querySelector('#enquete .button').innerHTML
+  = '<a href="' + config.EnqueteURL + '" class="button">参加者アンケート</a>';
 
   // [03] グローバル変数 config 設定
   // 01. 初期設定終了時の処理を事前に定義
