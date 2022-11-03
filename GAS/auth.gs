@@ -1,5 +1,5 @@
 const passPhrase = "Oct.22,2022"; // テスト用共通鍵
-const MasterURL = "https://script.google.com/macros/s/AKfycbz8yB0PMs3LQVMWKJuEGWgvJoy_1xmW9RrrkDCUiiicCZ2ZXps7lCR5DxeTbaBX64XOFA/exec";
+const MasterURL = "https://script.google.com/macros/s/AKfycbzldVmiNCPfedSwpjwtEo5FnORzjIoBjnSYdnXe4QiltCbR2e18B_DWQuSukT3Y4uMXjg/exec";
 
 const doPostTest = () => {
   const testData = ['0010'];

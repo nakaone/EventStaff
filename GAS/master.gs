@@ -1,5 +1,5 @@
 const passPhrase = "Oct.22,2022"; // テスト用共通鍵
-const postoffice = "https://script.google.com/macros/s/AKfycbxLsm58FzWqC789J8GHzRElSYHv4WUoRoRJXFimKwKW_kAMrmSutdlEH4Ev244I1lP8/exec";
+const PostURL = "https://script.google.com/macros/s/AKfycbzCmXPL2IrCfSCrJG2pbTmTUSCdMCp3DTiWijtZt_PnCNI5T0rt3WYtdNkrWzHo5qB1eQ/exec";
 
 // ===========================================================
 // トリガー関数
@@ -172,7 +172,7 @@ function onFormSubmit(  // メールの自動返信
       }
     }
   };
-  const endpoint = postoffice + '?v=' + szLib.encrypt(vObj,passPhrase);
+  const endpoint = PostURL + '?v=' + szLib.encrypt(vObj,passPhrase);
 
   const response = UrlFetchApp.fetch(endpoint).getContentText();
   console.log('管理局.onFormSubmit end. response='+response);
@@ -201,12 +201,17 @@ const onFormSubmitTest = () => {
 // ===========================================================
 // トリガーから呼ばれる関数・定義
 // ===========================================================
-
+const authA2Test = () => {
+  authA2(1);
+}
 const authA2 = (entryNo) => {
   console.log('管理局.authA2 start. entryNo='+entryNo);
-  const passCode = Math.floor(Math.random() * 1000000);
+  const passCode = ('00000' + Math.floor(Math.random() * 1000000)).slice(-6);
   console.log('管理局.passCode='+passCode);
   const dObj = szLib.getSheetData('マスタ');
+  const participant = dObj.data.filter(x => {return Number(x['受付番号']) === Number(entryNo)})[0];
+  console.log('管理局.participant='+JSON.stringify(participant));
+
   const post = {
     target: {key:'受付番号',value:Number(entryNo)},
     revice: [
@@ -219,21 +224,19 @@ const authA2 = (entryNo) => {
   szLib.updateSheetData(dObj,post);
 
   // メール送信要求
-  const participant = dObj.data.filter(x => {return Number(x['受付番号']) === Number(entryNo)});
-  console.log('管理局.participant='+JSON.stringify(participant));
   const vObj = {
     func: 'post',
     data: {
       passPhrase : passPhrase,
       template   : 'パスコード通知',
-      recipient  : participant['メールアドレス'],
+      recipient  : participant['メール'],
       variables  : {
         passCode : passCode,
       }
     }
   };
   console.log('管理局.vObj='+JSON.stringify(vObj));
-  const endpoint = postoffice + '?v=' + szLib.encrypt(vObj,passPhrase);
+  const endpoint = PostURL + '?v=' + szLib.encrypt(vObj,passPhrase);
   const response = UrlFetchApp.fetch(endpoint).getContentText();
   return response;
 

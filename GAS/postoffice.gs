@@ -13,9 +13,9 @@ const doGetTest = () => {
       {key:'参加費',value:'既収'},
     ]}},*/
     {func:'post',data:{
-      passPhrase : 'hoge',
+      passPhrase : passPhrase,
       template: '申込への返信',
-      recipient: 'nakaone.kunihiro@gmail.com',
+      recipient: 'shimokita.oyaji@gmail.com',
       variables: {name:'嶋津　邦浩',entryNo:'0025'},
     }},
   ];
@@ -25,11 +25,11 @@ const doGetTest = () => {
 };
 
 function doGet(e) {
-  console.log('doGet start.',e);
+  console.log('郵便局.doGet start.',e);
 
   // 'v'で渡されたクエリを復号
   arg = szLib.decrypt(e.parameter.v,passPhrase);
-  console.log('arg',szLib.whichType(arg),arg);
+  console.log('郵便局.arg',szLib.whichType(arg),arg);
 
   let rv = [];
   switch( arg.func ){  // 処理指定により分岐
@@ -43,7 +43,7 @@ function doGet(e) {
 
   // 結果をJSON化して返す
   rv = JSON.stringify(rv,null,2);
-  console.log('doGet end. rv='+rv);
+  console.log('郵便局.doGet end. rv='+rv);
   return ContentService
   .createTextOutput(rv)
   .setMimeType(ContentService.MimeType.JSON);
@@ -57,10 +57,10 @@ function postMail(arg){ /*
     variables object : テンプレートで置換する{変数名:実値}オブジェクト
   }
   */
-  console.log('postMail start. arg='+JSON.stringify(arg));
+  console.log('郵便局.postMail start. arg='+JSON.stringify(arg));
 
   if( arg.passPhrase !== passPhrase ){
-    console.log('共通鍵が一致しません: '+arg.passPhrase+'(arg) !== '+passPhrase);
+    console.log('郵便局.共通鍵が一致しません: '+arg.passPhrase+'(arg) !== '+passPhrase);
     return new Error('共通鍵が一致しません');
   }
 
@@ -75,7 +75,7 @@ function postMail(arg){ /*
 
   // 配達員に渡すパラメータの作成と配達指示
   const data = {
-    passPhrase  : passPhrase,
+    passPhrase  : delivery.passPhrase,
     recipient   : arg.recipient,
     subject     : mail.subject,
     body        : mail.body,
@@ -117,11 +117,11 @@ function mailMerge(arg){  /* 差込印刷でメールの文面を作成
   GmailApp.sendEmail() :
   https://developers.google.com/apps-script/reference/gmail/gmail-app#sendEmail(String,String,String,Object)
   */
-  console.log('mailMerge start. arg='+JSON.stringify(arg));
+  console.log('郵便局.mailMerge start. arg='+JSON.stringify(arg));
 
   // テンプレートをシートから取得
   const dObj = szLib.getSheetData(arg.template);
-  //console.log('dObj.data='+JSON.stringify(dObj.data));
+  //console.log('郵便局.dObj.data='+JSON.stringify(dObj.data));
 
   // 	内部関数定義：dObjから指定ラベルを持つ値を取得
   const lookup = (label) => {
@@ -146,12 +146,15 @@ function mailMerge(arg){  /* 差込印刷でメールの文面を作成
       //htmlBody: lookup('htmlBody'),
     },
   }
-  console.log('mail prototype = '+JSON.stringify(mail));
+  console.log('郵便局.mail prototype = '+JSON.stringify(mail));
 
   // 本文のプレースホルダを引数で渡された実値で置換
   for( let x in arg.variables ){
-    mail.body = mail.body.replace(new RegExp('::' + x + '::','g'),arg.variables[x]);
+    const rex = new RegExp('::' + x + '::','g');
+    mail.body = mail.body.replace(rex,arg.variables[x]);
+    console.log('rex='+rex+'\narg.variables[x]='+arg.variables[x]+'\nmail.body='+mail.body);
   }
+  console.log('郵便局.mail replaced = '+JSON.stringify(mail));
 
   // HTMLメールならoptions.htmlBodyをセット
   if( lookup('html') ){
@@ -162,6 +165,6 @@ function mailMerge(arg){  /* 差込印刷でメールの文面を作成
     .replace(/<[^<>]+?>/g,'');  // HTMLのタグは削除
   }
 
-  console.log('mailMerge end. mail='+JSON.stringify(mail));
+  console.log('郵便局.mailMerge end. mail='+JSON.stringify(mail));
   return mail;
 }

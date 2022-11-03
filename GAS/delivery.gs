@@ -5,7 +5,7 @@
   3. ウェブアプリとしてデプロイ。郵便局にIDを登録
 =========================================================== */
 
-const passPhrase = "Oct.22,2022"; // テスト用共通鍵
+const passPhrase = "psp2*ZRTS/GXr9C4"; // 郵便局との共通鍵
 
 const authorization = () => {
   GmailApp.sendEmail('nakaone.kunihiro@gmail.com','配達員初期化','これは配達員の初期化処理(authorization)で送信されたメールです。');
