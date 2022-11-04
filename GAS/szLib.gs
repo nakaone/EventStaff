@@ -1,6 +1,174 @@
 /* ====================================================================
   GAS専用ライブラリ
 ==================================================================== */
+/** 指定シートから全データ取得
+ * @param {string}} sheetName 取得対象シート名
+ * @return {Object} 取得したシートのデータ
+ *   rows : 取得した生データ(二次元配列)
+ *   keys : ヘッダ行(1行目固定)の一次元配列
+ *   data : データ行を[{ラベル1:値, ラベル2:値, ..},{..},..]形式にした配列
+ *   sheet: getSheetで取得したシートのオブジェクト
+ */
+function getSheetData(sheetName='マスタ'){
+  console.log('szLib.getSheetData start. sheetName='+sheetName);
+
+  const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
+  // JSONオブジェクトに変換する
+  const rows = sheet.getDataRange().getValues()
+    .filter(row => row.join('').length > 0);  // 空白行は削除
+  const keys = rows.splice(0, 1)[0];  // ヘッダを一次元配列で取得
+  const data = rows.map(row => {  // [{ラベル1:値, ラベル2:値, ..},{..},..]形式
+    const obj = {};
+    row.map((item, index) => {
+      obj[String(keys[index])] = String(item);
+    });
+    return obj;
+  });
+  const rv = {rows:rows, keys:keys, data:data, sheet:sheet};
+  console.log('szLib.getSheetData end.\n'+JSON.stringify({
+    // 配列が大きいと表示し切れないので、rows,dataは最初の1行のみサンプル表示
+    rows: [rv.rows[0] || 'null'],
+    keys: rv.keys || 'null',
+    data: [rv.data[0] || 'null'],
+    sheet: rv.sheet || 'null',
+  }));
+  return rv;
+}
+
+/** 各局のURL/Keyを管理局から参照してセット
+ * @param {string[]} arg - 設定したいキー
+ * @return {object} - configのオブジェクト
+ */
+function setConfig(arg=['MasterURL']){
+  const rv = {};
+  // 「管理局」configシートのデータを読み込み
+  const configSheet = SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1eTBBzj9pryniOK-vTbNMks6aO5tqRdEjjgeQpBNZDuI/edit#gid=397762435').getSheetByName('config');
+  const configData = configSheet.getDataRange().getValues();
+  //console.log(JSON.stringify(configData));
+
+  // key, value の列番号を検索
+  const keyRow = configData[0].findIndex(x => x === 'key');
+  const valueRow = configData[0].findIndex(x => x === 'value');
+  console.log('key='+keyRow+', value='+valueRow);
+
+  // 指定キーの値をconfigにセット
+  for( let i=0 ; i<arg.length ; i++ ){
+    const arr = configData.filter(x => {
+      //console.log(x[keyRow],arg[i],x[keyRow] === arg[i]);
+      return x[keyRow] === arg[i];
+    })[0];
+    console.log(arg[i],arr[valueRow]);
+    rv[arg[i]] = arr[valueRow];
+  }
+  console.log('rv='+JSON.stringify(rv));
+  return rv;
+}
+
+/** シートの値を更新
+ * @param {Object} dObj - 取得対象シート名
+ * @param {Object} post - 更新データ
+ * @param {Object} post.target - 更新対象の特定情報
+ * @param {string} post.target.key - 更新対象の項目名(キー項目)
+ * @param {any} post.target.value - キー値
+ * @param {Object[]} post.revice - 1セルの更新情報
+ * @param {string} post.revice.key - 更新対象の項目名
+ * @param {any} post.revice.value - 更新後の値
+ * @param {Object} opt - オプション
+ * 
+ * post = {  更新の場合
+ *   target: {
+ *     key: 更新対象の項目名(キー項目)
+ *     value: キー値
+ *   },
+ *   revice: [{
+ *     key: 更新対象の項目名
+ *     value: 更新後の値
+ *   },{..},..]
+ * }
+ * 
+ * post = [{　　追加の場合
+ *   key: 追加対象の項目名
+ *   value: 項目の値
+ * },{..},..]
+ * 
+ * opt = {
+ *   append: {boolean} キー値が存在しない場合、追加を許すならtrue
+ * }
+ * @returns {Object[]} 更新結果。変更された項目のみ。
+ * result = [{
+ *   column: 更新対象項目
+ *   before: 更新前の値
+ *   after: 更新後の値
+ * },{},..]
+ */
+function updateSheetData(dObj,post,opt={append:true}){
+  console.log('szLib.updateSheetData start.',JSON.stringify(post));
+  const log = [];
+
+  const doUpdate = () => {
+    // 1.何行目のデータを更新するか特定する
+    const map = dObj.data.map(x => x[post.target.key]);
+    const rowNum = map.indexOf(String(post.target.value)) + 2;
+
+    // 2.更新対象行のデータをuArrに保存する
+    const uArr = dObj.rows[rowNum-2];
+    console.log('szLib.uArr = '+JSON.stringify(uArr));
+
+    // 3.uArrのデータを順次更新しながらログに記録、更新範囲をメモ
+    let maxColumn = 0;
+    let minColumn = 99999;
+    for( let i=0 ; i<post.revice.length ; i++ ){
+      // (1) 更新対象項目の列番号を特定、columnに保存
+      const column = dObj.keys.indexOf(post.revice[i].key);
+      // (2) >maxColumn or <minColumn ならmax/minを更新
+      maxColumn = column > maxColumn ? column : maxColumn;
+      minColumn = column < minColumn ? column : minColumn;
+      // (3) logに更新対象項目/更新前の値/更新後の値を保存
+      if( uArr[column] !== post.revice[i].value ){
+        log.push({
+          column: post.revice[i].key,
+          before: uArr[column],
+          after: post.revice[i].value,
+        });
+      }
+      // (4) uArr[column]の値を更新
+      uArr[column] = post.revice[i].value;
+    }
+    console.log('szLib.uArr = '+JSON.stringify(uArr));
+
+    // uArrから更新範囲のデータを切り出して更新
+    const range = dObj.sheet.getRange(rowNum, minColumn+1, 1, maxColumn-minColumn+1);
+    const sv = uArr.splice(minColumn, maxColumn-minColumn+1);
+    console.log('szLib.sv = '+JSON.stringify(sv));
+    range.setValues([sv]);
+  }
+
+  const doAppend = () => {
+    // 追加対象行のデータをaArrとして作成
+    const aArr = [];
+    const rv = {};
+    for( let i=0 ; i<dObj.keys.length ; i++ ){
+      rv[dObj.keys[i]] = post[dObj.keys[i]] || '';
+      aArr.push(rv[dObj.keys[i]]);
+    }
+    dObj.sheet.appendRow(aArr);
+    log.push(rv);
+    console.log('szLib.aArr = '+JSON.stringify(aArr));
+    console.log('szLib.rv = '+JSON.stringify(rv));
+  }
+
+  if( post.hasOwnProperty('target') ){
+    console.log('szLib.doUpdate');
+    doUpdate();
+  } else if( opt.append ){
+    console.log('szLib.doAppend');
+    doAppend();
+  }
+
+  console.log('szLib.updateSheetData end.'+JSON.stringify(log));
+  return log;
+}
+
 
 /* ====================================================================
   汎用ライブラリ
@@ -162,40 +330,6 @@ function encrypt(arg,passPhrase){
   return encryptResult;
 }
 
-/** 指定シートから全データ取得
- * @param {string}} sheetName 取得対象シート名
- * @return {Object} 取得したシートのデータ
- *   rows : 取得した生データ(二次元配列)
- *   keys : ヘッダ行(1行目固定)の一次元配列
- *   data : データ行を[{ラベル1:値, ラベル2:値, ..},{..},..]形式にした配列
- *   sheet: getSheetで取得したシートのオブジェクト
- */
-function getSheetData(sheetName='マスタ'){
-  console.log('szLib.getSheetData start. sheetName='+sheetName);
-
-  const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
-  // JSONオブジェクトに変換する
-  const rows = sheet.getDataRange().getValues()
-    .filter(row => row.join('').length > 0);  // 空白行は削除
-  const keys = rows.splice(0, 1)[0];  // ヘッダを一次元配列で取得
-  const data = rows.map(row => {  // [{ラベル1:値, ラベル2:値, ..},{..},..]形式
-    const obj = {};
-    row.map((item, index) => {
-      obj[String(keys[index])] = String(item);
-    });
-    return obj;
-  });
-  const rv = {rows:rows, keys:keys, data:data, sheet:sheet};
-  console.log('szLib.getSheetData end.\n'+JSON.stringify({
-    // 配列が大きいと表示し切れないので、rows,dataは最初の1行のみサンプル表示
-    rows: [rv.rows[0] || 'null'],
-    keys: rv.keys || 'null',
-    data: [rv.data[0] || 'null'],
-    sheet: rv.sheet || 'null',
-  }));
-  return rv;
-}
-
 /** オブジェクトの構造を分析
  * @param {any} arg - 分析対象の変数
  * @param {number} depth - 再帰階層の深さ。指定不要
@@ -236,111 +370,6 @@ function inspect(arg,depth=0){
     }
   }
   return depth === 0 ? JSON.stringify(rv) : rv;
-}
-
-/** シートの値を更新
- * @param {Object} dObj - 取得対象シート名
- * @param {Object} post - 更新データ
- * @param {Object} post.target - 更新対象の特定情報
- * @param {string} post.target.key - 更新対象の項目名(キー項目)
- * @param {any} post.target.value - キー値
- * @param {Object[]} post.revice - 1セルの更新情報
- * @param {string} post.revice.key - 更新対象の項目名
- * @param {any} post.revice.value - 更新後の値
- * @param {Object} opt - オプション
- * 
- * post = {  更新の場合
- *   target: {
- *     key: 更新対象の項目名(キー項目)
- *     value: キー値
- *   },
- *   revice: [{
- *     key: 更新対象の項目名
- *     value: 更新後の値
- *   },{..},..]
- * }
- * 
- * post = [{　　追加の場合
- *   key: 追加対象の項目名
- *   value: 項目の値
- * },{..},..]
- * 
- * opt = {
- *   append: {boolean} キー値が存在しない場合、追加を許すならtrue
- * }
- * @returns {Object[]} 更新結果。変更された項目のみ。
- * result = [{
- *   column: 更新対象項目
- *   before: 更新前の値
- *   after: 更新後の値
- * },{},..]
- */
-function updateSheetData(dObj,post,opt={append:true}){
-  console.log('szLib.updateSheetData start.',JSON.stringify(post));
-  const log = [];
-
-  const doUpdate = () => {
-    // 1.何行目のデータを更新するか特定する
-    const map = dObj.data.map(x => x[post.target.key]);
-    const rowNum = map.indexOf(String(post.target.value)) + 2;
-
-    // 2.更新対象行のデータをuArrに保存する
-    const uArr = dObj.rows[rowNum-2];
-    console.log('szLib.uArr = '+JSON.stringify(uArr));
-
-    // 3.uArrのデータを順次更新しながらログに記録、更新範囲をメモ
-    let maxColumn = 0;
-    let minColumn = 99999;
-    for( let i=0 ; i<post.revice.length ; i++ ){
-      // (1) 更新対象項目の列番号を特定、columnに保存
-      const column = dObj.keys.indexOf(post.revice[i].key);
-      // (2) >maxColumn or <minColumn ならmax/minを更新
-      maxColumn = column > maxColumn ? column : maxColumn;
-      minColumn = column < minColumn ? column : minColumn;
-      // (3) logに更新対象項目/更新前の値/更新後の値を保存
-      if( uArr[column] !== post.revice[i].value ){
-        log.push({
-          column: post.revice[i].key,
-          before: uArr[column],
-          after: post.revice[i].value,
-        });
-      }
-      // (4) uArr[column]の値を更新
-      uArr[column] = post.revice[i].value;
-    }
-    console.log('szLib.uArr = '+JSON.stringify(uArr));
-
-    // uArrから更新範囲のデータを切り出して更新
-    const range = dObj.sheet.getRange(rowNum, minColumn+1, 1, maxColumn-minColumn+1);
-    const sv = uArr.splice(minColumn, maxColumn-minColumn+1);
-    console.log('szLib.sv = '+JSON.stringify(sv));
-    range.setValues([sv]);
-  }
-
-  const doAppend = () => {
-    // 追加対象行のデータをaArrとして作成
-    const aArr = [];
-    const rv = {};
-    for( let i=0 ; i<dObj.keys.length ; i++ ){
-      rv[dObj.keys[i]] = post[dObj.keys[i]] || '';
-      aArr.push(rv[dObj.keys[i]]);
-    }
-    dObj.sheet.appendRow(aArr);
-    log.push(rv);
-    console.log('szLib.aArr = '+JSON.stringify(aArr));
-    console.log('szLib.rv = '+JSON.stringify(rv));
-  }
-
-  if( post.hasOwnProperty('target') ){
-    console.log('szLib.doUpdate');
-    doUpdate();
-  } else if( opt.append ){
-    console.log('szLib.doAppend');
-    doAppend();
-  }
-
-  console.log('szLib.updateSheetData end.'+JSON.stringify(log));
-  return log;
 }
 
 /** 変数の型を判定

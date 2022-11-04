@@ -1,5 +1,4 @@
-const passPhrase = "Oct.22,2022"; // テスト用共通鍵
-const MasterURL = "https://script.google.com/macros/s/AKfycbzldVmiNCPfedSwpjwtEo5FnORzjIoBjnSYdnXe4QiltCbR2e18B_DWQuSukT3Y4uMXjg/exec";
+const config = szLib.setConfig(['MasterKey','MasterURL']);
 
 const doPostTest = () => {
   const testData = ['0010'];
@@ -68,7 +67,7 @@ const authA1 = (arg) => {
 
   if( rv.result ){  // 管理局APIのauthA2の呼び出し
     const data = {
-      passPhrase  : passPhrase,
+      passPhrase  : config.MasterKey,
       func: 'authA2',
       entryNo: entryNo,
     };
@@ -79,7 +78,7 @@ const authA1 = (arg) => {
       },
       'payload': data,
     }
-    const response = UrlFetchApp.fetch(MasterURL,options);
+    const response = UrlFetchApp.fetch(config.MasterURL,options);
     console.log(response.getContentText());
   }
   

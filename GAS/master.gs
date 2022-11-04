@@ -1,5 +1,4 @@
-const passPhrase = "Oct.22,2022"; // テスト用共通鍵
-const PostURL = "https://script.google.com/macros/s/AKfycbzCmXPL2IrCfSCrJG2pbTmTUSCdMCp3DTiWijtZt_PnCNI5T0rt3WYtdNkrWzHo5qB1eQ/exec";
+const config = szLib.setConfig(['MasterKey','PostURL','PostKey']);
 
 // ===========================================================
 // トリガー関数
@@ -9,7 +8,7 @@ function doPost(e){
   console.log('管理局.doPost start. e.parameter='+JSON.stringify(e.parameter));
 
   let rv = null;
-  if( e.parameter.passPhrase === passPhrase ){
+  if( e.parameter.passPhrase === config.MasterKey ){
     // 共通鍵が一致したら処理分岐
     switch( e.parameter.func ){
       case 'authA2':
@@ -21,34 +20,6 @@ function doPost(e){
     console.error('共通鍵が一致しません');
     rv = new Error('共通鍵が一致しません');
   }
-  /*
-  if( e.parameter.passPhrase === passPhrase ){
-    // 共通鍵が一致したらメール配送
-    const mail = {
-      recipient: e.parameter.recipient,
-      subject: e.parameter.subject,
-      body: e.parameter.body,
-      options: {
-        attachments: e.parameter.attachments || undefined,
-        bcc: e.parameter.bcc || undefined,
-        cc: e.parameter.cc || undefined,
-        from: e.parameter.from || undefined,
-        inlineImages: e.parameter.inlineImages || undefined,
-        name: e.parameter.name || undefined,
-        noReply: e.parameter.noReply || undefined,
-        replyTo: e.parameter.replyTo || undefined,
-        htmlBody: e.parameter.htmlBody || undefined,
-      }
-    };
-    console.log(JSON.stringify(mail));
-
-    rv = GmailApp.sendEmail(mail.recipient, mail.subject, mail.body, mail.options);
-
-  } else {
-    // 共通鍵が一致しなければ配送拒否
-    rv = new Error('共通鍵が一致しません');
-  }
-  */
 
   console.log('管理局.doPost end. rv='+rv);
   return ContentService
@@ -66,7 +37,7 @@ const doGetTest = () => {
     ]}},
   ];
   for( let i=0 ; i<testData.length ; i++ ){
-    doGet({parameter:{v:encrypt(testData[i],passPhrase)}});
+    doGet({parameter:{v:encrypt(testData[i],config.MasterKey)}});
   }
 };
 
@@ -74,7 +45,7 @@ function doGet(e) {
   console.log('管理局.doGet start.',e);
 
   // 'v'で渡されたクエリを復号
-  arg = decrypt(e.parameter.v,passPhrase);
+  arg = decrypt(e.parameter.v,config.MasterKey);
   console.log('管理局.arg',whichType(arg),arg);
 
   let rv = [];
@@ -163,7 +134,7 @@ function onFormSubmit(  // メールの自動返信
   const vObj = {
     func: 'post',
     data: {
-      passPhrase : passPhrase,
+      passPhrase : config.PostKey,
       template   : '申込への返信',
       recipient  : e.namedValues['メールアドレス'][0],
       variables  : {
@@ -172,7 +143,7 @@ function onFormSubmit(  // メールの自動返信
       }
     }
   };
-  const endpoint = PostURL + '?v=' + szLib.encrypt(vObj,passPhrase);
+  const endpoint = config.PostURL + '?v=' + szLib.encrypt(vObj,config.PostKey);
 
   const response = UrlFetchApp.fetch(endpoint).getContentText();
   console.log('管理局.onFormSubmit end. response='+response);
@@ -202,32 +173,39 @@ const onFormSubmitTest = () => {
 // トリガーから呼ばれる関数・定義
 // ===========================================================
 const authA2Test = () => {
+  const params = ['MasterKey','PostURL','PostKey'];
+
+  const c = szLib.setConfig(params);
+  console.log(szLib.setConfig(params));
+  console.log(JSON.stringify(c));
+  params.forEach(x => {config[x] = c[x]});
   authA2(1);
 }
 const authA2 = (entryNo) => {
   console.log('管理局.authA2 start. entryNo='+entryNo);
   const passCode = ('00000' + Math.floor(Math.random() * 1000000)).slice(-6);
-  console.log('管理局.passCode='+passCode);
+  //console.log('管理局.passCode='+passCode);
   const dObj = szLib.getSheetData('マスタ');
   const participant = dObj.data.filter(x => {return Number(x['受付番号']) === Number(entryNo)})[0];
   console.log('管理局.participant='+JSON.stringify(participant));
 
-  const post = {
-    target: {key:'受付番号',value:Number(entryNo)},
+  // マスタにパスコードを記録
+  const regData = {
+    target: {key:'受付番号',value:entryNo},
     revice: [
       {key:'パスコード',value:passCode},
-      {key:'有効期限',value:new Date(new Date().getTime()+3600000)}, // 1時間
+      {key:'発行日時',value:new Date()},
       {key:'認証成否',value:''},
     ]
   };
-  console.log('管理局.post='+JSON.stringify(post));
-  szLib.updateSheetData(dObj,post);
+  console.log('管理局.regData='+JSON.stringify(regData));
+  szLib.updateSheetData(dObj,regData);
 
   // メール送信要求
   const vObj = {
     func: 'post',
     data: {
-      passPhrase : passPhrase,
+      passPhrase : config.PostKey,
       template   : 'パスコード通知',
       recipient  : participant['メール'],
       variables  : {
@@ -236,8 +214,10 @@ const authA2 = (entryNo) => {
     }
   };
   console.log('管理局.vObj='+JSON.stringify(vObj));
-  const endpoint = PostURL + '?v=' + szLib.encrypt(vObj,passPhrase);
+  const endpoint = config.PostURL + '?v=' + szLib.encrypt(vObj,config.PostKey);
+  console.log('l.216 endpoint='+endpoint+'\nconfig='+JSON.stringify(config));
   const response = UrlFetchApp.fetch(endpoint).getContentText();
+  console.log('管理局.response='+JSON.stringify(response));
   return response;
 
 }

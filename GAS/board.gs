@@ -1,4 +1,4 @@
-const passPhrase = "Oct.22,2022"; // テスト用共通鍵
+const config = szLib.setConfig(['BoardKey']);
 
 // ===========================================================
 // トリガー関数
@@ -18,7 +18,7 @@ const doGetTest = () => {
     {func:'getMessages',data:{}},
   ];
   for( let i=0 ; i<testData.length ; i++ ){
-    doGet({parameter:{v:szLib.encrypt(testData[i],passPhrase)}});
+    doGet({parameter:{v:szLib.encrypt(testData[i],config.BoardKey)}});
   }
 };
 
@@ -26,7 +26,7 @@ function doGet(e) {
   console.log('放送局.doGet start.',e);
 
   // 'v'で渡されたクエリを復号
-  arg = szLib.decrypt(e.parameter.v,passPhrase);
+  arg = szLib.decrypt(e.parameter.v,config.BoardKey);
   console.log('放送局.arg',szLib.whichType(arg),arg);
 
   let rv = [];

@@ -1,36 +1,7 @@
 const config = {
   // 分類A
-  AuthURL: "https://script.google.com/macros/s/AKfycbzLTSCt6lfjnCE1h1kzcDC9kXraugHUsT0mnZ6HEF1JeqCDfYiBPbzbGvlhRPdjdqSKxg/exec",
-  FormURL: "https://docs.google.com/forms/d/e/1FAIpQLSfIJ4IFsBI5pPXsLz2jlTBczzIn8QZQL4r6QHqxZmSeDOhwUA/viewform",
-  SiteURL: "https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97",
-  MapURL: "materials/map.html",
-  TableURL: "materials/timetable/WBS.html",
-  EnqueteURL: "https://docs.google.com/forms/d/16r3luYQRiLVmI9xqaD4FuaSlUqTRGvI8nAGrjGcg8lc/viewform",
-  // 分類B　※プリセットは認証実装までの暫定
-  BoardAPI: null,         // 「掲示板」のGAS Web API のID
-  passPhrase: null,       // GASとの共通鍵(Master, Board共通)
-  DateOfExpiry: null,     // config情報の有効期限
-  BoardInterval: 30000,   // 掲示板巡回のインターバル。m秒
-  // 分類C
-  //handleName: '(未定義)',  // お知らせに表示する自分の名前
-  // 分類D
-  //scanCode: false,        // スキャン実行フラグ。true時のみスキャン可
-  getMessages: false,     // 掲示板データ取得フラグ。true時のみ実行可。
-  BoardIntervalId: null,  // setIntervalのID
-  // --- メソッド
-  set: (label,value) => { // 値のセット＋localStorageへの格納
-    console.log('config.set start. label='+label+', value='+JSON.stringify(value));
-    config[label] = value;
-    let sv = {};
-    for( let x in config ){
-      if( typeof config[x] !== 'function' ){
-	      sv[x] = config[x];
-      }
-    }
-    sv = JSON.stringify(sv);
-    localStorage.setItem('config',sv)
-    console.log('config.set end. sv='+sv);
-  },
+  AuthURL: "https://script.google.com/macros/s/AKfycbzBOIDVfhcHAmqcBuQUwki0CpytWrRAYpVLsWhVrSUmg04EmipancwVawbYeOQqVKDxxg/exec",
+  AuthLevel: 0,
 }
 
 const changeScreen = (scrId='home',titleStr='お知らせ') => {  // 表示画面の切り替え
