@@ -72,10 +72,10 @@ function doGet(e) {
   .setMimeType(ContentService.MimeType.JSON);
 }
 
-/** メールの自動返信
+/** フォーム申込み時のメールの自動返信
  * @param {Object} e - 
  */
-function onFormSubmit(  // メールの自動返信
+function onFormSubmit(
   e={namedValues:{'メールアドレス':['nakaone.kunihiro@gmail.com']}} // テスト用既定値
 ) {
   console.log('管理局.onFormSubmit start. e.namedValues='+JSON.stringify(e.namedValues));
@@ -183,48 +183,73 @@ const authA2Test = () => {
 }
 const authA2 = (entryNo) => {
   console.log('管理局.authA2 start. entryNo='+entryNo);
-  const passCode = ('00000' + Math.floor(Math.random() * 1000000)).slice(-6);
-  //console.log('管理局.passCode='+passCode);
-  const dObj = szLib.getSheetData('マスタ');
-  const participant = dObj.data.filter(x => {return Number(x['受付番号']) === Number(entryNo)})[0];
-  console.log('管理局.participant='+JSON.stringify(participant));
+  let rv = null;
+  try {
 
-  // マスタにパスコードを記録
-  const regData = {
-    target: {key:'受付番号',value:entryNo},
-    revice: [
-      {key:'パスコード',value:passCode},
-      {key:'発行日時',value:new Date()},
-      {key:'認証成否',value:''},
-    ]
-  };
-  console.log('管理局.regData='+JSON.stringify(regData));
-  szLib.updateSheetData(dObj,regData);
+    // 01.申込者情報の取得とパスコードの生成
+    const dObj = szLib.getSheetData('マスタ');
+    const participant = dObj.data.filter(x => {return Number(x['受付番号']) === Number(entryNo)})[0];
+    console.log('管理局.participant='+JSON.stringify(participant));
+    const passCode = ('00000' + Math.floor(Math.random() * 1000000)).slice(-6);
+    //console.log('管理局.passCode='+passCode);
 
-  // メール送信要求
-  //  postMails: 依頼された定型メールの配信
-  // @param {object} arg - 以下のメンバを持つオブジェクト
-  //    template (string) : メールのテンプレートが定義された郵便局のシート名
-  //    data : [{
-  //      recipient (string) : 宛先メールアドレス
-  //      variables {label1:value1, label2:value2, ...}
-  //    },{..},..]
-  const vObj = {
-    func: 'post',
-    data: {
-      template: 'パスコード通知',
-      data: [{
-        recipient: participant['メール'],
-        variables: {passCode : passCode},
-      }],
+    // 02.マスタにパスコードを記録
+    const regData = {
+      target: {key:'受付番号',value:entryNo},
+      revice: [
+        {key:'パスコード',value:passCode},
+        {key:'発行日時',value:new Date()},
+      ]
+    };
+    console.log('管理局.regData='+JSON.stringify(regData));
+    szLib.updateSheetData(dObj,regData);
+
+    // 03.メール送信要求
+    //  postMails: 依頼された定型メールの配信
+    // @param {object} arg - 以下のメンバを持つオブジェクト
+    //    template (string) : メールのテンプレートが定義された郵便局のシート名
+    //    data : [{
+    //      recipient (string) : 宛先メールアドレス
+    //      variables {label1:value1, label2:value2, ...}
+    //    },{..},..]
+    const vObj = {
+      func: 'post',
+      data: {
+        template: 'パスコード通知',
+        data: [{
+          recipient: participant['メール'],
+          variables: {passCode : passCode},
+        }],
+      }
+    };
+    console.log('管理局.vObj='+JSON.stringify(vObj));
+    const endpoint = config.PostURL + '?v=' + szLib.encrypt(vObj,config.PostKey);
+    console.log('管理局.endpoint='+endpoint+'\nconfig='+JSON.stringify(config));
+    const response = JSON.parse(UrlFetchApp.fetch(endpoint).getContentText());
+    console.log('管理局.response='+JSON.stringify(response));
+    if( response.length === 0 ){
+      rv = {isErr:false};
+    } else {
+      rv = {isErr:true,message:response[0].recipient+'\n'+response[0].message};
     }
-  };
-  console.log('管理局.vObj='+JSON.stringify(vObj));
-  const endpoint = config.PostURL + '?v=' + szLib.encrypt(vObj,config.PostKey);
-  console.log('l.216 endpoint='+endpoint+'\nconfig='+JSON.stringify(config));
-  const response = UrlFetchApp.fetch(endpoint).getContentText();
-  console.log('管理局.response='+JSON.stringify(response));
-  return response;
+  } catch(e) {
+    // Errorオブジェクトをrvとするとmessageが欠落するので再作成
+    rv = {isErr:true, message:e.name+': '+e.message};
+  } finally {
+    console.log('管理局.authA2 end. rv='+JSON.stringify(rv));
+    return rv;
+  }
+}
+
+const authB2Test = () => {
+
+}
+
+/** authB2: 認証局から送られた受付番号とパスコードの正当性をチェック
+ *  @param {object} arg - 以下のメンバを持つオブジェクト
+ *  @return {object} - 以下のメンバを持つオブジェクト
+ */
+const authB2 = (arg) => {
 
 }
 
