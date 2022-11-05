@@ -47,10 +47,18 @@
   </div -->
 
   <div id="entryNo" class="screen"><!-- 受付番号入力 -->
-    <p>受付番号を入力してください</p>
-    <input type="text" name="entryNo" />
-    <a type="button" class="button" onclick="getEntryNo()" />送信</a>
-    </form>
+    <div class="entryNo">
+      <p>受付番号を入力してください</p>
+      <input type="text" />
+      <input type="button" value="送信" onclick="getEntryNo()" />
+      <!-- a type="button" class="button" onclick="getEntryNo()" />送信</a -->
+    </div>
+    <div class="passCode">
+      <p>確認のメールを送信しました。記載されているパスコード(数字6桁)を入力してください。</p>
+      <input type="text" />
+      <input type="button" value="送信" onclick="getPassCode()" />
+    </div>
+    <div class="message"></div>
   </div>
 
   <div id="home" class="screen"><!-- ホーム画面 -->

@@ -1,6 +1,18 @@
 const getEntryNo = () => {  // 受付番号入力時処理
   console.log('getEntryNo start.');
 
+  // 受付番号のボタンを不活性化
+  document.querySelector('#entryNo .entryNo input[type="button"]').disabled = 'disabled';
+
+  const inputValue = document.querySelector('#entryNo .entryNo input[type="text"]').value;
+  if( !inputValue.match(/^[0-9]{1,4}$/) ){
+    alert("不適切な受付番号です");
+    // 入力欄をクリア
+    document.querySelector('#entryNo .entryNo input[type="text"]').value = '';
+    // 受付番号のボタンを活性化
+    document.querySelector('#entryNo .entryNo input[type="button"]').disabled = null;
+    return;
+  }
   const endpoint = config.AuthURL;
   const entryNo = document.querySelector('#entryNo input').value;
   const sendData = {  // 認証局へ受付番号をPOSTで送る
@@ -11,9 +23,54 @@ const getEntryNo = () => {  // 受付番号入力時処理
   };
   doPost(endpoint,sendData,(response) => {
     console.log('getEntryNo response = '+JSON.stringify(response));
-    //document.querySelector('#entryNo').innerHTML = response.message;
+    if( response.isErr ){
+      document.querySelector('#entryNo .message').innerHTML
+        = '<p class="error">' + response.message + '</p>';
+    } else {
+      // パスコード入力画面を開く
+      document.querySelector('#entryNo div.passCode').style.display = 'block';
+    }
   });
 }
+
+const getPassCode = () => {
+  console.log('getPassCode start.');  
+
+  // パスコードのボタンを不活性化
+  document.querySelector('#entryNo .passCode input[type="button"]').disabled = 'disabled';
+
+  const inputValue = document.querySelector('#entryNo .passCode input[type="text"]').value;
+  if( !inputValue.match(/^[0-9]{6}$/) ){
+    alert("不適切なパスコードです");
+    // 入力欄をクリア
+    document.querySelector('#entryNo .passCode input[type="text"]').value = '';
+    // パスコードのボタンを活性化
+    document.querySelector('#entryNo .passCode input[type="button"]').disabled = null;
+    return;
+  }
+  const endpoint = config.AuthURL;
+  const entryNo = document.querySelector('#entryNo input').value;
+  const passCode = document.querySelector('#entryNo [name="passCode"]').value;
+  const sendData = {  // 認証局へ受付番号とパスコードをPOSTで送る
+    func: 'authB1',
+    data: {
+      entryNo: entryNo,
+      passCode: passCode,
+    }
+  };
+  doPost(endpoint,sendData,(response) => {
+    console.log('getPassCode response = '+JSON.stringify(response));
+    if( response.isErr ){
+      document.querySelector('#entryNo .message').innerHTML
+        = '<p class="error">' + response.message + '</p>';
+    } else {
+      // ホーム画面へ遷移
+      changeScreen();
+    }
+  });
+  
+  console.log('getPassCode end.');  
+}  
 
 const initialize = () => {  // 初期設定処理
   console.log("initialize start.");
