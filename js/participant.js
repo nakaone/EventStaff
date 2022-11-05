@@ -131,7 +131,7 @@ const initialize = () => {  // 初期設定処理
   }
 
   // 03. 受付番号入力画面表示
-  changeScreen('entryNo','受付番号入力');
+  changeScreen('entryNo','ログイン');
 
   /* 03. パスコード入力
   document.querySelector('#initialize input[type="submit"]')
