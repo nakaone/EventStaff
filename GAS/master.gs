@@ -202,15 +202,21 @@ const authA2 = (entryNo) => {
   szLib.updateSheetData(dObj,regData);
 
   // メール送信要求
+  //  postMails: 依頼された定型メールの配信
+  // @param {object} arg - 以下のメンバを持つオブジェクト
+  //    template (string) : メールのテンプレートが定義された郵便局のシート名
+  //    data : [{
+  //      recipient (string) : 宛先メールアドレス
+  //      variables {label1:value1, label2:value2, ...}
+  //    },{..},..]
   const vObj = {
     func: 'post',
     data: {
-      passPhrase : config.PostKey,
-      template   : 'パスコード通知',
-      recipient  : participant['メール'],
-      variables  : {
-        passCode : passCode,
-      }
+      template: 'パスコード通知',
+      data: [{
+        recipient: participant['メール'],
+        variables: {passCode : passCode},
+      }],
     }
   };
   console.log('管理局.vObj='+JSON.stringify(vObj));
