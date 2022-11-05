@@ -11,7 +11,7 @@ const getEntryNo = () => {  // 受付番号入力時処理
   };
   doPost(endpoint,sendData,(response) => {
     console.log('getEntryNo response = '+JSON.stringify(response));
-    document.querySelector('#entryNo').innerHTML = response.message;
+    //document.querySelector('#entryNo').innerHTML = response.message;
   });
 }
 
@@ -57,11 +57,6 @@ const initialize = () => {  // 初期設定処理
     console.log("initialize end.",config);
     changeScreen();// ホーム画面表示
   }
-
-  /* 受付番号の取得
-  config.entryNo = Number(location.search.match(/n=(\d+)/)[1]);
-  console.log('l.80',config);
-  terminate();  // 暫定 */
 
   // 02. localStorageから読み込み
   let confStr = localStorage.getItem('config');

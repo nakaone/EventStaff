@@ -1,6 +1,6 @@
 const config = {
   // 分類A
-  AuthURL: "https://script.google.com/macros/s/AKfycbzBOIDVfhcHAmqcBuQUwki0CpytWrRAYpVLsWhVrSUmg04EmipancwVawbYeOQqVKDxxg/exec",
+  AuthURL: "https://script.google.com/macros/s/AKfycbzOhcReYRaoK9orCI63PNlKMtAHBK6GEBNZ2AFZbj48M05lf472OxmqEInPFIg2TF-3vg/exec",
   AuthLevel: 0,
 }
 
