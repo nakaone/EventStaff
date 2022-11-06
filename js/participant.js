@@ -16,7 +16,7 @@ const getEntryNo = () => {  // 受付番号入力時処理
   const endpoint = config.AuthURL;
   const entryNo = document.querySelector('#entryNo input').value;
   const sendData = {  // 認証局へ受付番号をPOSTで送る
-    func: 'authA1',
+    func: 'auth1A',
     data: {
       entryNo: entryNo,
     }
@@ -52,7 +52,7 @@ const getPassCode = () => {
   const entryNo = document.querySelector('#entryNo input').value;
   const passCode = document.querySelector('#entryNo [name="passCode"]').value;
   const sendData = {  // 認証局へ受付番号とパスコードをPOSTで送る
-    func: 'authB1',
+    func: 'auth2A',
     data: {
       entryNo: entryNo,
       passCode: passCode,

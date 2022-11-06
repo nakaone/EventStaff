@@ -189,7 +189,7 @@ sequenceDiagram
 
   html ->> CAApi : ログイン要求(受付番号)
   activate CAApi
-  Note right of CAApi : authA1()
+  Note right of CAApi : auth1A()
   CAApi->>CASht : 試行ログ要求
   CASht->>CAApi : 試行ログ
   alt 1時間以内に3回以上失敗
@@ -198,7 +198,7 @@ sequenceDiagram
   CAApi ->> mApi : パスコード送付要求
   deactivate CAApi
   activate mApi
-  Note right of mApi : authA2()
+  Note right of mApi : auth1B()
   mApi ->> mApi : パスコード(数字6桁)生成
   mApi ->> mSht : 受付番号＋パスコード
   mSht ->> mSht : パスコード・有効期限格納<br>前回試行結果クリア
@@ -211,10 +211,10 @@ sequenceDiagram
   mail ->> html : パスコード入力
   html ->> CAApi : 受付番号(平文)＋トークン
   activate CAApi
-  Note right of CAApi : authB1()
+  Note right of CAApi : auth2A()
   CAApi ->> mApi : 受付番号＋トークン
   activate mApi
-  Note right of mApi : authB2()
+  Note right of mApi : auth2B()
   mApi ->> mSht : 受付番号
   mSht ->> mApi : パスコード＋有効期限
   mApi ->> mApi : トークンの内容・有効期限確認
@@ -346,6 +346,111 @@ GCPの無料枠に収めるため、送受信の情報量・頻度は極力絞�
 参考：[QR コードを連続で読み取れる Web アプリを作った](https://tech.basicinc.jp/articles/193)
 
 # Ⅲ.クラウド
+
+## プロトタイプ
+
+### 通常関数のスキーマ
+
+```
+/** xxxx: 
+ * @param {object} arg - 
+ * @return {object} - 処理結果
+ *    isErr {boolean} : エラーならtrue
+ *    message {string} : エラーの場合はメッセージ。正常終了ならundefined
+ *    result {object} : 分岐先の処理が正常終了した場合の結果オブジェクト
+ */
+const xxxx = (arg) => {
+  console.log('■■局.xxxx start. arg='+JSON.stringify(arg));
+  let rv = null;
+  try {
+
+    // 処理を記述
+
+  } catch(e) {
+    // Errorオブジェクトをrvとするとmessageが欠落するので再作成
+    rv = {isErr:true, message:e.name+': '+e.message};
+  } finally {
+    console.log('■■局.xxxx end. rv='+JSON.stringify(rv));
+    return rv;
+  }
+}
+```
+
+### doPostのスキーマ
+
+```
+/** doPost: パラメータに応じて処理を分岐
+ * @param {object} e - メールの中身。以下のメンバを持つオブジェクト
+ *    parameter: {
+ *      passPhrase: 正当な要求であることを検証するための本APIの秘密鍵
+ *      data: 分岐先の処理に渡すオブジェクト
+ *    }
+ * @return {object} - 処理結果
+ *    isErr {boolean} : エラーならtrue
+ *    message {string} : エラーの場合はメッセージ。正常終了ならundefined
+ *    result {object} : 分岐先の処理が正常終了した場合の結果オブジェクト
+ */
+function doPost(e){
+  console.log('■■局.doPost start. e.parameter='+JSON.stringify(e.parameter));
+  let rv = null;
+  try {
+
+    // 秘密鍵が一致しなければ配送拒否
+    if( e.parameter.passPhrase !== config.xxxxKey ){  // 自分の秘密鍵
+      throw new Error('共通鍵が一致しません');
+    }
+
+    // 秘密鍵が一致したら処理分岐
+    switch( e.parameter.func ){
+      case 'auth2B':
+        const r = auth2B(e.parameter);
+        if( r.isErr ){  // 異常終了した場合
+          rv.isErr = true;
+          rv.message = r.message;
+        } else {  // 正常終了した場合
+          rv.isErr = false;
+          rv.result = r.result;
+        }
+        break;
+    }
+
+  } catch(e) {
+    // Errorオブジェクトをrvとするとmessageが欠落するので再作成
+    rv = {isErr:true, message:e.name+': '+e.message};
+  } finally {
+    console.log('■■局.doPost end. rv='+JSON.stringify(rv));
+    return ContentService
+    .createTextOutput(JSON.stringify(rv,null,2))
+    .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+```
+
+### 他のAPIの呼び出し
+
+```
+const options = {
+  'method': 'post',
+  'headers': {
+    'contentType': 'application/json',
+  },
+  'payload': {
+    passPhrase  : config.MasterKey,  // 相手先APIの秘密鍵
+    func: 'auth1B',   // 相手先APIのdoPostで分岐させる際のキーワード
+    entryNo: entryNo, // 以下、相手に渡したいキー・値の組み合わせ
+  },
+}
+const r0 = UrlFetchApp.fetch(config.MasterURL,options);
+const r1 = r0.getContentText();
+const res = JSON.parse(r1);
+console.log('■■局.res='+r1);
+if( res.isErr ){
+  rv = {isErr:true,message:res.message};
+} else {
+  rv = {isErr:false};
+}
+```
+
 
 ## Ⅲ.1.フォーム
 

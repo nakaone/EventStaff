@@ -1,30 +1,49 @@
-const config = szLib.setConfig(['MasterKey','PostURL','PostKey']);
+const config = szLib.setConfig(['MasterKey','AuthSheetId','PostURL','PostKey']);
 
 // ===========================================================
 // トリガー関数
 // ===========================================================
 
+/** doPost: パラメータに応じて処理を分岐
+ * @param {object} e - メールの中身。以下のメンバを持つオブジェクト
+ *    parameter: {
+ *      passPhrase: 正当な要求であることを検証するための本APIの秘密鍵
+ *      data: 分岐先の処理に渡すオブジェクト
+ *    }
+ * @return {object} - 処理結果
+ *    isErr {boolean} : エラーならtrue
+ *    message {string} : エラーの場合はメッセージ。正常終了ならundefined
+ *    result {object} : 分岐先の処理が正常終了した場合の結果オブジェクト
+ */
 function doPost(e){
   console.log('管理局.doPost start. e.parameter='+JSON.stringify(e.parameter));
-
   let rv = null;
-  if( e.parameter.passPhrase === config.MasterKey ){
-    // 共通鍵が一致したら処理分岐
+  try {
+
+    // 秘密鍵が一致しなければ配送拒否
+    if( e.parameter.passPhrase !== config.MasterKey ){
+      throw new Error('鍵が一致しません');
+    }
+
+    // 秘密鍵が一致したら処理分岐
     switch( e.parameter.func ){
-      case 'authA2':
-        rv = authA2(Number(e.parameter.entryNo));
+      case 'auth1B':
+        rv = auth1B(e.parameter);
+        break;
+      case 'auth2B':
+        rv = auth2B(e.parameter);
         break;
     }
-  } else {
-    // 共通鍵が一致しなければ配送拒否
-    console.error('共通鍵が一致しません');
-    rv = new Error('共通鍵が一致しません');
-  }
 
-  console.log('管理局.doPost end. rv='+rv);
-  return ContentService
-  .createTextOutput(JSON.stringify(rv,null,2))
-  .setMimeType(ContentService.MimeType.JSON);
+  } catch(e) {
+    // Errorオブジェクトをrvとするとmessageが欠落するので再作成
+    rv = {isErr:true, message:e.name+': '+e.message};
+  } finally {
+    console.log('管理局.doPost end. rv='+JSON.stringify(rv));
+    return ContentService
+    .createTextOutput(JSON.stringify(rv,null,2))
+    .setMimeType(ContentService.MimeType.JSON);
+  }
 }
 
 const doGetTest = () => {
@@ -172,23 +191,33 @@ const onFormSubmitTest = () => {
 // ===========================================================
 // トリガーから呼ばれる関数・定義
 // ===========================================================
-const authA2Test = () => {
+const auth1BTest = () => {
   const params = ['MasterKey','PostURL','PostKey'];
 
   const c = szLib.setConfig(params);
   console.log(szLib.setConfig(params));
   console.log(JSON.stringify(c));
   params.forEach(x => {config[x] = c[x]});
-  authA2(1);
+  auth1B(1);
 }
-const authA2 = (entryNo) => {
-  console.log('管理局.authA2 start. entryNo='+entryNo);
+
+/** auth1B: 認証第一段階。パスコードを生成してメールで送付
+ * @param {object} arg - 
+ *    entryNo {string} : 利用者が入力した受付番号
+ * @return {object} - 処理結果
+ *    isErr {boolean} : エラーならtrue
+ *    message {string} : エラーの場合はメッセージ。正常終了ならundefined
+ *    result {object} : 分岐先の処理が正常終了した場合の結果オブジェクト
+ */
+const auth1B = (arg) => {
+  console.log('管理局.auth1B start. arg='+JSON.stringify(arg));
   let rv = null;
   try {
 
     // 01.申込者情報の取得とパスコードの生成
+    const entryNo = Number(arg.entryNo);
     const dObj = szLib.getSheetData('マスタ');
-    const participant = dObj.data.filter(x => {return Number(x['受付番号']) === Number(entryNo)})[0];
+    const participant = dObj.data.filter(x => {return Number(x['受付番号']) === entryNo})[0];
     console.log('管理局.participant='+JSON.stringify(participant));
     const passCode = ('00000' + Math.floor(Math.random() * 1000000)).slice(-6);
     //console.log('管理局.passCode='+passCode);
@@ -232,25 +261,93 @@ const authA2 = (entryNo) => {
     } else {
       rv = {isErr:true,message:response[0].recipient+'\n'+response[0].message};
     }
+
   } catch(e) {
     // Errorオブジェクトをrvとするとmessageが欠落するので再作成
     rv = {isErr:true, message:e.name+': '+e.message};
   } finally {
-    console.log('管理局.authA2 end. rv='+JSON.stringify(rv));
+    console.log('管理局.auth1B end. rv='+JSON.stringify(rv));
     return rv;
   }
 }
 
-const authB2Test = () => {
+const auth2BTest = () => {
 
 }
 
-/** authB2: 認証局から送られた受付番号とパスコードの正当性をチェック
- *  @param {object} arg - 以下のメンバを持つオブジェクト
- *  @return {object} - 以下のメンバを持つオブジェクト
+/** auth2B: 認証局から送られた受付番号とパスコードの正当性をチェック
+ * @param {object} arg - 以下のメンバを持つオブジェクト
+ *    entryNo: 利用者が入力した受付番号
+ *    passCode: 利用者が入力したパスコード
+ * @return {object} - 処理結果
+ *    isErr {boolean} : エラーならtrue
+ *    message {string} : エラーの場合はメッセージ。正常終了ならundefined
+ *    config {object} : configにセットする値(オブジェクト)
+ *    menuFlags {number} : メニューの表示/非表示フラグの集合 
  */
-const authB2 = (arg) => {
+const auth2B = (arg) => {
+  console.log('管理局.auth2B start. arg='+JSON.stringify(arg));
+  let rv = null;
+  try {
 
+    // 受付番号を基にパスコード・生成日時を取得、検証
+    const entryNo = Number(e.parameter.entryNo);
+    const passCode = Number(e.parameter.passCode);
+    const dObj = szLib.getSheetData('マスタ');
+    const participant = dObj.data.filter(x => {return Number(x['受付番号']) === entryNo})[0];
+    console.log('管理局.participant='+JSON.stringify(participant));
+    const revice = [];
+
+    // パスコードが一致したかの判定
+    const validCode = passCode === Number(participant['パスコード']);
+    // 発行日時は一時間以内かの判定
+    const validTime = new Date().getTime() - new Date(participant['発行日時']).getTime() < 3600000;
+    if(  validCode && validTime ){
+      // 検証OK：表示に必要なURLとメニューフラグをconfigとして作成
+      // (1) AuthLevelに応じたconfigを作成
+      //     認証局:1, 放送局:2, 予約局:4, 管理局:8, 郵便局:16
+      rv.config = [];
+      const AuthLevel = participant.AuthLevel || 6; // 既定値「参加者」
+      // いまここ
+      
+      // (2) 表示するメニューのフラグ(menuFlags)
+      rv.menuFlags = participant.menuFlags || 1151; // 既定値「参加者」
+      // (3) 検証結果記録用オブジェクトを作成
+      revice.push({key:'result',value:'OK'}).push({key:'message',value:''});
+    } else {
+      // 検証NG：エラー通知
+      rv = {
+        isErr: true,
+        message: !validCode ? 'パスコードが一致しません' : 'パスコードの有効期限が切れています',
+      };
+      // 検証結果記録用オブジェクトを作成
+      revice.push({key:'result',value:'NG'}).push({key:'message',value:rv.message});
+    }
+
+    // 検証結果を記録
+    // マスタ「認証成否」の記入
+    szLib.updateSheetData(dObj,{
+      target:  {key:'受付番号',value: entryNo},
+      revice: [{key:'認証成否',value: rv.isErr ? 'NG' : 'OK'}],
+    });    
+    // 認証局-logシートへの追記
+    const t = new Date();
+    const currentTime = t.toLocaleString('ja-JP') + '.' + t.x.getMilliseconds();
+    revice.push({key:'timestamp',value:currentTime}).push({key:'entryNo',value:entryNo});
+    const log = {sheet:SpreadsheetApp.openByUrl(
+      'https://docs.google.com/spreadsheets/d/_/edit'
+      .replace('_',config.AuthSheetId))
+      .getSheetByName('log')
+    };
+    szLib.updateSheetData(log,revice)
+
+  } catch(e) {
+    // Errorオブジェクトをrvとするとmessageが欠落するので再作成
+    rv = {isErr:true, message:e.name+': '+e.message};
+  } finally {
+    console.log('管理局.auth2B end. rv='+JSON.stringify(rv));
+    return rv;
+  }
 }
 
 const candidates = (data) => {  // 該当者リストの作成
