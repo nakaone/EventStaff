@@ -52,13 +52,15 @@
       <input type="text" />
       <input type="button" value="送信" onclick="getEntryNo()" />
       <!-- a type="button" class="button" onclick="getEntryNo()" />送信</a -->
+      <div class="message"></div>
     </div>
     <div class="passCode">
-      <p>確認のメールを送信しました。記載されているパスコード(数字6桁)を入力してください。</p>
+      <p>確認のメールを送信しました。記載されているパスコード(数字6桁)を入力してください。<br>
+      ※まれに迷惑メールと判定される場合があります。メールが来ない場合、そちらもご確認ください。</p>
       <input type="text" />
       <input type="button" value="送信" onclick="getPassCode()" />
+      <div class="message">※パスコードの有効期限は1時間です</div>
     </div>
-    <div class="message"></div>
   </div>
 
   <div id="home" class="screen"><!-- ホーム画面 -->

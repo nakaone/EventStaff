@@ -986,6 +986,8 @@ function doGet(e) {
     case 'postMessage':  // 掲示板への投稿
       rv = postMessage(arg.data);
       break;
+    default:
+      rv = {isErr:true, message:'No Function'};
   }
 
   // 結果をJSON化して返す

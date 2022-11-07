@@ -3,6 +3,8 @@ const getEntryNo = () => {  // 受付番号入力時処理
 
   // 受付番号のボタンを不活性化
   document.querySelector('#entryNo .entryNo input[type="button"]').disabled = 'disabled';
+  // メッセージ設定
+  document.querySelector('#entryNo .entryNo .message').innerHTML = '<p>暫くお待ちください...</p>';
 
   const inputValue = document.querySelector('#entryNo .entryNo input[type="text"]').value;
   if( !inputValue.match(/^[0-9]{1,4}$/) ){
@@ -24,11 +26,13 @@ const getEntryNo = () => {  // 受付番号入力時処理
   doPost(endpoint,sendData,(response) => {
     console.log('getEntryNo response = '+JSON.stringify(response));
     if( response.isErr ){
-      document.querySelector('#entryNo .message').innerHTML
+      document.querySelector('#entryNo .entryNo .message').innerHTML
         = '<p class="error">' + response.message + '</p>';
     } else {
+      // メッセージを消去
+      document.querySelector('#entryNo .entryNo .message').innerHTML = '';
       // パスコード入力画面を開く
-      document.querySelector('#entryNo div.passCode').style.display = 'block';
+      document.querySelector('#entryNo .passCode').style.display = 'block';
     }
   });
 }
@@ -49,8 +53,8 @@ const getPassCode = () => {
     return;
   }
   const endpoint = config.AuthURL;
-  const entryNo = document.querySelector('#entryNo input').value;
-  const passCode = document.querySelector('#entryNo [name="passCode"]').value;
+  const entryNo = document.querySelector('#entryNo .entryNo input[type="text"]').value;
+  const passCode = document.querySelector('#entryNo .passCode input[type="text"]').value;
   const sendData = {  // 認証局へ受付番号とパスコードをPOSTで送る
     func: 'auth2A',
     data: {
@@ -61,7 +65,7 @@ const getPassCode = () => {
   doPost(endpoint,sendData,(response) => {
     console.log('getPassCode response = '+JSON.stringify(response));
     if( response.isErr ){
-      document.querySelector('#entryNo .message').innerHTML
+      document.querySelector('#entryNo .passCode .message').innerHTML
         = '<p class="error">' + response.message + '</p>';
     } else {
       // ホーム画面へ遷移

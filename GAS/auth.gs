@@ -20,9 +20,12 @@ const doPostTest = () => {
  *    result {object} : 分岐先の処理が正常終了した場合の結果オブジェクト
  */
 function doPost(e){
-  console.log('認証局.doPost start. e.parameter='+JSON.stringify(e.parameter));
+  console.log('認証局.doPost start. e.postData.contents='+JSON.stringify(e.postData.contents));
+  //console.log('認証局.doPost start. e.parameter='+JSON.stringify(e.parameter));
   let rv = null;
   try {
+
+    const arg = JSON.parse(e.postData.contents);
 
     /* 認証局は誰でもアクセス可なので秘密鍵による拒否は無い
     if( e.parameter.passPhrase !== config.AuthKey ){
@@ -30,13 +33,15 @@ function doPost(e){
     }*/
 
     // 共通鍵が一致したら処理分岐
-    switch( e.parameter.func ){
+    switch( arg.func ){
       case 'auth1A':
-        rv = auth1A(e.parameter);
+        rv = auth1A(arg.data);
         break;
       case 'auth2A':
-        rv = auth2A(e.parameter);
+        rv = auth2A(arg.data);
         break;
+      default:
+        rv = {isErr:true, message:'No Function'};
     }
 
   } catch(e) {
@@ -81,7 +86,7 @@ const auth1A = (arg) => {
     console.log('認証局.list='+JSON.stringify(list));
   
     // 3回連続失敗後1時間以内ならチャレンジ不可判定
-    let rv = {isErr:true};
+    rv = {isErr:true};
     if( list.length < 3 ){
       // 挑戦回数が3回未満
       rv.isErr = false;
@@ -107,15 +112,10 @@ const auth1A = (arg) => {
           entryNo: entryNo,
         },
       }
-      const r0 = UrlFetchApp.fetch(config.MasterURL,options);
-      const r1 = r0.getContentText();
-      const res = JSON.parse(r1);
-      console.log('認証局.response='+r1);
-      if( res.isErr ){
-        rv = {isErr:true,message:res.message};
-      } else {
-        rv = {isErr:false};
-      }
+      const res = UrlFetchApp.fetch(config.MasterURL,options).getContentText();
+      console.log('認証局.res='+res);
+      rv = JSON.parse(res);
+      console.log('認証局.rv='+rv);
     }
 
   } catch(e) {
@@ -164,6 +164,14 @@ const auth2A = (arg) => {
     const r1 = r0.getContentText();
     console.log('認証局.response='+r1);
     rv = JSON.parse(r1);
+
+    // logシートへの追記
+    SpreadsheetApp.getActive().getSheetByName('log').appendRow([
+      new Date(),             // timestamp
+	    arg.entryNo,            // entryNo
+      rv.isErr ? 'NG' : 'OK', // result
+      rv.message || ''        // message
+    ]);
 
   } catch(e) {
     // Errorオブジェクトをrvとするとmessageが欠落するので再作成

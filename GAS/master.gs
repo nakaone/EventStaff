@@ -271,10 +271,6 @@ const auth1B = (arg) => {
   }
 }
 
-const auth2BTest = () => {
-
-}
-
 /** auth2B: 認証局から送られた受付番号とパスコードの正当性をチェック
  * @param {object} arg - 以下のメンバを持つオブジェクト
  *    entryNo: 利用者が入力した受付番号
@@ -288,12 +284,12 @@ const auth2BTest = () => {
 const auth2B = (arg) => {
   console.log('管理局.auth2B start. arg='+JSON.stringify(arg));
   let rv = null;
+  const dObj = szLib.getSheetData('マスタ');  // finallyで使用なのでtry外で宣言
+  const entryNo = Number(arg.entryNo);  // finallyで使用なのでtry外で宣言
   try {
 
     // 受付番号を基にパスコード・生成日時を取得、検証
-    const entryNo = Number(e.parameter.entryNo);
-    const passCode = Number(e.parameter.passCode);
-    const dObj = szLib.getSheetData('マスタ');
+    const passCode = Number(arg.passCode);
     const participant = dObj.data.filter(x => {return Number(x['受付番号']) === entryNo})[0];
     console.log('管理局.participant='+JSON.stringify(participant));
     const revice = [];
@@ -306,14 +302,16 @@ const auth2B = (arg) => {
       // 検証OK：表示に必要なURLとメニューフラグをconfigとして作成
       // (1) AuthLevelに応じたconfigを作成
       //     認証局:1, 放送局:2, 予約局:4, 管理局:8, 郵便局:16
-      rv.config = [];
+      rv = {isErr:false, config:{}};
       const AuthLevel = participant.AuthLevel || 6; // 既定値「参加者」
-      // いまここ
-      
+      const cObj = szLib.getSheetData('config');
+      for( let i=0 ; i<cObj.data.length ; i++ ){
+        if( cObj.data[i].AuthLevel & AuthLevel > 0 ){
+          rv.config[cObj.data[i].key] = cObj.data[i].value;
+        }
+      }
       // (2) 表示するメニューのフラグ(menuFlags)
       rv.menuFlags = participant.menuFlags || 1151; // 既定値「参加者」
-      // (3) 検証結果記録用オブジェクトを作成
-      revice.push({key:'result',value:'OK'}).push({key:'message',value:''});
     } else {
       // 検証NG：エラー通知
       rv = {
@@ -324,27 +322,15 @@ const auth2B = (arg) => {
       revice.push({key:'result',value:'NG'}).push({key:'message',value:rv.message});
     }
 
-    // 検証結果を記録
-    // マスタ「認証成否」の記入
-    szLib.updateSheetData(dObj,{
-      target:  {key:'受付番号',value: entryNo},
-      revice: [{key:'認証成否',value: rv.isErr ? 'NG' : 'OK'}],
-    });    
-    // 認証局-logシートへの追記
-    const t = new Date();
-    const currentTime = t.toLocaleString('ja-JP') + '.' + t.x.getMilliseconds();
-    revice.push({key:'timestamp',value:currentTime}).push({key:'entryNo',value:entryNo});
-    const log = {sheet:SpreadsheetApp.openByUrl(
-      'https://docs.google.com/spreadsheets/d/_/edit'
-      .replace('_',config.AuthSheetId))
-      .getSheetByName('log')
-    };
-    szLib.updateSheetData(log,revice)
-
   } catch(e) {
     // Errorオブジェクトをrvとするとmessageが欠落するので再作成
     rv = {isErr:true, message:e.name+': '+e.message};
   } finally {
+    // 「認証成否」に検証結果を記録
+    szLib.updateSheetData(dObj,{
+      target:  {key:'受付番号',value: entryNo},
+      revice: [{key:'認証成否',value: rv.isErr ? 'NG' : 'OK'}],
+    });    
     console.log('管理局.auth2B end. rv='+JSON.stringify(rv));
     return rv;
   }
