@@ -297,7 +297,7 @@ const inputSearchKey = () => {  // 参加者の検索キーを入力
     config.scanCode = false;  // スキャンを停止
     document.querySelector('#inputSearchKey .scanner')
       .innerHTML = ''; // スキャナ用DIV内を除去
-    doGet(config.MasterAPI,{func:'search',data:{key:keyPhrase}},(data) => {
+    doGet(config.MasterURL,config.MasterKey,{func:'search',data:{key:keyPhrase}},(data) => {
       if( data.length === 0 ){
         alert("該当する参加者は存在しませんでした");
       } else if( data.length > 1){
@@ -372,7 +372,7 @@ const editParticipant = (arg) => {  // 検索結果の内容編集
   // [02] 各要素への値設定
 
   // 要素の作成とセット
-  let o = genChild(localDef.editParticipant,arg,'root');  // 全体の定義と'root'を渡す
+  let o = genChild(JSON.parse(config.editParticipant),arg,'root');  // 全体の定義と'root'を渡す
   if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
     throw o.result;
   } else if( o.append ){  // 追加フラグがtrue

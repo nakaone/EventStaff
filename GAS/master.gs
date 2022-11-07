@@ -64,8 +64,8 @@ function doGet(e) {
   console.log('管理局.doGet start.',e);
 
   // 'v'で渡されたクエリを復号
-  arg = decrypt(e.parameter.v,config.MasterKey);
-  console.log('管理局.arg',whichType(arg),arg);
+  arg = szLib.decrypt(e.parameter.v,config.MasterKey);
+  console.log('管理局.arg',szLib.whichType(arg),arg);
 
   let rv = [];
   switch( arg.func ){  // 処理指定により分岐
@@ -271,6 +271,11 @@ const auth1B = (arg) => {
   }
 }
 
+const auth2BTest = () => {
+  const t = {entryNo:3,passCode:988293};
+  const rv = auth2B(t);
+  console.log(rv);
+}
 /** auth2B: 認証局から送られた受付番号とパスコードの正当性をチェック
  * @param {object} arg - 以下のメンバを持つオブジェクト
  *    entryNo: 利用者が入力した受付番号
@@ -303,15 +308,18 @@ const auth2B = (arg) => {
       // (1) AuthLevelに応じたconfigを作成
       //     認証局:1, 放送局:2, 予約局:4, 管理局:8, 郵便局:16
       rv = {isErr:false, config:{}};
-      const AuthLevel = participant.AuthLevel || 6; // 既定値「参加者」
+      participant.AuthLevel = Number(participant.AuthLevel);
+      const AuthLevel = participant.AuthLevel > 0 ? participant.AuthLevel : 6; // 既定値「参加者」
       const cObj = szLib.getSheetData('config');
-      for( let i=0 ; i<cObj.data.length ; i++ ){
-        if( cObj.data[i].AuthLevel & AuthLevel > 0 ){
-          rv.config[cObj.data[i].key] = cObj.data[i].value;
+      cObj.data.forEach(x => {
+        if( (x.AuthLevel & AuthLevel) > 0 ){
+          rv.config[x.key] = x.value;
         }
-      }
+      });
+      // editParticipantはオブジェクト用の記述なので、正確なJSON形式に整形が必要
+      rv.config.editParticipant = JSON.stringify(rv.config.editParticipant);
       // (2) 表示するメニューのフラグ(menuFlags)
-      rv.menuFlags = participant.menuFlags || 1151; // 既定値「参加者」
+      rv.menuFlags = participant.menuFlags || 7949; // 既定値「参加者」
     } else {
       // 検証NG：エラー通知
       rv = {
@@ -339,7 +347,7 @@ const auth2B = (arg) => {
 const candidates = (data) => {  // 該当者リストの作成
   console.log('管理局.candidates start.',data);
 
-  const dObj = getSheetData('マスタ'); // データをシートから取得
+  const dObj = szLib.getSheetData('マスタ'); // データをシートから取得
   let result = [];
   const sKey = String(data.key);
   if( sKey.match(/^[0-9]+$/) ){
@@ -357,8 +365,8 @@ const candidates = (data) => {  // 該当者リストの作成
 const updateParticipant = (data) => { // 参加者情報を更新
   console.log('管理局.updateParticipant start.',data);
 
-  const dObj = getSheetData('マスタ'); // データをシートから取得
-  const rv = updateSheetData(dObj,data);
+  const dObj = szLib.getSheetData('マスタ'); // データをシートから取得
+  const rv = szLib.updateSheetData(dObj,data);
 
   console.log('管理局.updateParticipant end.',rv);
   return rv;
