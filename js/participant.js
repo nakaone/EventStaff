@@ -1,3 +1,67 @@
+class Broad {
+  constructor(URL,key,interval=30000){
+    this.URL = URL;
+    this.key = key;
+    this.interval = interval;
+    console.log('Board.constructor end.');
+  }
+
+  start(){
+    this.onGoing = true;
+    this.IntervalId = setInterval(this.periodical,this.interval);
+    this.periodical();
+    console.log('Board.start');
+  }
+
+  end(){
+    this.onGoing = false;
+    clearInterval(this.IntervalId);
+    this.IntervalId = null;
+    console.log('Board.end');
+  }
+
+  periodical(){
+    doGet(this.URL,this.key,{func:'getMessages',data:{}},(response) => {
+      console.log('getMessages response='+JSON.stringify(response));
+      // 時系列にメッセージを並べ替え
+      response.sort((a,b) => a.timestamp < b.timestamp);
+      console.log(response);
+      // 掲示板領域に書き込むHTMLを msg として作成
+      let msg = '';
+      let lastMesDate = '1900/01/01';
+      const t = '<p class="title">[_time] From:_from　To:_to</p><p>_message</p>';
+      for( let i=0 ; i<response.length ; i++ ){
+        const dt = new Date(response[i].timestamp);
+        if( dt.toLocaleDateString('ja-JP') !== lastMesDate ){
+          lastMesDate = dt.toLocaleDateString('ja-JP');
+          msg += '<p class="date">' + lastMesDate + '</p>';
+        }
+        const hms = ('0'+dt.getHours()).slice(-2)
+          + ':' + ('0'+dt.getMinutes()).slice(-2)
+          + ':' + ('0'+dt.getSeconds()).slice(-2);
+        const m = t.replace('_time',hms)
+          .replace('_from',response[i].from)
+          .replace('_to',response[i].to)
+          .replace('_message',response[i].message)
+          .replace(/\n/g,'<br>');
+        console.log('m='+m);
+        msg += m;
+      }
+      // 掲示板領域に書き込み
+      const msgEl = document.getElementById('boardArea');
+      msgEl.innerHTML = msg;
+      msgEl.scrollIntoView(false);
+      console.log('getMessages periodical end: '+msg);
+    })
+  }
+}
+
+const config = {
+  // 分類A
+  AuthURL: "https://script.google.com/macros/s/AKfycbxCXpmamk-zGGckxIuCwEfP4Ac24sRKmO3DcFuBBW2UaNJK87RBr50eykjxKJ2D324k-w/exec",
+  AuthLevel: 0,
+}
+
 const getEntryNo = () => {  // 受付番号入力時処理
   console.log('getEntryNo start.');
 
@@ -29,8 +93,8 @@ const getEntryNo = () => {  // 受付番号入力時処理
       document.querySelector('#entryNo .entryNo .message').innerHTML
         = '<p class="error">' + response.message + '</p>';
     } else {
-      // メッセージを消去
-      document.querySelector('#entryNo .entryNo .message').innerHTML = '';
+      // 受付番号入力欄を隠蔽
+      document.querySelector('#entryNo .entryNo').style.display = 'none';
       // パスコード入力画面を開く
       document.querySelector('#entryNo .passCode').style.display = 'block';
     }
@@ -68,23 +132,37 @@ const getPassCode = () => {
       document.querySelector('#entryNo .passCode .message').innerHTML
         = '<p class="error">' + response.message + '</p>';
     } else {
-      // ホーム画面へ遷移
-      changeScreen();
+      // 初期設定を呼び出す
+      initialize(response);
     }
   });
   
   console.log('getPassCode end.');  
 }  
 
-const initialize = () => {  // 初期設定処理
-  console.log("initialize start.");
+const initialize = (arg) => {  // 初期設定処理
+  console.log("initialize start.",arg);
 
-  // [01] 初期設定処理の画面を表示
-  changeScreen();
+  // サーバから取得したconfig, menuFlagsを保存
+  for( let x in arg.config ){
+    config[x] = arg.config[x];
+  }
+  config.menuFlags = arg.menuFlags;
+  // 数値項目は数値化
+  config.BoardInterval = Number(arg.config.BoardInterval);
+  console.log('initialize.config',config);
 
-  // [02] 画面・イベント定義の設定
-  // 01. お知らせ画面
-  // 新規のお知らせが来たら末尾を表示
+  // 05. 進行予定画面
+  document.querySelector("#schedule iframe").src = config.TableURL;
+  // 06. 校内案内図
+  document.querySelector("#VenueMap iframe").src = config.MapURL;
+  // 07. サイト案内　※Googleのサイトはiframe不可
+  document.querySelector('nav .noticeSite').href = config.SiteURL;
+  // 08. アンケート
+  document.querySelector('#enquete .button').innerHTML
+  = '<a href="' + config.EnqueteURL + '" class="button">参加者アンケート</a>';
+
+  // 新規のお知らせが来たら末尾を表示するよう設定
   // https://at.sachi-web.com/blog-entry-1516.html
   const msgArea = document.getElementById('boardArea');
   const mo = new MutationObserver(() => {
@@ -101,64 +179,76 @@ const initialize = () => {  // 初期設定処理
     attributeFilter: [],//配列で記述した属性だけを見張る
   });
 
-  // 05. 進行予定画面
-  document.querySelector("#schedule iframe").src = config.TableURL;
-  // 06. 校内案内図
-  document.querySelector("#VenueMap iframe").src = config.MapURL;
-  // 07. サイト案内　※Googleのサイトはiframe不可
-  document.querySelector('nav .noticeSite').href = config.SiteURL;
-  // 08. アンケート
-  document.querySelector('#enquete .button').innerHTML
-  = '<a href="' + config.EnqueteURL + '" class="button">参加者アンケート</a>';
+  // 掲示板定期更新開始
+  config.Broad = new Broad(config.BroadURL,config.BroadKey,config.BoardInterval);
+  config.Broad.start();
+  //getMessages(1);
 
-  // [03] グローバル変数 config 設定
-  // 01. 初期設定終了時の処理を事前に定義
-  const terminate = () => {
-    getMessages(1);  // 掲示板定期更新開始
-    console.log("initialize end.",config);
-    changeScreen();// ホーム画面表示
+  changeScreen();// ホーム画面表示
+  console.log("initialize end.",config);
+}
+
+const changeScreen = (scrId='home',titleStr='お知らせ') => {  // 表示画面の切り替え
+  console.log("changeScreen start. scrId="+scrId+', titleStr='+titleStr);
+
+  // screenクラスの画面を全部隠す
+  const scrList = document.querySelectorAll('.screen');
+  for( let i=0 ; i<scrList.length ; i++ ){
+    scrList[i].style.display = 'none';
   }
 
-  // 02. localStorageから読み込み
-  let confStr = localStorage.getItem('config');
-  if( confStr ){  // localStorageに存在
-    confObj = JSON.parse(confStr);
-    if( confObj.DateOfExpiry < new Date() ){
-      // 有効期限が切れていたら無効化＋localStorageから削除
-      localStorage.removeItem('config');
-    } else {
-      // 有効期限内ならセットして以後の処理はスキップ
-      Object.assign(config,confObj);
-      terminate();
-      return;
-    }
+  // ローディング画面以外の場合、メニュー名を書き換え
+  if( scrId !== 'loading' ){
+    document.querySelector('header .title').innerText = titleStr;
   }
+  // 指定IDの画面は再表示
+  document.querySelector('#'+scrId).style.display = 'flex';
 
-  // 03. 受付番号入力画面表示
-  changeScreen('entryNo','ログイン');
+  // メニューを隠す
+  toggleMenu(false);
 
-  /* 03. パスコード入力
-  document.querySelector('#initialize input[type="submit"]')
-  .addEventListener('click',() => {
+  // 投稿欄に名前をセット
+  /* !! EventStaff Only !!
+  if( scrId === 'home' ){
+    document.querySelector('#home input[name="from"]').value = config.handleName;
+  }
+  console.log("changeScreen end.");*/
+}
 
+const doGet = (endpoint,passPhrase,postData,callback) => {  // GASのdoGetを呼び出し、後続処理を行う
+  console.log("doGet start. ",endpoint,passPhrase,postData,callback);
+
+  // GASに渡すデータを作成
+  const v = encrypt(postData,passPhrase);
+  dump('v',v);
+
+  // エンドポイントを作成
+  const ep = endpoint + '?v=' + v;
+  dump('ep',ep);
+
+  // GASからの返信を受けたらcallbackを呼び出し
+  fetch(ep,{"method": "GET"})
+  .then(response => response.json())
+  .then(data => {
+    console.log("doGet end.",data);
+    callback(data);  // 成功した場合、後続処理を呼び出し
   });
-  alert('input passcord');
 
-  // 03. 分類B : シートからQRコードを読み込んで設定する変数
-  config.scanCode = true;
-  scanCode((code) => {
-    const o = JSON.parse(code); // QRコード優先分は書き換え
-    for( let x in o ){ // グローバル変数configに値を設定
-      config.set(x,o[x]);
-    }
-    alert('初期設定は正常に終了しました');
-    terminate();
-  },{
-    selector:'#initialize .scanner',  // 設置位置指定
-    RegExp:new RegExp('^{.+}$'),  // JSON文字列であること
-    alert: false,  // 読み込み時、内容をalert表示しない
+}
+
+const doPost = (endpoint,postData,callback) => {  // GASのdoPostを呼び出し、後続処理を行う
+  console.log("doPost start. ",postData,callback);
+
+  // GASからの返信を受けたらcallbackを呼び出し
+  fetch(endpoint,{
+    "method": "POST",
+    "body": JSON.stringify(postData),
+    "Content-Type": "application/json",
+  }).then(response => response.json())
+  .then(data => {
+    console.log("doPost end.",data);
+    callback(data);  // 成功した場合、後続処理を呼び出し
   });
-  */
 }
 
 window.addEventListener('DOMContentLoaded', function(){ // 主処理
@@ -166,5 +256,7 @@ window.addEventListener('DOMContentLoaded', function(){ // 主処理
   // -> DOMが構築されたときに初期化処理が行われるように設定
   // https://pisuke-code.com/jquery-is-not-defined-solution/
   console.log("participant start.",config);
-  initialize();
+  // 受付番号入力画面表示
+  // getPassCode正常終了時、そこからinitializeを呼び出す
+  changeScreen('entryNo','ログイン');
 });
