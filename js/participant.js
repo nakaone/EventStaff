@@ -71,9 +71,7 @@ class Broad {
 }
 
 const config = {
-  // 分類A
   AuthURL: "https://script.google.com/macros/s/AKfycbxCXpmamk-zGGckxIuCwEfP4Ac24sRKmO3DcFuBBW2UaNJK87RBr50eykjxKJ2D324k-w/exec",
-  AuthLevel: 0,
 }
 
 const getEntryNo = () => {  // 受付番号入力時処理
@@ -175,6 +173,24 @@ const initialize = (arg) => {  // 初期設定処理
   // 08. アンケート
   document.querySelector('#enquete .button').innerHTML
   = '<a href="' + config.EnqueteURL + '" class="button">参加者アンケート</a>';
+
+  // menuFlagsに基づくメニューの表示・非表示制御
+  [
+    {flag:2, selector:'#home .PostArea'},
+    {flag:4, selector:'.menu [name="dispEntryNo"]'},
+    {flag:8, selector:'.menu [name="ReservationStatus"]'},
+    {flag:16, selector:'.menu [name="SearchPerticipant"]'},
+    {flag:32, selector:'.menu [name="onThatDay"]'},
+    {flag:64, selector:'.menu [name="ParticipationStatus"]'},
+    {flag:128, selector:'.menu [name="CornerOperation"]'},
+    {flag:256, selector:'.menu [name="schedule"]'},
+    {flag:512, selector:'.menu [name="VenueMap"]'},
+    {flag:1024, selector:'.menu [name="noticeSite"]'},
+    {flag:2048, selector:'.menu [name="enquete"]'},
+  ].forEach(x => {
+    document.querySelector(x.selector).style.display
+    = ( config.menuFlags & x.flag ) > 0 ? 'block' : 'none';
+  });
 
   // 新規のお知らせが来たら末尾を表示するよう設定
   // https://at.sachi-web.com/blog-entry-1516.html
