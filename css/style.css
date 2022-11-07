@@ -152,7 +152,8 @@ nav li a {
 /* =========================================================
   ホーム画面
 ========================================================= */
-#home .postArea {
+#home .PostArea {
+  display: none;
   width: calc(100% - 1rem);
   padding: 0.5rem;
   background-color: #deecc6;

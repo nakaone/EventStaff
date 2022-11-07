@@ -18,15 +18,21 @@
   </header>
   <nav class="menu">
     <ul>
-      <li onclick="changeScreen()">お知らせ</li>
+      <li name="home" onclick="changeScreen()">お知らせ</li>
 
-      <li>受付番号表示</li>
+      <li name="dispEntryNo">受付番号表示</li>
+      <li name="ReservationStatus">予約状況参照</li>
 
-      <li onclick="changeScreen('schedule','進行予定')">進行予定</a></li>
-      <li onclick="changeScreen('VenueMap','校内案内図')">校内案内図</li>
-      <li><a class="noticeSite" target="_blank">募集要項</a></li><!-- ※Googleのサイトはiframe不可 -->
-      <li onclick="changeScreen('enquete','アンケート')">アンケート</li>
-      <li onclick="changeScreen('system','システム設定')">システム設定</li>
+      <li name="SearchPerticipant" onclick="inputSearchKey()">該当者検索</li>
+      <li name="onThatDay" onclick="onThatDay()">当日参加対応</li>
+      <li name="ParticipationStatus" onclick="showSummary()">参加状況</li>
+      <li name="CornerOperation">コーナー運営</li>
+
+      <li name="schedule" onclick="changeScreen('schedule','進行予定')">進行予定</a></li>
+      <li name="VenueMap" onclick="changeScreen('VenueMap','校内案内図')">校内案内図</li>
+      <li name="noticeSite"><a class="noticeSite" target="_blank">募集要項</a></li><!-- ※Googleのサイトはiframe不可 -->
+      <li name="enquete" onclick="changeScreen('enquete','アンケート')">参加者アンケート</li>
+      <li name="system" onclick="changeScreen('system','システム設定')">システム設定</li>
 
     </ul>
   </nav>
@@ -53,7 +59,66 @@
   </div>
 
   <div id="home" class="screen"><!-- ホーム画面 -->
+    <div class="PostArea">
+      <input type="button" value="投稿する" />
+      <div class="postMessage" style="display:none">
+        <div class="fromto">
+          <label>From</label>
+          <input type="text" name="from" width="100%"
+            placeholder="ハンドルネームを入力"
+            onchange="config.set('handleName',this.value);"
+          />
+        </div>
+        <div class="fromto">
+          <label>To</label>
+          <select name="to">
+            <option value="スタッフ全員">スタッフ全員</option>
+            <option value="本部">本部</option>
+            <option value="カレー担当">カレー担当</option>
+            <option value="校内探検担当">校内探検担当</option>
+            <option value="受付担当">受付担当</option>
+            <option value="金魚すくい担当">金魚すくい担当</option>
+            <option value="射的担当">射的担当</option>
+          </select>
+        </div>
+        <div>
+          <textarea name="message"></textarea>
+        </div>
+        <div class="submit">
+          <input type="button" value="送信" onclick="postMessage()" />
+        </div>
+      </div>
+    </div>
     <div id="BroadArea">
+    </div>
+  </div>
+
+  <div id="inputSearchKey" class="screen"><!-- 該当者検索 -->
+    <input type="text" placeholder="&#x1F50D受付番号または氏名読み(最初の数文字)" />
+    <input type="button" value="検索" />
+    <div class="scanner"></div><!-- QRコードスキャナ -->
+  </div>
+
+  <div id="selectParticipant" class="screen"><!-- 該当者選択 -->
+  </div>
+
+  <div id="editParticipant" class="screen"><!-- 参加者情報編集 -->
+    <div class="edit"></div>
+    <div>
+      <input value="更新" type="button" onclick="updateParticipant()" />
+      <input value="破棄" type="button" onclick="changeScreen()" />
+    </div>
+    <div class="result"></div>
+  </div>
+
+  <div id="onThatDay" class="screen"><!-- 参加フォームURLのQRコード表示画面 -->
+    <div>
+      <p>スマホをお持ちの場合、申請フォームに必要事項を記入してください。</p>
+      <input type="button" value="QRコード表示" />
+      <div class="qrcode" style="display:none"></div>
+    </div>
+    <div>
+      <p>スマホをお持ちでない場合、事前記入された当日参加申請票を以下からスキャンしてください</p>
     </div>
   </div>
 
@@ -74,10 +139,6 @@
   </div>
 
   <div id="system" class="screen"><!-- システム画面 -->
-    <input type="button" value="設定の参照(グローバル変数)" onclick="alert(JSON.stringify(config))" />
-    <input type="button" value="設定の参照(localStorage)" onclick="alert(localStorage.getItem('config'))" />
-    <input type="button" value="localStorageのクリア" onclick="localStorage.removeItem('config');alert('clear!')" />
-    <hr />
     <p>掲示板メッセージの定期取得</p>
     <input type="button" value="再開" onclick="config.Broad.start();alert('再開しました')" />
     <input type="button" value="停止" onclick="config.Broad.stop();alert('停止しました')" />
