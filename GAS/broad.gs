@@ -1,4 +1,4 @@
-const config = szLib.setConfig(['BoardKey']);
+const config = szLib.setConfig(['BroadKey']);
 
 // ===========================================================
 // トリガー関数
@@ -18,7 +18,7 @@ const doGetTest = () => {
     {func:'getMessages',data:{}},
   ];
   for( let i=0 ; i<testData.length ; i++ ){
-    doGet({parameter:{v:szLib.encrypt(testData[i],config.BoardKey)}});
+    doGet({parameter:{v:szLib.encrypt(testData[i],config.BroadKey)}});
   }
 };
 
@@ -26,7 +26,7 @@ function doGet(e) {
   console.log('放送局.doGet start.',e);
 
   // 'v'で渡されたクエリを復号
-  arg = szLib.decrypt(e.parameter.v,config.BoardKey);
+  arg = szLib.decrypt(e.parameter.v,config.BroadKey);
   console.log('放送局.arg',szLib.whichType(arg),arg);
 
   let rv = [];

@@ -91,16 +91,16 @@ const config = {
   ]},
   // 分類B
   MasterAPI: null,        // 「回答」のGAS Web API の ID。"https://script.google.com/macros/s/〜/exec"
-  BoardAPI: null,         // 「掲示板」のGAS Web API のID
-  passPhrase: null,       // GASとの共通鍵(Master, Board共通)
+  BroadAPI: null,         // 「掲示板」のGAS Web API のID
+  passPhrase: null,       // GASとの共通鍵(Master, Broad共通)
   DateOfExpiry: null,     // config情報の有効期限
-  BoardInterval: 30000,   // 掲示板巡回のインターバル。m秒
+  BroadInterval: 30000,   // 掲示板巡回のインターバル。m秒
   // 分類C
   handleName: '(未定義)',  // お知らせに表示する自分の名前
   // 分類D
   scanCode: false,        // スキャン実行フラグ。true時のみスキャン可
   getMessages: false,     // 掲示板データ取得フラグ。true時のみ実行可。
-  BoardIntervalId: null,  // setIntervalのID
+  BroadIntervalId: null,  // setIntervalのID
   // --- メソッド
   set: (label,value) => { // 値のセット＋localStorageへの格納
     console.log('config.set start. label='+label+', value='+JSON.stringify(value));
@@ -187,7 +187,7 @@ const initialize = () => {  // 初期設定処理
   });
   // 新規のお知らせが来たら末尾を表示
   // https://at.sachi-web.com/blog-entry-1516.html
-  const msgArea = document.getElementById('boardArea');
+  const msgArea = document.getElementById('BroadArea');
   const mo = new MutationObserver(() => {
     console.log('mutation detected');
     msgArea.scrollTop = msgArea.scrollHeight;
@@ -441,7 +441,7 @@ const postMessage = () => { // メッセージを投稿
   const toNum = toEl.selectedIndex;
   msg.to = toEl.options[toNum].value;
 
-  doGet(config.BoardAPI,{func:'postMessage',data:msg},(response) => {
+  doGet(config.BroadAPI,{func:'postMessage',data:msg},(response) => {
     console.log(response);
     getMessages(0); // 掲示板を更新
   });
@@ -454,9 +454,9 @@ const getMessages = (arg=0) => {
   if( arg === 0 ){  // 定期的に実行される処理
     const cTime = new Date();
     console.log('getMessages periodical start: '+cTime.toLocaleString('ja-JP')+'.'+cTime.getMilliseconds());
-    if( config.getMessages && config.BoardIntervalId !== null){
-      // 掲示板スプレッドシートからデータを取得し、boardAreaに書き込む
-      doGet(config.BoardAPI,{func:'getMessages',data:{}},(response) => {
+    if( config.getMessages && config.BroadIntervalId !== null){
+      // 掲示板スプレッドシートからデータを取得し、BroadAreaに書き込む
+      doGet(config.BroadAPI,{func:'getMessages',data:{}},(response) => {
         console.log('getMessages response='+JSON.stringify(response));
         // 時系列にメッセージを並べ替え
         response.sort((a,b) => a.timestamp < b.timestamp);
@@ -483,7 +483,7 @@ const getMessages = (arg=0) => {
           msg += m;
         }
         // 掲示板領域に書き込み
-        const msgEl = document.getElementById('boardArea');
+        const msgEl = document.getElementById('BroadArea');
         msgEl.innerHTML = msg;
         msgEl.scrollIntoView(false);
         console.log('getMessages periodical end: '+msg);
@@ -492,19 +492,19 @@ const getMessages = (arg=0) => {
   } else {  // 実行/停止指示
     if( arg > 0 ){  // 定期巡回開始(再開)
       config.getMessages = true;
-      //config.BoardInterval = true;
+      //config.BroadInterval = true;
       console.log('config='+JSON.stringify(config));
       // 取得間隔は最低10秒。既定値30秒
-      const interval = Number(config.BoardInterval) > 9999 ? config.BoardInterval : 30000;
-//      config.BoardIntervalId = setInterval(getMessages,10000);
-      config.BoardIntervalId = setInterval(getMessages,interval);
-      console.log('getMessages start. id='+config.BoardIntervalId);
+      const interval = Number(config.BroadInterval) > 9999 ? config.BroadInterval : 30000;
+//      config.BroadIntervalId = setInterval(getMessages,10000);
+      config.BroadIntervalId = setInterval(getMessages,interval);
+      console.log('getMessages start. id='+config.BroadIntervalId);
     } else {    // 定期巡回停止
-      clearInterval(config.BoardIntervalId);
+      clearInterval(config.BroadIntervalId);
       config.getMessages = false;
-      //config.BoardInterval = false;
-      console.log('getMessages stop. id='+config.BoardIntervalId);
-      config.BoardIntervalId = null;
+      //config.BroadInterval = false;
+      console.log('getMessages stop. id='+config.BroadIntervalId);
+      config.BroadIntervalId = null;
     }
   }
 }

@@ -3,21 +3,21 @@ class Broad {
     this.URL = URL;
     this.key = key;
     this.interval = interval;
-    console.log('Board.constructor end.');
+    console.log('Broad.constructor end.');
   }
 
   start(){
     this.onGoing = true;
     this.IntervalId = setInterval(this.periodical,this.interval);
     this.periodical();
-    console.log('Board.start');
+    console.log('Broad.start');
   }
 
   end(){
     this.onGoing = false;
     clearInterval(this.IntervalId);
     this.IntervalId = null;
-    console.log('Board.end');
+    console.log('Broad.end');
   }
 
   periodical(){
@@ -48,7 +48,7 @@ class Broad {
         msg += m;
       }
       // 掲示板領域に書き込み
-      const msgEl = document.getElementById('boardArea');
+      const msgEl = document.getElementById('BroadArea');
       msgEl.innerHTML = msg;
       msgEl.scrollIntoView(false);
       console.log('getMessages periodical end: '+msg);
@@ -149,7 +149,7 @@ const initialize = (arg) => {  // 初期設定処理
   }
   config.menuFlags = arg.menuFlags;
   // 数値項目は数値化
-  config.BoardInterval = Number(arg.config.BoardInterval);
+  config.BroadInterval = Number(arg.config.BroadInterval);
   console.log('initialize.config',config);
 
   // 05. 進行予定画面
@@ -164,7 +164,7 @@ const initialize = (arg) => {  // 初期設定処理
 
   // 新規のお知らせが来たら末尾を表示するよう設定
   // https://at.sachi-web.com/blog-entry-1516.html
-  const msgArea = document.getElementById('boardArea');
+  const msgArea = document.getElementById('BroadArea');
   const mo = new MutationObserver(() => {
     console.log('mutation detected');
     msgArea.scrollTop = msgArea.scrollHeight;
@@ -180,7 +180,7 @@ const initialize = (arg) => {  // 初期設定処理
   });
 
   // 掲示板定期更新開始
-  config.Broad = new Broad(config.BroadURL,config.BroadKey,config.BoardInterval);
+  config.Broad = new Broad(config.BroadURL,config.BroadKey,config.BroadInterval);
   config.Broad.start();
   //getMessages(1);
 

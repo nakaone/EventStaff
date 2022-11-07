@@ -668,7 +668,7 @@ const htmlPattern = `
   border-radius: 8px;">参加申込の修正</a></p>
 
 <p>なお当日の注意事項・持ち物リストは適宜追加されることがありますので、
-イベント前日に「<a href="::boardURL::">開催案内</a>」のページで
+イベント前日に「<a href="::BroadURL::">開催案内</a>」のページで
 再度ご確認いただけますようお願い申し上げます。</p>
 
 <p>当日のお越しをお待ちしております。</p>
@@ -1145,14 +1145,14 @@ No | 変更 | 設定元 | 保存 | 分類 | メンバ名 | 概要
 6 | 無 | ソース | 否 | A | editParticipant | 参加者情報入力画面の定義
 7 | 無 | ソース | 否 | A | map | シート上の項目名 <-> HTML上のname 対応表
 8 | 無 | シート | 要 | B | MasterAPI | 「回答」のGAS Web API の ID<br>"https://script.google.com/macros/s/〜/exec"
-9 | 無 | シート | 要 | B | BoardAPI | 「掲示板」のGAS Web API のID
-10 | 無 | シート | 要 | B | passPhrase | GASとの共通鍵(Master, Board共通)
+9 | 無 | シート | 要 | B | BroadAPI | 「掲示板」のGAS Web API のID
+10 | 無 | シート | 要 | B | passPhrase | GASとの共通鍵(Master, Broad共通)
 11 | 無 | シート | 要 | B | DateOfExpiry | シートが優先される設定情報の有効期限
-12 | 無 | シート | 要 | B | BoardInterval | 掲示板データ取得の間隔。ミリ秒
+12 | 無 | シート | 要 | B | BroadInterval | 掲示板データ取得の間隔。ミリ秒
 13 | 有 | 手動 | 要 | C | handleName | お知らせに表示する自分の名前
 14 | 有 | 自動 | 否 | D | scanCode | スキャン実行フラグ。true時のみスキャン可
 15 | 有 | 自動 | 否 | D | getMessages | 掲示板データ取得フラグ。true時のみ実行可
-16 | 有 | 自動 | 否 | D | BoardIntervalId | お知らせデータの定期取得で設定されるsetInterval()のID
+16 | 有 | 自動 | 否 | D | BroadIntervalId | お知らせデータの定期取得で設定されるsetInterval()のID
 
 - 「変更」は、プログラム実行中に値が変化するかどうか。
 - 「設定元」は、その値がどこで設定されるか。
