@@ -9,10 +9,22 @@
  *   data : データ行を[{ラベル1:値, ラベル2:値, ..},{..},..]形式にした配列
  *   sheet: getSheetで取得したシートのオブジェクト
  */
-function getSheetData(sheetName='マスタ'){
+const lookupTest = () => {
+  const spreadId = '1y4FjpKJVE5zhwgK68IKiahy6Pm3v_PNigkcgDFW2YpE';
+  const dObj = getSheetData('郵便局初期化',spreadId);
+  console.log(JSON.stringify(dObj));
+  console.log(dObj.lookup('parameters','template'));
+}
+
+function getSheetData(sheetName='マスタ',spreadId){
   console.log('szLib.getSheetData start. sheetName='+sheetName);
 
-  const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
+  let sheet;
+  if( spreadId ){
+    sheet = SpreadsheetApp.openById(spreadId).getSheetByName(sheetName);
+  } else {
+    sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
+  }
   // JSONオブジェクトに変換する
   const rows = sheet.getDataRange().getValues()
     .filter(row => row.join('').length > 0);  // 空白行は削除
@@ -24,7 +36,11 @@ function getSheetData(sheetName='マスタ'){
     });
     return obj;
   });
-  const rv = {rows:rows, keys:keys, data:data, sheet:sheet};
+  const rv = {rows:rows, keys:keys, data:data, sheet:sheet,
+    lookup: (key,value) => { // 項目名'key'の値がvalueである行Objを返す
+      return data.filter(x => {return x[key] === value})[0];
+    },
+  };
   console.log('szLib.getSheetData end.\n'+JSON.stringify({
     // 配列が大きいと表示し切れないので、rows,dataは最初の1行のみサンプル表示
     rows: [rv.rows[0] || 'null'],
@@ -40,6 +56,8 @@ function getSheetData(sheetName='マスタ'){
  * @return {object} - configのオブジェクト
  */
 function setConfig(arg=['MasterURL']){
+  console.log('szLib.setConfig start. arg='+JSON.stringify(arg));
+
   const rv = {};
   // 「管理局」configシートのデータを読み込み
   const configSheet = SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1eTBBzj9pryniOK-vTbNMks6aO5tqRdEjjgeQpBNZDuI/edit#gid=397762435').getSheetByName('config');
@@ -49,7 +67,7 @@ function setConfig(arg=['MasterURL']){
   // key, value の列番号を検索
   const keyRow = configData[0].findIndex(x => x === 'key');
   const valueRow = configData[0].findIndex(x => x === 'value');
-  console.log('key='+keyRow+', value='+valueRow);
+  //console.log('key='+keyRow+', value='+valueRow);
 
   // 指定キーの値をconfigにセット
   for( let i=0 ; i<arg.length ; i++ ){
@@ -57,10 +75,10 @@ function setConfig(arg=['MasterURL']){
       //console.log(x[keyRow],arg[i],x[keyRow] === arg[i]);
       return x[keyRow] === arg[i];
     })[0];
-    console.log(arg[i],arr[valueRow]);
+    //console.log(arg[i],arr[valueRow]);
     rv[arg[i]] = arr[valueRow];
   }
-  console.log('rv='+JSON.stringify(rv));
+  console.log('szLib.setConfig end. rv='+JSON.stringify(rv));
   return rv;
 }
 

@@ -1,19 +1,28 @@
 class Broad {
-  constructor(URL,key,interval=30000){
-    this.URL = URL;
+  
+  constructor(url=config.BroadURL,key=config.BroadKey,interval=config.BroadInterval){
+    this.url = url;
     this.key = key;
     this.interval = interval;
-    console.log('Broad.constructor end.');
+    console.log('Broad.constructor end.'
+      + '\nurl=' + this.url
+      + '\nkey=' + this.key
+      + '\ninterval=' + this.interval
+    );
   }
 
   start(){
     this.onGoing = true;
-    this.IntervalId = setInterval(this.periodical,this.interval);
+    this.IntervalId = setInterval(this.periodical(),this.interval);
     this.periodical();
-    console.log('Broad.start');
+    console.log('Broad.start'
+      + '\nurl=' + this.url
+      + '\nkey=' + this.key
+      + '\ninterval=' + this.interval
+    );
   }
 
-  end(){
+  stop(){
     this.onGoing = false;
     clearInterval(this.IntervalId);
     this.IntervalId = null;
@@ -21,7 +30,12 @@ class Broad {
   }
 
   periodical(){
-    doGet(this.URL,this.key,{func:'getMessages',data:{}},(response) => {
+    console.log('Broad.periodical'
+      + '\nurl=' + this.url
+      + '\nkey=' + this.key
+      + '\ninterval=' + this.interval
+    );
+    doGet(this.url,this.key,{func:'getMessages',data:{}},(response) => {
       console.log('getMessages response='+JSON.stringify(response));
       // 時系列にメッセージを並べ替え
       response.sort((a,b) => a.timestamp < b.timestamp);
@@ -149,7 +163,7 @@ const initialize = (arg) => {  // 初期設定処理
   }
   config.menuFlags = arg.menuFlags;
   // 数値項目は数値化
-  config.BroadInterval = Number(arg.config.BroadInterval);
+  config.BroadInterval = Number(arg.config.BroadInterval) || 30000;
   console.log('initialize.config',config);
 
   // 05. 進行予定画面
@@ -182,7 +196,6 @@ const initialize = (arg) => {  // 初期設定処理
   // 掲示板定期更新開始
   config.Broad = new Broad(config.BroadURL,config.BroadKey,config.BroadInterval);
   config.Broad.start();
-  //getMessages(1);
 
   changeScreen();// ホーム画面表示
   console.log("initialize end.",config);
@@ -216,7 +229,11 @@ const changeScreen = (scrId='home',titleStr='お知らせ') => {  // 表示画�
 }
 
 const doGet = (endpoint,passPhrase,postData,callback) => {  // GASのdoGetを呼び出し、後続処理を行う
-  console.log("doGet start. ",endpoint,passPhrase,postData,callback);
+  console.log("doGet start."
+    + '\nendpoint='+endpoint
+    + '\npassPhrase='+passPhrase
+    + '\npostData='+JSON.stringify(postData)
+  );
 
   // GASに渡すデータを作成
   const v = encrypt(postData,passPhrase);

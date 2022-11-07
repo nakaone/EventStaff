@@ -169,22 +169,22 @@ nav li a {
   width: 90%;
   height: 4rem;
 }
-#boardArea {
+#BroadArea {
   width: 100%;
   height: 100%;
   overflow: auto;
 }
-#boardArea p {
+#BroadArea p {
   width: 100%;
   margin-top: 0;
   margin-bottom: 0.5rem;
 }
-#boardArea p.date {
+#BroadArea p.date {
   padding-left: 1rem;
   background-color: forestgreen;
   color: white;  
 }
-#boardArea p.title {
+#BroadArea p.title {
   margin-bottom: 0.2rem;
   background-color: #a0c238;
   font-size: 0.8rem;
