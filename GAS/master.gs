@@ -318,8 +318,10 @@ const auth2B = (arg) => {
       });
       // editParticipantはオブジェクト用の記述なので、正確なJSON形式に整形が必要
       rv.config.editParticipant = JSON.stringify(rv.config.editParticipant);
-      // (2) 表示するメニューのフラグ(menuFlags)
-      rv.menuFlags = participant.menuFlags || 7949; // 既定値「参加者」
+      // (2) 参加申請フォームの編集用URL
+      rv.config.entryURL = participant['編集用URL'];
+      // (3) 表示するメニューのフラグ(menuFlags)
+      rv.menuFlags = participant.menuFlags || 8431; // 既定値「参加者」
     } else {
       // 検証NG：エラー通知
       rv = {

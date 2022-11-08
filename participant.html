@@ -20,7 +20,8 @@
     <ul>
       <li name="home" onclick="changeScreen()">お知らせ</li>
 
-      <li name="dispEntryNo">受付番号表示</li>
+      <li name="entryURL"><a class="entryURL" target="_blank">参加者の変更・取消</a></li>
+      <li name="dispEntryNo" onclick="changeScreen('dispEntryNo','受付番号表示')">受付番号表示</li>
       <li name="ReservationStatus">予約状況参照</li>
 
       <li name="SearchPerticipant" onclick="inputSearchKey()">該当者検索</li>
@@ -91,6 +92,11 @@
     </div>
     <div id="BroadArea">
     </div>
+  </div>
+
+  <div id="dispEntryNo" class="screen"><!-- 受付番号表示(QR) -->
+    <div><h1></h1></div>
+    <div class="qrcode"></div>
   </div>
 
   <div id="inputSearchKey" class="screen"><!-- 該当者検索 -->

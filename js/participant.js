@@ -92,11 +92,11 @@ const getEntryNo = () => {  // 受付番号入力時処理
     return;
   }
   const endpoint = config.AuthURL;
-  const entryNo = document.querySelector('#entryNo input').value;
+  config.entryNo = Number(document.querySelector('#entryNo input').value);
   const sendData = {  // 認証局へ受付番号をPOSTで送る
     func: 'auth1A',
     data: {
-      entryNo: entryNo,
+      entryNo: config.entryNo,
     }
   };
   doPost(endpoint,sendData,(response) => {
@@ -129,12 +129,11 @@ const getPassCode = () => {
     return;
   }
   const endpoint = config.AuthURL;
-  const entryNo = document.querySelector('#entryNo .entryNo input[type="text"]').value;
   const passCode = document.querySelector('#entryNo .passCode input[type="text"]').value;
   const sendData = {  // 認証局へ受付番号とパスコードをPOSTで送る
     func: 'auth2A',
     data: {
-      entryNo: entryNo,
+      entryNo: config.entryNo,
       passCode: passCode,
     }
   };
@@ -164,29 +163,36 @@ const initialize = (arg) => {  // 初期設定処理
   config.BroadInterval = Number(arg.config.BroadInterval) || 30000;
   console.log('initialize.config',config);
 
-  // 05. 進行予定画面
+  // 参加者の変更・取消　※Googleのサイトはiframe不可
+  document.querySelector('nav a.entryURL').href = config.entryURL;
+  // 受付番号表示(QRコード)
+  document.querySelector('#dispEntryNo h1').innerText
+  = 'No.' + ('000'+config.entryNo).slice(-4);
+  setQRcode('#dispEntryNo .qrcode',{text:config.entryNo});
+  // 進行予定画面
   document.querySelector("#schedule iframe").src = config.TableURL;
-  // 06. 校内案内図
+  // 校内案内図
   document.querySelector("#VenueMap iframe").src = config.MapURL;
-  // 07. サイト案内　※Googleのサイトはiframe不可
-  document.querySelector('nav .noticeSite').href = config.SiteURL;
-  // 08. アンケート
+  // サイト案内　※Googleのサイトはiframe不可
+  document.querySelector('nav a.noticeSite').href = config.SiteURL;
+  // アンケート
   document.querySelector('#enquete .button').innerHTML
-  = '<a href="' + config.EnqueteURL + '" class="button">参加者アンケート</a>';
+  = '<a href="' + config.EnqueteURL + '" class="button" target="_blank">参加者アンケート</a>';
 
   // menuFlagsに基づくメニューの表示・非表示制御
   [
-    {flag:2, selector:'#home .PostArea'},
-    {flag:4, selector:'.menu [name="dispEntryNo"]'},
-    {flag:8, selector:'.menu [name="ReservationStatus"]'},
-    {flag:16, selector:'.menu [name="SearchPerticipant"]'},
-    {flag:32, selector:'.menu [name="onThatDay"]'},
-    {flag:64, selector:'.menu [name="ParticipationStatus"]'},
-    {flag:128, selector:'.menu [name="CornerOperation"]'},
-    {flag:256, selector:'.menu [name="schedule"]'},
-    {flag:512, selector:'.menu [name="VenueMap"]'},
-    {flag:1024, selector:'.menu [name="noticeSite"]'},
-    {flag:2048, selector:'.menu [name="enquete"]'},
+    {flag:1, selector:'.menu [name="entryURL"]'},
+    {flag:2, selector:'.menu [name="dispEntryNo"]'},
+    {flag:4, selector:'.menu [name="enquete"]'},
+    {flag:16, selector:'.menu [name="ReservationStatus"]'},
+    {flag:32, selector:'.menu [name="schedule"]'},
+    {flag:64, selector:'.menu [name="VenueMap"]'},
+    {flag:128, selector:'.menu [name="noticeSite"]'},
+    {flag:256, selector:'#home .PostArea'},
+    {flag:512, selector:'.menu [name="SearchPerticipant"]'},
+    {flag:1024, selector:'.menu [name="onThatDay"]'},
+    {flag:2048, selector:'.menu [name="ParticipationStatus"]'},
+    {flag:4096, selector:'.menu [name="CornerOperation"]'},
   ].forEach(x => {
     document.querySelector(x.selector).style.display
     = ( config.menuFlags & x.flag ) > 0 ? 'block' : 'none';
