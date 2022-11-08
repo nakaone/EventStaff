@@ -3,9 +3,8 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta http-equiv="Content-Style-Type" content="text/css">
   <meta http-equiv="Content-Script-Type" content="text/javascript">
-  <title>EventStaff</title>
+  <title>participant</title>
   <link rel="stylesheet" href="css/style.css">
-  <!-- link rel="stylesheet" href="css/hambergerMenu.css" -->
 </head>
 
 <body>
@@ -19,18 +18,22 @@
   </header>
   <nav class="menu">
     <ul>
-      <li onclick="changeScreen()">お知らせ</li>
+      <li name="home" onclick="changeScreen()">お知らせ</li>
 
-      <li onclick="inputSearchKey()">該当者検索</li>
-      <li onclick="onThatDay()">当日参加対応</li>
-      <li onclick="showSummary()">参加状況</li>
+      <li name="entryURL"><a class="entryURL" target="_blank">参加者の変更・取消</a></li>
+      <li name="dispEntryNo" onclick="changeScreen('dispEntryNo','受付番号表示')">受付番号表示</li>
+      <li name="ReservationStatus">予約状況参照</li>
 
-      <li onclick="changeScreen('schedule','進行予定')">進行予定</a></li>
-      <li onclick="changeScreen('VenueMap','校内案内図')">校内案内図</li>
-      <li><a class="noticeSite" target="_blank">募集要項</a></li><!-- ※Googleのサイトはiframe不可 -->
-      <li><a src="participant.html" target="_blank">参加者用画面</a></li>
-      <li onclick="changeScreen('enquete','アンケート')">アンケート</li>
-      <li onclick="changeScreen('system','システム設定')">システム設定</li>
+      <li name="SearchPerticipant" onclick="inputSearchKey()">該当者検索</li>
+      <li name="onThatDay" onclick="onThatDay()">当日参加対応</li>
+      <li name="ParticipationStatus" onclick="showSummary()">参加状況</li>
+      <li name="CornerOperation">コーナー運営</li>
+
+      <li name="schedule" onclick="changeScreen('schedule','進行予定')">進行予定</a></li>
+      <li name="VenueMap" onclick="changeScreen('VenueMap','校内案内図')">校内案内図</li>
+      <li name="noticeSite"><a class="noticeSite" target="_blank">募集要項</a></li><!-- ※Googleのサイトはiframe不可 -->
+      <li name="enquete" onclick="changeScreen('enquete','アンケート')">参加者アンケート</li>
+      <li name="system" onclick="changeScreen('system','システム設定')">システム設定</li>
 
     </ul>
   </nav>
@@ -39,21 +42,32 @@
     <img src="img/loading.gif" />
   </div>
 
-  <div id="initialize" class="screen"><!-- 初期化処理画面 -->
-    <div>下のカメラで初期設定用QRコードを読み取ってください。</div>
-    <div class="scanner"></div><!-- QRコードスキャナ -->
-    <div class="msg"></div>
+  <div id="entryNo" class="screen"><!-- 受付番号入力 -->
+    <div class="entryNo">
+      <p>受付番号を入力してください</p>
+      <input type="text" />
+      <input type="button" value="送信" onclick="getEntryNo()" />
+      <!-- a type="button" class="button" onclick="getEntryNo()" />送信</a -->
+      <div class="message"></div>
+    </div>
+    <div class="passCode">
+      <p>確認のメールを送信しました。記載されているパスコード(数字6桁)を入力してください。<br>
+      ※まれに迷惑メールと判定される場合があります。メールが来ない場合、そちらもご確認ください。</p>
+      <input type="text" />
+      <input type="button" value="送信" onclick="getPassCode()" />
+      <div class="message">※パスコードの有効期限は1時間です</div>
+    </div>
   </div>
 
   <div id="home" class="screen"><!-- ホーム画面 -->
-    <div class="postArea">
+    <div class="PostArea">
       <input type="button" value="投稿する" />
       <div class="postMessage" style="display:none">
         <div class="fromto">
           <label>From</label>
           <input type="text" name="from" width="100%"
             placeholder="ハンドルネームを入力"
-            onchange="config.set('handleName',this.value);"
+            onchange="config.handleName=this.value"
           />
         </div>
         <div class="fromto">
@@ -80,6 +94,11 @@
     </div>
   </div>
 
+  <div id="dispEntryNo" class="screen"><!-- 受付番号表示(QR) -->
+    <div><h1></h1></div>
+    <div class="qrcode"></div>
+  </div>
+
   <div id="inputSearchKey" class="screen"><!-- 該当者検索 -->
     <input type="text" placeholder="&#x1F50D受付番号または氏名読み(最初の数文字)" />
     <input type="button" value="検索" />
@@ -90,121 +109,7 @@
   </div>
 
   <div id="editParticipant" class="screen"><!-- 参加者情報編集 -->
-    <div class="edit">
-      <div class="table">
-        <div class="tr entry"><!- 申請者情報 ->
-          <div class="td" name="entryNo"></div>
-          <div class="td">
-            <ruby><rb name="name"></rb><rt name="yomi"></rt></ruby>
-          </div>
-          <div><input type="button" value="詳細" /></div>
-        </div>
-        <div class="tr detail"><!- 申請の詳細 ->
-          <div name="timestamp"></div>
-          <div name="email"></div>
-          <div name="tel"></div>
-          <div name="pickup"></div>
-          <div name="note"></div>
-          <div name="cancel"></div>
-          <div name="form">
-            <div>申込フォーム：</div>
-            <div class="qrcode"></div>
-            <input type="button" value="申込フォームの表示" />
-          </div>
-        </div>
-        <div class="tr participant"><!- 申請者の入退場・参加費 ->
-          <div></div><div></div><!- Noと名前のプレースホルダ ->
-          <div>
-            <label>入退場</label><!- 申請者のみ「未登録」は除外 ->
-            <select class="status" name="status00">
-              <option value="未入場">未入場</option>
-              <option value="入場済">入場済</option>
-              <option value="退場済">退場済</option>
-              <option value="不参加">不参加</option>
-            </select>
-          </div>
-          <div>
-            <label>参加費</label>
-            <select class="fee" name="fee00">
-              <option value="未収">未収</option>
-              <option value="既収">既収</option>
-              <option value="免除">免除</option>
-              <option value="無し">無し</option>
-            </select>
-          </div>
-          <hr />
-        </div>
-        <div class="tr participant"><!- 参加者① ->
-          <div>①</div>
-          <div name="name01"></div>
-          <div>
-            <label>入退場</label>
-            <select class="status" name="status01">
-              <option value="未入場">未入場</option>
-              <option value="入場済">入場済</option>
-              <option value="退場済">退場済</option>
-              <option value="不参加">不参加</option>
-              <option value="未登録">未登録</option>
-            </select>
-          </div>
-          <div>
-            <label>参加費</label>
-            <select class="fee" name="fee01">
-              <option value="未収">未収</option>
-              <option value="既収">既収</option>
-              <option value="免除">免除</option>
-              <option value="無し">無し</option>
-            </select>
-          </div>
-        </div>
-        <div class="tr participant"><!- 参加者② ->
-          <div>②</div>
-          <div name="name02"></div>
-          <div>
-            <label>入退場</label>
-            <select class="status" name="status02">
-              <option value="未入場">未入場</option>
-              <option value="入場済">入場済</option>
-              <option value="退場済">退場済</option>
-              <option value="不参加">不参加</option>
-              <option value="未登録">未登録</option>
-            </select>
-          </div>
-          <div>
-            <label>参加費</label>
-            <select class="fee" name="fee02">
-              <option value="未収">未収</option>
-              <option value="既収">既収</option>
-              <option value="免除">免除</option>
-              <option value="無し">無し</option>
-            </select>
-          </div>
-        </div>
-        <div class="tr participant"><!- 参加者③ ->
-          <div>③</div>
-          <div name="name03"></div>
-          <div>
-            <label>入退場</label>
-            <select class="status" name="status03">
-              <option value="未入場">未入場</option>
-              <option value="入場済">入場済</option>
-              <option value="退場済">退場済</option>
-              <option value="不参加">不参加</option>
-              <option value="未登録">未登録</option>
-            </select>
-          </div>
-          <div>
-            <label>参加費</label>
-            <select class="fee" name="fee03">
-              <option value="未収">未収</option>
-              <option value="既収">既収</option>
-              <option value="免除">免除</option>
-              <option value="無し">無し</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
+    <div class="edit"></div>
     <div>
       <input value="更新" type="button" onclick="updateParticipant()" />
       <input value="破棄" type="button" onclick="changeScreen()" />
@@ -233,25 +138,16 @@
 
   <div id="enquete" class="screen"><!-- アンケート -->
     <p>本日参加された感想を是非以下にお寄せください。</p>
-    <div class="qrcode"></div>
+    <div class="button"></div>
   </div>
 
   <div id="showSummary" class="screen"><!-- 集計表の表示画面 -->
   </div>
 
   <div id="system" class="screen"><!-- システム画面 -->
-    <div><a href="prototype/chat.html" target="_blank">prototype::chat</a></div>
-    <div><a href="prototype/crypto.html" target="_blank">prototype::crypto</a></div>
-    <div><a href="prototype/inspect.html" target="_blank">prototype::inspect</a></div>
-    <div><a href="prototype/convertCharacters.html" target="_blank">prototype::convertCharacters</a></div>
-    <hr />
-    <input type="button" value="設定の参照(グローバル変数)" onclick="alert(JSON.stringify(config))" />
-    <input type="button" value="設定の参照(localStorage)" onclick="alert(localStorage.getItem('config'))" />
-    <input type="button" value="localStorageのクリア" onclick="localStorage.removeItem('config');alert('clear!')" />
-    <hr />
     <p>掲示板メッセージの定期取得</p>
-    <input type="button" value="再開" onclick="getMessages(1);alert('再開しました')" />
-    <input type="button" value="停止" onclick="getMessages(-1);alert('停止しました')" />
+    <input type="button" value="再開" onclick="config.Broad.start();alert('再開しました')" />
+    <input type="button" value="停止" onclick="config.Broad.stop();alert('停止しました')" />
   </div>
 </body>
 <script src="js/jsQR.js" defer></script>

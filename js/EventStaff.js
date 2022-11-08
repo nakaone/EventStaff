@@ -1,10 +1,77 @@
+class Broad {
+  
+  constructor(url=config.BroadURL,key=config.BroadKey,interval=config.BroadInterval){
+    this.url = url;
+    this.key = key;
+    this.interval = interval;
+    console.log('Broad.constructor end.'
+      + '\nurl=' + this.url
+      + '\nkey=' + this.key
+      + '\ninterval=' + this.interval
+    );
+  }
+
+  start(){
+    this.onGoing = true;
+    this.IntervalId = setInterval(this.periodical(),this.interval);
+    this.periodical();
+    console.log('Broad.start'
+      + '\nurl=' + this.url
+      + '\nkey=' + this.key
+      + '\ninterval=' + this.interval
+    );
+  }
+
+  stop(){
+    this.onGoing = false;
+    clearInterval(this.IntervalId);
+    this.IntervalId = null;
+    console.log('Broad.end');
+  }
+
+  periodical(){
+    console.log('Broad.periodical'
+      + '\nurl=' + this.url
+      + '\nkey=' + this.key
+      + '\ninterval=' + this.interval
+    );
+    doGet(this.url,this.key,{func:'getMessages',data:{}},(response) => {
+      console.log('getMessages response='+JSON.stringify(response));
+      // 時系列にメッセージを並べ替え
+      response.sort((a,b) => a.timestamp < b.timestamp);
+      console.log(response);
+      // 掲示板領域に書き込むHTMLを msg として作成
+      let msg = '';
+      let lastMesDate = '1900/01/01';
+      const t = '<p class="title">[_time] From:_from　To:_to</p><p>_message</p>';
+      for( let i=0 ; i<response.length ; i++ ){
+        const dt = new Date(response[i].timestamp);
+        if( dt.toLocaleDateString('ja-JP') !== lastMesDate ){
+          lastMesDate = dt.toLocaleDateString('ja-JP');
+          msg += '<p class="date">' + lastMesDate + '</p>';
+        }
+        const hms = ('0'+dt.getHours()).slice(-2)
+          + ':' + ('0'+dt.getMinutes()).slice(-2)
+          + ':' + ('0'+dt.getSeconds()).slice(-2);
+        const m = t.replace('_time',hms)
+          .replace('_from',response[i].from)
+          .replace('_to',response[i].to)
+          .replace('_message',response[i].message)
+          .replace(/\n/g,'<br>');
+        console.log('m='+m);
+        msg += m;
+      }
+      // 掲示板領域に書き込み
+      const msgEl = document.getElementById('BroadArea');
+      msgEl.innerHTML = msg;
+      msgEl.scrollIntoView(false);
+      console.log('getMessages periodical end: '+msg);
+    })
+  }
+}
+
 const config = {
-  // 分類A
-  FormURL: "https://docs.google.com/forms/d/e/1FAIpQLSfIJ4IFsBI5pPXsLz2jlTBczzIn8QZQL4r6QHqxZmSeDOhwUA/viewform",
-  SiteURL: "https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97",
-  MapURL: "materials/map.html",
-  TableURL: "materials/timetable/WBS.html",
-  EnqueteURL: "https://docs.google.com/forms/d/16r3luYQRiLVmI9xqaD4FuaSlUqTRGvI8nAGrjGcg8lc/viewform",
+  AuthURL: "https://script.google.com/macros/s/AKfycbxCXpmamk-zGGckxIuCwEfP4Ac24sRKmO3DcFuBBW2UaNJK87RBr50eykjxKJ2D324k-w/exec",
   editParticipant: {tag:"div", class:"table", children:[
     {tag:"div", class:"tr entry", children:[
       {tag:"div", class:"td entryNo", variable:"受付番号"},
@@ -89,32 +156,168 @@ const config = {
       ]},
     ]},
   ]},
-  // 分類B
-  MasterAPI: null,        // 「回答」のGAS Web API の ID。"https://script.google.com/macros/s/〜/exec"
-  BroadAPI: null,         // 「掲示板」のGAS Web API のID
-  passPhrase: null,       // GASとの共通鍵(Master, Broad共通)
-  DateOfExpiry: null,     // config情報の有効期限
-  BroadInterval: 30000,   // 掲示板巡回のインターバル。m秒
-  // 分類C
-  handleName: '(未定義)',  // お知らせに表示する自分の名前
-  // 分類D
-  scanCode: false,        // スキャン実行フラグ。true時のみスキャン可
-  getMessages: false,     // 掲示板データ取得フラグ。true時のみ実行可。
-  BroadIntervalId: null,  // setIntervalのID
-  // --- メソッド
-  set: (label,value) => { // 値のセット＋localStorageへの格納
-    console.log('config.set start. label='+label+', value='+JSON.stringify(value));
-    config[label] = value;
-    let sv = {};
-    for( let x in config ){
-      if( typeof config[x] !== 'function' ){
-	      sv[x] = config[x];
-      }
+}
+
+const getEntryNo = () => {  // 受付番号入力時処理
+  console.log('getEntryNo start.');
+
+  // 受付番号のボタンを不活性化
+  document.querySelector('#entryNo .entryNo input[type="button"]').disabled = 'disabled';
+  // メッセージ設定
+  document.querySelector('#entryNo .entryNo .message').innerHTML = '<p>暫くお待ちください...</p>';
+
+  const inputValue = document.querySelector('#entryNo .entryNo input[type="text"]').value;
+  if( !inputValue.match(/^[0-9]{1,4}$/) ){
+    alert("不適切な受付番号です");
+    // 入力欄をクリア
+    document.querySelector('#entryNo .entryNo input[type="text"]').value = '';
+    // 受付番号のボタンを活性化
+    document.querySelector('#entryNo .entryNo input[type="button"]').disabled = null;
+    return;
+  }
+  const endpoint = config.AuthURL;
+  config.entryNo = Number(document.querySelector('#entryNo input').value);
+  const sendData = {  // 認証局へ受付番号をPOSTで送る
+    func: 'auth1A',
+    data: {
+      entryNo: config.entryNo,
     }
-    sv = JSON.stringify(sv);
-    localStorage.setItem('config',sv)
-    console.log('config.set end. sv='+sv);
-  },
+  };
+  doPost(endpoint,sendData,(response) => {
+    console.log('getEntryNo response = '+JSON.stringify(response));
+    if( response.isErr ){
+      document.querySelector('#entryNo .entryNo .message').innerHTML
+        = '<p class="error">' + response.message + '</p>';
+    } else {
+      // 受付番号入力欄を隠蔽
+      document.querySelector('#entryNo .entryNo').style.display = 'none';
+      // パスコード入力画面を開く
+      document.querySelector('#entryNo .passCode').style.display = 'block';
+    }
+  });
+}
+
+const getPassCode = () => {
+  console.log('getPassCode start.');  
+
+  // パスコードのボタンを不活性化
+  document.querySelector('#entryNo .passCode input[type="button"]').disabled = 'disabled';
+
+  const inputValue = document.querySelector('#entryNo .passCode input[type="text"]').value;
+  if( !inputValue.match(/^[0-9]{6}$/) ){
+    alert("不適切なパスコードです");
+    // 入力欄をクリア
+    document.querySelector('#entryNo .passCode input[type="text"]').value = '';
+    // パスコードのボタンを活性化
+    document.querySelector('#entryNo .passCode input[type="button"]').disabled = null;
+    return;
+  }
+  const endpoint = config.AuthURL;
+  const passCode = document.querySelector('#entryNo .passCode input[type="text"]').value;
+  const sendData = {  // 認証局へ受付番号とパスコードをPOSTで送る
+    func: 'auth2A',
+    data: {
+      entryNo: config.entryNo,
+      passCode: passCode,
+    }
+  };
+  doPost(endpoint,sendData,(response) => {
+    console.log('getPassCode response = '+JSON.stringify(response));
+    if( response.isErr ){
+      document.querySelector('#entryNo .passCode .message').innerHTML
+        = '<p class="error">' + response.message + '</p>';
+    } else {
+      // 初期設定を呼び出す
+      initialize(response);
+    }
+  });
+  
+  console.log('getPassCode end.');  
+}  
+
+const initialize = (arg) => {  // 初期設定処理
+  console.log("initialize start.",arg);
+
+  // サーバから取得したconfig, menuFlagsを保存
+  for( let x in arg.config ){
+    config[x] = arg.config[x];
+  }
+  config.menuFlags = arg.menuFlags;
+  // 数値項目は数値化
+  config.BroadInterval = Number(arg.config.BroadInterval) || 30000;
+  console.log('initialize.config',config);
+
+  // お知らせ画面
+  // 「投稿する」ボタンの動作を定義
+  const postButton = document.querySelector('#home .PostArea input');
+  postButton.addEventListener('click',() => {
+    const post = document.querySelector('#home .postMessage');
+    if( postButton.value === '投稿する' ){
+      postButton.value = '閉じる';
+      post.style.display = 'block';
+    } else {
+      postButton.value = '投稿する';
+      post.style.display = 'none';
+    }
+  });
+  // 参加者の変更・取消　※Googleのサイトはiframe不可
+  document.querySelector('nav a.entryURL').href = config.entryURL;
+  // 受付番号表示(QRコード)
+  document.querySelector('#dispEntryNo h1').innerText
+  = 'No.' + ('000'+config.entryNo).slice(-4);
+  setQRcode('#dispEntryNo .qrcode',{text:config.entryNo});
+  // 進行予定画面
+  document.querySelector("#schedule iframe").src = config.TableURL;
+  // 校内案内図
+  document.querySelector("#VenueMap iframe").src = config.MapURL;
+  // サイト案内　※Googleのサイトはiframe不可
+  document.querySelector('nav a.noticeSite').href = config.SiteURL;
+  // アンケート
+  document.querySelector('#enquete .button').innerHTML
+  = '<a href="' + config.EnqueteURL + '" class="button" target="_blank">参加者アンケート</a>';
+
+  // menuFlagsに基づくメニューの表示・非表示制御
+  [
+    {flag:1, selector:'.menu [name="entryURL"]'},
+    {flag:2, selector:'.menu [name="dispEntryNo"]'},
+    {flag:4, selector:'.menu [name="enquete"]'},
+    {flag:16, selector:'.menu [name="ReservationStatus"]'},
+    {flag:32, selector:'.menu [name="schedule"]'},
+    {flag:64, selector:'.menu [name="VenueMap"]'},
+    {flag:128, selector:'.menu [name="noticeSite"]'},
+    {flag:256, selector:'#home .PostArea'},
+    {flag:512, selector:'.menu [name="SearchPerticipant"]'},
+    {flag:1024, selector:'.menu [name="onThatDay"]'},
+    {flag:2048, selector:'.menu [name="ParticipationStatus"]'},
+    {flag:4096, selector:'.menu [name="CornerOperation"]'},
+  ].forEach(x => {
+    document.querySelector(x.selector).style.display
+    = ( config.menuFlags & x.flag ) > 0 ? 'block' : 'none';
+  });
+
+  // 新規のお知らせが来たら末尾を表示するよう設定
+  // https://at.sachi-web.com/blog-entry-1516.html
+  const msgArea = document.getElementById('BroadArea');
+  const mo = new MutationObserver(() => {
+    console.log('mutation detected');
+    msgArea.scrollTop = msgArea.scrollHeight;
+  });
+  mo.observe(msgArea,{
+    childList: true,
+    attributes: true,
+    characterData: true,
+    subtree: true,//孫以降のノードの変化も検出
+    attributeOldValue: true,//変化前の属性データを記録する
+    characterDataOldValue: true,//変化前のテキストノードを記録する
+    attributeFilter: [],//配列で記述した属性だけを見張る
+  });
+
+  // 掲示板定期更新開始
+  config.Broad = new Broad(config.BroadURL,config.BroadKey,config.BroadInterval);
+  config.Broad.start();
+
+  changeScreen();// ホーム画面表示
+  console.log("initialize end.",config);
 }
 
 const changeScreen = (scrId='home',titleStr='お知らせ') => {  // 表示画面の切り替え
@@ -137,22 +340,26 @@ const changeScreen = (scrId='home',titleStr='お知らせ') => {  // 表示画�
   toggleMenu(false);
 
   // 投稿欄に名前をセット
+  /* !! EventStaff Only !!
   if( scrId === 'home' ){
     document.querySelector('#home input[name="from"]').value = config.handleName;
   }
-  console.log("changeScreen end.");
+  console.log("changeScreen end.");*/
 }
 
-const doGet = (endpoint,postData,callback) => {  // GASのdoGetを呼び出し、結果を返す
-  console.log("doGet start. ",postData,callback);
+const doGet = (endpoint,passPhrase,postData,callback) => {  // GASのdoGetを呼び出し、後続処理を行う
+  console.log("doGet start."
+    + '\nendpoint='+endpoint
+    + '\npassPhrase='+passPhrase
+    + '\npostData='+JSON.stringify(postData)
+  );
 
   // GASに渡すデータを作成
-  const v = encrypt(postData,config.passPhrase);
+  const v = encrypt(postData,passPhrase);
   dump('v',v);
 
   // エンドポイントを作成
-  const ep = 'https://script.google.com/macros/s/〜/exec'
-    .replace('〜',endpoint) + '?v=' + v;
+  const ep = endpoint + '?v=' + v;
   dump('ep',ep);
 
   // GASからの返信を受けたらcallbackを呼び出し
@@ -165,90 +372,18 @@ const doGet = (endpoint,postData,callback) => {  // GASのdoGetを呼び出し�
 
 }
 
-const initialize = () => {  // 初期設定処理
-  console.log("initialize start.");
+const doPost = (endpoint,postData,callback) => {  // GASのdoPostを呼び出し、後続処理を行う
+  console.log("doPost start. ",postData,callback);
 
-  // [01] 初期設定処理の画面を表示
-  changeScreen('initialize',"初期化処理");
-
-  // [02] 画面・イベント定義の設定
-  // 01. お知らせ画面
-  // 「投稿する」ボタンの動作を定義
-  const postButton = document.querySelector('#home .postArea input');
-  postButton.addEventListener('click',() => {
-    const post = document.querySelector('#home .postMessage');
-    if( postButton.value === '投稿する' ){
-      postButton.value = '閉じる';
-      post.style.display = 'block';
-    } else {
-      postButton.value = '投稿する';
-      post.style.display = 'none';
-    }
-  });
-  // 新規のお知らせが来たら末尾を表示
-  // https://at.sachi-web.com/blog-entry-1516.html
-  const msgArea = document.getElementById('BroadArea');
-  const mo = new MutationObserver(() => {
-    console.log('mutation detected');
-    msgArea.scrollTop = msgArea.scrollHeight;
-  });
-  mo.observe(msgArea,{
-    childList: true,
-    attributes: true,
-    characterData: true,
-    subtree: true,//孫以降のノードの変化も検出
-    attributeOldValue: true,//変化前の属性データを記録する
-    characterDataOldValue: true,//変化前のテキストノードを記録する
-    attributeFilter: [],//配列で記述した属性だけを見張る
-  });
-
-  // 05. 進行予定画面
-  document.querySelector("#schedule iframe").src = config.TableURL;
-  // 06. 校内案内図
-  document.querySelector("#VenueMap iframe").src = config.MapURL;
-  // 07. サイト案内　※Googleのサイトはiframe不可
-  document.querySelector('nav .noticeSite').href = config.SiteURL;
-  // 08. アンケート
-  setQRcode('#enquete .qrcode',{text:config.SiteURL});
-
-  // [03] グローバル変数 config 設定
-  // 01. 初期設定終了時の処理を事前に定義
-  const terminate = () => {
-    getMessages(1);  // 掲示板定期更新開始
-    console.log("initialize end.",config);
-    changeScreen();// ホーム画面表示
-  }
-
-  // 02. localStorageから読み込み
-  let confStr = localStorage.getItem('config');
-  if( confStr ){
-    confObj = JSON.parse(confStr);
-    if( confObj.DateOfExpiry < new Date() ){
-      // 有効期限が切れていたら無効化＋localStorageから削除
-      localStorage.removeItem('config');
-      // ハンドルネームだけは従来の設定を引き継ぐ
-      config.set('handleName',confObj.handleName);  // 分類C
-    } else {
-      // 有効期限内ならセットして以後の処理はスキップ
-      Object.assign(config,confObj);
-      terminate();
-      return;
-    }
-  }
-
-  // 03. 分類B : シートからQRコードを読み込んで設定する変数
-  config.scanCode = true;
-  scanCode((code) => {
-    const o = JSON.parse(code); // QRコード優先分は書き換え
-    for( let x in o ){ // グローバル変数configに値を設定
-      config.set(x,o[x]);
-    }
-    alert('初期設定は正常に終了しました');
-    terminate();
-  },{
-    selector:'#initialize .scanner',  // 設置位置指定
-    RegExp:new RegExp('^{.+}$'),  // JSON文字列であること
-    alert: false,  // 読み込み時、内容をalert表示しない
+  // GASからの返信を受けたらcallbackを呼び出し
+  fetch(endpoint,{
+    "method": "POST",
+    "body": JSON.stringify(postData),
+    "Content-Type": "application/json",
+  }).then(response => response.json())
+  .then(data => {
+    console.log("doPost end.",data);
+    callback(data);  // 成功した場合、後続処理を呼び出し
   });
 }
 
@@ -265,7 +400,7 @@ const inputSearchKey = () => {  // 参加者の検索キーを入力
     config.scanCode = false;  // スキャンを停止
     document.querySelector('#inputSearchKey .scanner')
       .innerHTML = ''; // スキャナ用DIV内を除去
-    doGet(config.MasterAPI,{func:'search',data:{key:keyPhrase}},(data) => {
+    doGet(config.MasterURL,config.MasterKey,{func:'search',data:{key:keyPhrase}},(data) => {
       if( data.length === 0 ){
         alert("該当する参加者は存在しませんでした");
       } else if( data.length > 1){
@@ -340,7 +475,7 @@ const editParticipant = (arg) => {  // 検索結果の内容編集
   // [02] 各要素への値設定
 
   // 要素の作成とセット
-  let o = genChild(localDef.editParticipant,arg,'root');  // 全体の定義と'root'を渡す
+  let o = genChild(config.editParticipant,arg,'root');  // 全体の定義と'root'を渡す
   if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
     throw o.result;
   } else if( o.append ){  // 追加フラグがtrue
@@ -403,7 +538,7 @@ const updateParticipant = () => {  // 参加者情報更新
       value: f.options[f.selectedIndex].value,
     });
   }
-  doGet(config.MasterAPI,postData,(data) => {
+  doGet(config.MasterURL,config.MasterKey,postData,(data) => {
     // 結果表示
     let result = '<p>以下の変更を行いました。</p>';
     if( data.length > 0 ){
@@ -425,7 +560,7 @@ const postMessage = () => { // メッセージを投稿
   console.log('postMessage start.');
 
   // 投稿領域を閉める
-  document.querySelector('#home .postArea input').value = '投稿する';
+  document.querySelector('#home .PostArea input').value = '投稿する';
   document.querySelector('#home .postMessage').style.display = 'none';
 
   const msg = {
@@ -441,72 +576,11 @@ const postMessage = () => { // メッセージを投稿
   const toNum = toEl.selectedIndex;
   msg.to = toEl.options[toNum].value;
 
-  doGet(config.BroadAPI,{func:'postMessage',data:msg},(response) => {
+  doGet(config.BroadURL,config.BroadKey,{func:'postMessage',data:msg},(response) => {
     console.log(response);
-    getMessages(0); // 掲示板を更新
+    config.Broad.periodical(); // 掲示板を更新
   });
   console.log('postMessage end.',JSON.stringify(msg));
-}
-
-const getMessages = (arg=0) => {
-  console.log('getMessages start.');
-
-  if( arg === 0 ){  // 定期的に実行される処理
-    const cTime = new Date();
-    console.log('getMessages periodical start: '+cTime.toLocaleString('ja-JP')+'.'+cTime.getMilliseconds());
-    if( config.getMessages && config.BroadIntervalId !== null){
-      // 掲示板スプレッドシートからデータを取得し、BroadAreaに書き込む
-      doGet(config.BroadAPI,{func:'getMessages',data:{}},(response) => {
-        console.log('getMessages response='+JSON.stringify(response));
-        // 時系列にメッセージを並べ替え
-        response.sort((a,b) => a.timestamp < b.timestamp);
-        console.log(response);
-        // 掲示板領域に書き込むHTMLを msg として作成
-        let msg = '';
-        let lastMesDate = '1900/01/01';
-        const t = '<p class="title">[_time] From:_from　To:_to</p><p>_message</p>';
-        for( let i=0 ; i<response.length ; i++ ){
-          const dt = new Date(response[i].timestamp);
-          if( dt.toLocaleDateString('ja-JP') !== lastMesDate ){
-            lastMesDate = dt.toLocaleDateString();
-            msg += '<p class="date">' + lastMesDate + '</p>';
-          }
-          const hms = ('0'+dt.getHours()).slice(-2)
-            + ':' + ('0'+dt.getMinutes()).slice(-2)
-            + ':' + ('0'+dt.getSeconds()).slice(-2);
-          const m = t.replace('_time',hms)
-            .replace('_from',response[i].from)
-            .replace('_to',response[i].to)
-            .replace('_message',response[i].message)
-            .replace(/\n/g,'<br>');
-          console.log('m='+m);
-          msg += m;
-        }
-        // 掲示板領域に書き込み
-        const msgEl = document.getElementById('BroadArea');
-        msgEl.innerHTML = msg;
-        msgEl.scrollIntoView(false);
-        console.log('getMessages periodical end: '+msg);
-      });
-    }
-  } else {  // 実行/停止指示
-    if( arg > 0 ){  // 定期巡回開始(再開)
-      config.getMessages = true;
-      //config.BroadInterval = true;
-      console.log('config='+JSON.stringify(config));
-      // 取得間隔は最低10秒。既定値30秒
-      const interval = Number(config.BroadInterval) > 9999 ? config.BroadInterval : 30000;
-//      config.BroadIntervalId = setInterval(getMessages,10000);
-      config.BroadIntervalId = setInterval(getMessages,interval);
-      console.log('getMessages start. id='+config.BroadIntervalId);
-    } else {    // 定期巡回停止
-      clearInterval(config.BroadIntervalId);
-      config.getMessages = false;
-      //config.BroadInterval = false;
-      console.log('getMessages stop. id='+config.BroadIntervalId);
-      config.BroadIntervalId = null;
-    }
-  }
 }
 
 const onThatDay = (arg) => { // 参加フォームURLのQRコード表示
@@ -545,6 +619,45 @@ window.addEventListener('DOMContentLoaded', function(){ // 主処理
   // Err: "Uncaught ReferenceError: jsQR is not defined"
   // -> DOMが構築されたときに初期化処理が行われるように設定
   // https://pisuke-code.com/jquery-is-not-defined-solution/
-  console.log("EventStaff start.",config);
-  initialize();
+  console.log("participant start.",config);
+  // 受付番号入力画面表示
+  // getPassCode正常終了時、そこからinitializeを呼び出す
+  changeScreen('entryNo','ログイン');
+  //テストモード。開発終了時は直上の1行を有効化し、initializeの呼び出しを削除
+  /*initialize({
+    // スタッフ用
+    config:{
+      AuthURL: "https://script.google.com/macros/s/AKfycbxCXpmamk-zGGckxIuCwEfP4Ac24sRKmO3DcFuBBW2UaNJK87RBr50eykjxKJ2D324k-w/exec",
+      Broad :{url: 'https://script.google.com/macros/s/AKfycbyy6eMsgTQ…Ab1bnEQ4ypfkr9AJhehtyuwfOmEhSNa1VhSI49avynvm/exec', key: 'RD+qF6F6E#,,V7+v', interval: 30000, onGoing: true, IntervalId: 1},
+      BroadInterval: 30000,
+      BroadKey: "RD+qF6F6E#,,V7+v",
+      BroadURL: "https://script.google.com/macros/s/AKfycbyy6eMsgTQz7b3wNi0rr3PxAb1bnEQ4ypfkr9AJhehtyuwfOmEhSNa1VhSI49avynvm/exec",
+      EnqueteURL: "https://docs.google.com/forms/d/16r3luYQRiLVmI9xqaD4FuaSlUqTRGvI8nAGrjGcg8lc/viewform",
+      FormURL: "https://docs.google.com/forms/d/e/1FAIpQLSfIJ4IFsBI5pPXsLz2jlTBczzIn8QZQL4r6QHqxZmSeDOhwUA/viewform",
+      MapURL: "materials/map.html",
+      MasterKey: "GQD*4jzyk8!4aQ8r",
+      MasterURL: "https://script.google.com/macros/s/AKfycbxO9cvQx8Ihy2fa-Yb5hGihfwVDmV5_K_PbMHP2tH16RjzBH3KQHt4EI9hJZmm_Mdw7hA/exec",
+      SiteURL: "https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97",
+      TableURL: "materials/timetable/WBS.html",
+      entryNo: 1,
+      entryURL: "",
+    },
+    menuFlags: 9192,
+    // 参加者
+    config:{
+      BoardInterval: 30000,
+      BroadKey: "RD+qF6F6E#,,V7+v",
+      BroadURL: "https://script.google.com/macros/s/AKfycbyy6eMsgTQz7b3wNi0rr3PxAb1bnEQ4ypfkr9AJhehtyuwfOmEhSNa1VhSI49avynvm/exec",
+      EnqueteURL: "https://docs.google.com/forms/d/16r3luYQRiLVmI9xqaD4FuaSlUqTRGvI8nAGrjGcg8lc/viewform",
+      FormURL: "https://docs.google.com/forms/d/e/1FAIpQLSfIJ4IFsBI5pPXsLz2jlTBczzIn8QZQL4r6QHqxZmSeDOhwUA/viewform",
+      MapURL: "materials/map.html",
+      MasterKey: "GQD*4jzyk8!4aQ8r",
+      MasterURL: "https://script.google.com/macros/s/AKfycbxO9cvQx8Ihy2fa-Yb5hGihfwVDmV5_K_PbMHP2tH16RjzBH3KQHt4EI9hJZmm_Mdw7hA/exec",
+      SiteURL: "https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97",
+      TableURL: "materials/timetable/WBS.html",
+      entryURL: ""
+    },
+    menuFlags: 8431,
+  });
+  */
 });
