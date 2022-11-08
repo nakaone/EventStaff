@@ -163,6 +163,19 @@ const initialize = (arg) => {  // 初期設定処理
   config.BroadInterval = Number(arg.config.BroadInterval) || 30000;
   console.log('initialize.config',config);
 
+  // お知らせ画面
+  // 「投稿する」ボタンの動作を定義
+  const postButton = document.querySelector('#home .PostArea input');
+  postButton.addEventListener('click',() => {
+    const post = document.querySelector('#home .postMessage');
+    if( postButton.value === '投稿する' ){
+      postButton.value = '閉じる';
+      post.style.display = 'block';
+    } else {
+      postButton.value = '投稿する';
+      post.style.display = 'none';
+    }
+  });
   // 参加者の変更・取消　※Googleのサイトはiframe不可
   document.querySelector('nav a.entryURL').href = config.entryURL;
   // 受付番号表示(QRコード)
@@ -463,7 +476,7 @@ const postMessage = () => { // メッセージを投稿
   console.log('postMessage start.');
 
   // 投稿領域を閉める
-  document.querySelector('#home .postArea input').value = '投稿する';
+  document.querySelector('#home .PostArea input').value = '投稿する';
   document.querySelector('#home .postMessage').style.display = 'none';
 
   const msg = {
@@ -479,9 +492,9 @@ const postMessage = () => { // メッセージを投稿
   const toNum = toEl.selectedIndex;
   msg.to = toEl.options[toNum].value;
 
-  doGet(config.BroadAPI,{func:'postMessage',data:msg},(response) => {
+  doGet(config.BroadURL,config.BroadKey,{func:'postMessage',data:msg},(response) => {
     console.log(response);
-    getMessages(0); // 掲示板を更新
+    config.Broad.periodical(); // 掲示板を更新
   });
   console.log('postMessage end.',JSON.stringify(msg));
 }
