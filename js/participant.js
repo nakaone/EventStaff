@@ -72,6 +72,90 @@ class Broad {
 
 const config = {
   AuthURL: "https://script.google.com/macros/s/AKfycbxCXpmamk-zGGckxIuCwEfP4Ac24sRKmO3DcFuBBW2UaNJK87RBr50eykjxKJ2D324k-w/exec",
+  editParticipant: {tag:"div", class:"table", children:[
+    {tag:"div", class:"tr entry", children:[
+      {tag:"div", class:"td entryNo", variable:"受付番号"},
+      {tag:"div", class:"td name", children:[
+        {tag:"ruby", children:[
+          {tag:"rb", variable:"氏名"},
+          {tag:"rt", variable:"読み"},
+        ]},
+      ]},
+      {tag:"div", children:[
+        {tag:"input", type:"button", value:"詳細"},
+      ]},
+    ]},
+    {tag:"div", class:"tr detail", children:[ // 詳細情報
+      {tag:"div", text:"受付日時：\t", variable:"登録日時"},
+      {tag:"div", text:"e-mail：\t", variable:"メール"},
+      {tag:"div", text:"緊急連絡先：\t", variable:"連絡先"},
+      {tag:"div", text:"引取者：\t", variable:"引取者"},
+      {tag:"div", text:"備考：\t", variable:"備考"},
+      {tag:"div", text:"キャンセル：\t", variable:"取消"},
+      {tag:"div", class:"form", children:[
+        {tag:"div", text:"申込フォーム："},
+        {tag:"div", class:"qrcode"},
+        {tag:"input", type:"button", value:"申込フォームの表示"},
+      ]},
+    ]},
+    {tag:"div", class:"tr participant", children:[ // 申請者の状態・参加費
+      {tag:"div"},
+      {tag:"div"},
+      {tag:"div", children:[
+        {tag:"label", text:"入退場"},
+        {tag:"select", class:"status", name:"status00",
+          opt:"未入場,入場済,退場済,不参加,未登録", variable:"状態"},
+      ]},
+      {tag:"div", children:[
+        {tag:"label", text:"参加費"},
+        {tag:"select", class:"fee", name:"fee00",
+          opt:"未収,既収,免除,無し", variable:"参加費"},
+      ]},
+    ]},
+    {tag:'hr'}, // 以下参加者
+    {tag:"div", class:"tr participant", children:[
+      {tag:"div", text:"①"},
+      {tag:"div", variable:"①氏名"},
+      {tag:"div", children:[
+        {tag:"label", text:"入退場"},
+        {tag:"select", class:"status", name:"status01",
+          opt:"未入場,入場済,退場済,不参加,未登録", variable:"①状態"},
+      ]},
+      {tag:"div", children:[
+        {tag:"label", text:"参加費"},
+        {tag:"select", class:"fee", name:"fee01",
+          opt:"未収,既収,免除,無し", variable:"①参加費"},
+      ]},
+    ]},
+    {tag:"div", class:"tr participant", children:[
+      {tag:"div", text:"②"},
+      {tag:"div", variable:"②氏名"},
+      {tag:"div", children:[
+        {tag:"label", text:"入退場"},
+        {tag:"select", class:"status", name:"status02",
+          opt:"未入場,入場済,退場済,不参加,未登録", variable:"②状態"},
+      ]},
+      {tag:"div", children:[
+        {tag:"label", text:"参加費"},
+        {tag:"select", class:"fee", name:"fee02",
+          opt:"未収,既収,免除,無し", variable:"②参加費"},
+      ]},
+    ]},
+    {tag:"div", class:"tr participant", children:[
+      {tag:"div", text:"③"},
+      {tag:"div", variable:"③氏名"},
+      {tag:"div", children:[
+        {tag:"label", text:"入退場"},
+        {tag:"select", class:"status", name:"status03",
+          opt:"未入場,入場済,退場済,不参加,未登録", variable:"③状態"},
+      ]},
+      {tag:"div", children:[
+        {tag:"label", text:"参加費"},
+        {tag:"select", class:"fee", name:"fee03",
+          opt:"未収,既収,免除,無し", variable:"③参加費"},
+      ]},
+    ]},
+  ]},
 }
 
 const getEntryNo = () => {  // 受付番号入力時処理
@@ -391,7 +475,7 @@ const editParticipant = (arg) => {  // 検索結果の内容編集
   // [02] 各要素への値設定
 
   // 要素の作成とセット
-  let o = genChild(JSON.parse(config.editParticipant),arg,'root');  // 全体の定義と'root'を渡す
+  let o = genChild(config.editParticipant,arg,'root');  // 全体の定義と'root'を渡す
   if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
     throw o.result;
   } else if( o.append ){  // 追加フラグがtrue
@@ -538,5 +622,42 @@ window.addEventListener('DOMContentLoaded', function(){ // 主処理
   console.log("participant start.",config);
   // 受付番号入力画面表示
   // getPassCode正常終了時、そこからinitializeを呼び出す
-  changeScreen('entryNo','ログイン');
+  //changeScreen('entryNo','ログイン');
+  //テストモード。開発終了時は直上の1行を有効化し、initializeの呼び出しを削除
+  initialize({
+    // スタッフ用
+    config:{
+      AuthURL: "https://script.google.com/macros/s/AKfycbxCXpmamk-zGGckxIuCwEfP4Ac24sRKmO3DcFuBBW2UaNJK87RBr50eykjxKJ2D324k-w/exec",
+      Broad :{url: 'https://script.google.com/macros/s/AKfycbyy6eMsgTQ…Ab1bnEQ4ypfkr9AJhehtyuwfOmEhSNa1VhSI49avynvm/exec', key: 'RD+qF6F6E#,,V7+v', interval: 30000, onGoing: true, IntervalId: 1},
+      BroadInterval: 30000,
+      BroadKey: "RD+qF6F6E#,,V7+v",
+      BroadURL: "https://script.google.com/macros/s/AKfycbyy6eMsgTQz7b3wNi0rr3PxAb1bnEQ4ypfkr9AJhehtyuwfOmEhSNa1VhSI49avynvm/exec",
+      EnqueteURL: "https://docs.google.com/forms/d/16r3luYQRiLVmI9xqaD4FuaSlUqTRGvI8nAGrjGcg8lc/viewform",
+      FormURL: "https://docs.google.com/forms/d/e/1FAIpQLSfIJ4IFsBI5pPXsLz2jlTBczzIn8QZQL4r6QHqxZmSeDOhwUA/viewform",
+      MapURL: "materials/map.html",
+      MasterKey: "GQD*4jzyk8!4aQ8r",
+      MasterURL: "https://script.google.com/macros/s/AKfycbxO9cvQx8Ihy2fa-Yb5hGihfwVDmV5_K_PbMHP2tH16RjzBH3KQHt4EI9hJZmm_Mdw7hA/exec",
+      SiteURL: "https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97",
+      TableURL: "materials/timetable/WBS.html",
+      entryNo: 1,
+      entryURL: "",
+    },
+    menuFlags: 9192,
+    /* 参加者
+    config:{
+      BoardInterval: 30000,
+      BroadKey: "RD+qF6F6E#,,V7+v",
+      BroadURL: "https://script.google.com/macros/s/AKfycbyy6eMsgTQz7b3wNi0rr3PxAb1bnEQ4ypfkr9AJhehtyuwfOmEhSNa1VhSI49avynvm/exec",
+      EnqueteURL: "https://docs.google.com/forms/d/16r3luYQRiLVmI9xqaD4FuaSlUqTRGvI8nAGrjGcg8lc/viewform",
+      FormURL: "https://docs.google.com/forms/d/e/1FAIpQLSfIJ4IFsBI5pPXsLz2jlTBczzIn8QZQL4r6QHqxZmSeDOhwUA/viewform",
+      MapURL: "materials/map.html",
+      MasterKey: "GQD*4jzyk8!4aQ8r",
+      MasterURL: "https://script.google.com/macros/s/AKfycbxO9cvQx8Ihy2fa-Yb5hGihfwVDmV5_K_PbMHP2tH16RjzBH3KQHt4EI9hJZmm_Mdw7hA/exec",
+      SiteURL: "https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97",
+      TableURL: "materials/timetable/WBS.html",
+      entryURL: ""
+    },
+    menuFlags: 8431,
+    */
+  });
 });
