@@ -197,6 +197,9 @@ nav li a {
 /*#editParticipant > div {
   width: calc(100% - 2rem);
 }*/
+#editParticipant select {
+  width: 5rem;
+}
 
 #eidtParticipant .entry {
   display: -webkit-flex;

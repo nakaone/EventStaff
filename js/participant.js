@@ -538,7 +538,7 @@ const updateParticipant = () => {  // 参加者情報更新
       value: f.options[f.selectedIndex].value,
     });
   }
-  doGet(config.MasterAPI,postData,(data) => {
+  doGet(config.MasterURL,config.MasterKey,postData,(data) => {
     // 結果表示
     let result = '<p>以下の変更を行いました。</p>';
     if( data.length > 0 ){
@@ -622,9 +622,9 @@ window.addEventListener('DOMContentLoaded', function(){ // 主処理
   console.log("participant start.",config);
   // 受付番号入力画面表示
   // getPassCode正常終了時、そこからinitializeを呼び出す
-  //changeScreen('entryNo','ログイン');
+  changeScreen('entryNo','ログイン');
   //テストモード。開発終了時は直上の1行を有効化し、initializeの呼び出しを削除
-  initialize({
+  /*initialize({
     // スタッフ用
     config:{
       AuthURL: "https://script.google.com/macros/s/AKfycbxCXpmamk-zGGckxIuCwEfP4Ac24sRKmO3DcFuBBW2UaNJK87RBr50eykjxKJ2D324k-w/exec",
@@ -643,7 +643,7 @@ window.addEventListener('DOMContentLoaded', function(){ // 主処理
       entryURL: "",
     },
     menuFlags: 9192,
-    /* 参加者
+    // 参加者
     config:{
       BoardInterval: 30000,
       BroadKey: "RD+qF6F6E#,,V7+v",
@@ -658,6 +658,6 @@ window.addEventListener('DOMContentLoaded', function(){ // 主処理
       entryURL: ""
     },
     menuFlags: 8431,
-    */
   });
+  */
 });
