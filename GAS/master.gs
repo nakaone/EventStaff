@@ -153,13 +153,14 @@ function onFormSubmit(
   const vObj = {
     func: 'post',
     data: {
-      passPhrase : config.PostKey,
       template   : '申込への返信',
-      recipient  : e.namedValues['メールアドレス'][0],
-      variables  : {
-        name     : e.namedValues['申請者氏名'][0].match(/^([^　]+)/)[1],  // 姓のみ
-        entryNo  : entryNo,
-      }
+      data: [{
+        recipient  : e.namedValues['メールアドレス'][0],
+        variables  : {
+          name     : e.namedValues['申請者氏名'][0].match(/^([^　]+)/)[1],  // 姓のみ
+          entryNo  : entryNo,
+        }
+      }],
     }
   };
   const endpoint = config.PostURL + '?v=' + szLib.encrypt(vObj,config.PostKey);
