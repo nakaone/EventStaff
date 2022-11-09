@@ -145,9 +145,27 @@
   </div>
 
   <div id="system" class="screen"><!-- システム画面 -->
-    <p>掲示板メッセージの定期取得</p>
-    <input type="button" value="再開" onclick="config.Broad.start();alert('再開しました')" />
-    <input type="button" value="停止" onclick="config.Broad.stop();alert('停止しました')" />
+    <div>
+      <h1>掲示板メッセージの定期取得</h1>
+      <input type="button" value="再開" onclick="config.Broad.start();alert('再開しました')" />
+      <input type="button" value="停止" onclick="config.Broad.stop();alert('停止しました')" />
+    </div>
+    <div>
+      <h1>ヘルプ</h1>
+      <details><summary>[Android]カメラを使おうとすると「使用できません」と表示される</summary>
+        <p>ブラウザにカメラを使用する権限が付与されていない場合に表示されます。対応は以下の通りです(<a href="https://support.google.com/android/answer/9431959?hl=ja" target="_blank">出典</a>)。</p>
+        <ol>
+          <li>設定 > アプリ > 変更するアプリ(ブラウザ)を選択 > 権限 > カメラ</li>
+          <li>「許可しない」から「アプリの使用中のみ許可」または「毎回確認する」に変更</li>
+        </ol>
+      </details>
+    </div>
+    <div>
+      <h1>おまつり奉行について</h1>
+      <p>about OMATSURI-Bugyo</p>
+      <p>version: 1.0.0 (Nov.13,2022 released)</p>
+      <p>author : 嶋津　邦浩(Shimazu Kunihiro)  all right reserved</p>
+    </div>
   </div>
 </body>
 <script src="js/jsQR.js" defer></script>
