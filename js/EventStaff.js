@@ -4,6 +4,7 @@ class Broad {
     this.url = url;
     this.key = key;
     this.interval = interval;
+    this.startTime = 978274800000;  // 2001/01/01 00:00:00
     console.log('Broad.constructor end.'
       + '\nurl=' + this.url
       + '\nkey=' + this.key
@@ -13,7 +14,14 @@ class Broad {
 
   start(){
     this.onGoing = true;
-    this.IntervalId = setInterval(this.periodical(),this.interval);
+    // スリープ時間も含め一定時間毎に実行
+    // https://blog-and-destroy.com/28211
+    this.IntervalId = setInterval(() => {
+      if( Date.now() > (this.startTime + this.interval - 500) ){
+        this.periodical();
+        this.startTime = Date.now();
+      }
+    },this.interval);
     this.periodical();
     console.log('Broad.start'
       + '\nurl=' + this.url
