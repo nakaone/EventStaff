@@ -4,7 +4,11 @@ const config = szLib.setConfig(['BroadKey']);
 // トリガー関数
 // ===========================================================
 
-const doGetTest = () => {
+const doGetTest = () => { /**
+ * doGetのテスト
+ * @param {*} x - なし
+ * @returns void - 結果はコンソールで確認
+ */
   const tStr = (x) => {
     return x.toLocaleString('ja-JP') + '.' + x.getMilliseconds();
   };

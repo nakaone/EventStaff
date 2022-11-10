@@ -1,14 +1,7 @@
 /* ====================================================================
   GAS専用ライブラリ
 ==================================================================== */
-/** 指定シートから全データ取得
- * @param {string} sheetName 取得対象シート名
- * @return {Object} 取得したシートのデータ
- *   rows : 取得した生データ(二次元配列)
- *   keys : ヘッダ行(1行目固定)の一次元配列
- *   data : データ行を[{ラベル1:値, ラベル2:値, ..},{..},..]形式にした配列
- *   sheet: getSheetで取得したシートのオブジェクト
- */
+
 const lookupTest = () => {
   const spreadId = '1y4FjpKJVE5zhwgK68IKiahy6Pm3v_PNigkcgDFW2YpE';
   const dObj = getSheetData('郵便局初期化',spreadId);
@@ -16,7 +9,15 @@ const lookupTest = () => {
   console.log(dObj.lookup('parameters','template'));
 }
 
-function getSheetData(sheetName='マスタ',spreadId){
+function getSheetData(sheetName='マスタ',spreadId){  /** 指定シートから全データ取得
+ * @param {string} sheetName - 取得対象シート名
+ * @param {string} spreadId - スプレッドシートID。コンテナ以外のシートを開く場合に指定
+ * @return {Object} 取得したシートのデータ
+ *   rows : 取得した生データ(二次元配列)
+ *   keys : ヘッダ行(1行目固定)の一次元配列
+ *   data : データ行を[{ラベル1:値, ラベル2:値, ..},{..},..]形式にした配列
+ *   sheet: getSheetで取得したシートのオブジェクト
+ */
   console.log('szLib.getSheetData start. sheetName='+sheetName);
 
   let sheet;
