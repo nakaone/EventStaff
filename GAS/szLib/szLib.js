@@ -2,22 +2,19 @@
   GAS専用ライブラリ
 ==================================================================== */
 
-const lookupTest = () => {
-  const spreadId = '1y4FjpKJVE5zhwgK68IKiahy6Pm3v_PNigkcgDFW2YpE';
-  const dObj = getSheetData('郵便局初期化',spreadId);
-  console.log(JSON.stringify(dObj));
-  console.log(dObj.lookup('parameters','template'));
-}
-
-function getSheetData(sheetName='マスタ',spreadId){  /** 指定シートから全データ取得
+/** getSheetData: 指定シートから全データ取得
  * @param {string} sheetName - 取得対象シート名
  * @param {string} spreadId - スプレッドシートID。コンテナ以外のシートを開く場合に指定
- * @return {Object} 取得したシートのデータ
- *   rows : 取得した生データ(二次元配列)
- *   keys : ヘッダ行(1行目固定)の一次元配列
- *   data : データ行を[{ラベル1:値, ラベル2:値, ..},{..},..]形式にした配列
- *   sheet: getSheetで取得したシートのオブジェクト
+ * @returns {object} 取得したシートのデータ
+ * <ul>
+ * <li>rows   {array[]}  - 取得した生データ(二次元配列)
+ * <li>keys   {string[]} - ヘッダ行(1行目固定)の一次元配列
+ * <li>data   {object[]} - データ行を[{ラベル1:値, ラベル2:値, ..},{..},..]形式にした配列
+ * <li>sheet  {object}   - getSheetで取得したシートのオブジェクト
+ * <li>lookup {function} - メソッド。(key,value)を引数に、項目名'key'の値がvalueである行Objを返す
+ * <ul>
  */
+function getSheetData(sheetName='マスタ',spreadId){
   console.log('szLib.getSheetData start. sheetName='+sheetName);
 
   let sheet;
@@ -37,6 +34,13 @@ function getSheetData(sheetName='マスタ',spreadId){  /** 指定シートか�
     });
     return obj;
   });
+  /* lookupメソッドテスト
+  const lookupTest = () => {
+    const spreadId = '1y4FjpKJVE5zhwgK68IKiahy6Pm3v_PNigkcgDFW2YpE';
+    const dObj = getSheetData('郵便局初期化',spreadId);
+    console.log(JSON.stringify(dObj));
+    console.log(dObj.lookup('parameters','template'));
+  }  */
   const rv = {rows:rows, keys:keys, data:data, sheet:sheet,
     lookup: (key,value) => { // 項目名'key'の値がvalueである行Objを返す
       return data.filter(x => {return x[key] === value})[0];
@@ -52,9 +56,9 @@ function getSheetData(sheetName='マスタ',spreadId){  /** 指定シートか�
   return rv;
 }
 
-/** 各局のURL/Keyを管理局から参照してセット
- * @param {string[]} arg - 設定したいキー
- * @return {object} - configのオブジェクト
+/** setConfig: 各局のURL/Keyを管理局から参照してセット
+ * @param {string[]} arg - 設定したいキー。管理局-configシート「key」列の文字列
+ * @return {object} - configのオブジェクト。{argで渡されたキー:値, ..}形式
  */
 function setConfig(arg=['MasterURL']){
   console.log('szLib.setConfig start. arg='+JSON.stringify(arg));
@@ -83,42 +87,39 @@ function setConfig(arg=['MasterURL']){
   return rv;
 }
 
-/** シートの値を更新
- * @param {Object} dObj - 取得対象シート名
- * @param {Object} post - 更新データ
- * @param {Object} post.target - 更新対象の特定情報
- * @param {string} post.target.key - 更新対象の項目名(キー項目)
- * @param {any} post.target.value - キー値
- * @param {Object[]} post.revice - 1セルの更新情報
- * @param {string} post.revice.key - 更新対象の項目名
- * @param {any} post.revice.value - 更新後の値
- * @param {Object} opt - オプション
+/** updateSheetData: シートの値を更新
+ * @param {object}   dObj              - 取得対象シートオブジェクト。型は[getSheetDataの戻り値]{@link getSheetData}参照。
+ * @param {object}   post              - 更新データ
+ * @param {object}   post.target       - 更新対象を特定するための情報
+ * @param {object}   post.target.key   - キーとなる項目名
+ * @param {object}   post.target.value - キー値
+ * @param {object[]} post.revice       - 更新するための情報(上書きする値)の集合
+ * @param {string}   post.revice.key   - 更新対象の項目名
+ * @param {string}   post.revice.value - 上書きする値
+
+ * @param {object[]} post              - 追加データ
+ * @param {string}   post.key          - 追加項目の項目名
+ * @param {any}      post.value        - 項目の値
  * 
- * post = {  更新の場合
- *   target: {
- *     key: 更新対象の項目名(キー項目)
- *     value: キー値
- *   },
- *   revice: [{
- *     key: 更新対象の項目名
- *     value: 更新後の値
- *   },{..},..]
+ * @param {object}   opt               - オプション
+ * @param {boolean}  opt.append        - キー値が存在しない場合、追加ならtrue
+ * @return {object[]} 更新の場合の戻り値
+ * <ul>
+ * <li>column {string} - 更新対象項目名
+ * <li>before {any}    - 更新前の値
+ * <li>after {any}     - 更新後の値
+ * </ul>
+ * @return {any[]} 追加の場合の戻り値。更新された行イメージ(一次元配列)
+ * 
+ * @example <caption>postサンプル：更新時</caption>
+ * {
+ *  "target":{"key":"受付番号","value":1},
+ *  "revice":[
+ *    {"key":"パスコード","value":"101390"},
+ *    {"key":"発行日時","value":"2022-11-09T06:18:19.037Z"}
+ *  ]
  * }
- * 
- * post = [{　　追加の場合
- *   key: 追加対象の項目名
- *   value: 項目の値
- * },{..},..]
- * 
- * opt = {
- *   append: {boolean} キー値が存在しない場合、追加を許すならtrue
- * }
- * @returns {Object[]} 更新結果。変更された項目のみ。
- * result = [{
- *   column: 更新対象項目
- *   before: 更新前の値
- *   after: 更新後の値
- * },{},..]
+ * // hoge
  */
 function updateSheetData(dObj,post,opt={append:true}){
   console.log('szLib.updateSheetData start.',JSON.stringify(post));
@@ -193,16 +194,18 @@ function updateSheetData(dObj,post,opt={append:true}){
   汎用ライブラリ
 ==================================================================== */
 
-/** 文字を変換。全角英数字は半角、半角カナは全角、ひらがな<->カタカナは指定
- * 文字を変換。全角英数字は半角、半角カナは全角、ひらがな<->カタカナは指定
+/** convertCharacters: 文字種を変換
+ * <br><br>
+ * 全角英数字は半角に、半角片仮名は全角に強制的に変換。<br>
+ * 全角ひらがな<->全角カタカナは引数(kana)で指定。既定値はひらがなに変換。<br>
+ * <br>参考：
+ * <ul>
+ * <li>[全角ひらがな⇔全角カタカナの文字列変換]{@link https://neko-note.org/javascript-hiragana-katakana/1024}
+ * <li>[全角⇔半角の変換を行う(英数字、カタカナ)]{@link https://www.yoheim.net/blog.php?q=20191101}
+ * </ul>
  * @param {string} str - 変換対象文字列
- * @param {string} kana - true:ひらがな、false:カタカナ
+ * @param {boolean} kana - true:ひらがな、false:カタカナ
  * @returns {string} 変換結果
- * 
- * [JavaScript] 全角ひらがな⇔全角カタカナの文字列変換 [コピペ用のメモ]
- * https://neko-note.org/javascript-hiragana-katakana/1024
- * [JavaScript] 全角⇔半角の変換を行う（英数字、カタカナ）
- * https://www.yoheim.net/blog.php?q=20191101
  */
  function convertCharacters(str,kana=true){ 
   let rv = str;
@@ -277,9 +280,9 @@ function updateSheetData(dObj,post,opt={append:true}){
   return rv;
 }
 
-/** QRコード生成
+/** createQrCode: QRコード生成
  * @param {String} code_data QRコードに埋め込む文字列
- * @return {Blob} 画像のBLOB
+ * @return {Blob} QRコード画像のBLOB
  */
 function createQrCode(
   code_data){ 
@@ -293,10 +296,10 @@ function createQrCode(
   return ajax.getBlob();
 }
 
-/** 文字列を復号(＋オブジェクト化)
- * @param {Object} arg 暗号化された文字列
- * @param {String} passPhrase 共通暗号鍵
- * @return {String} 復号化された文字列・オブジェクト
+/** decrypt: 文字列を復号(＋オブジェクト化)
+ * @param {string} arg 暗号化された文字列
+ * @param {string} passPhrase 暗号鍵
+ * @return {string|object} 復号化された文字列・オブジェクト
  */
 function decrypt(arg,passPhrase){
   console.log('szLib.decrypt start.\n'+arg);
@@ -320,7 +323,7 @@ function decrypt(arg,passPhrase){
   }
 }
 
-/** 変数の型と値をコンソールに出力。デバッグ用
+/** dump: 変数の型と値をコンソールに出力。デバッグ用
  * @param {string} label 変数名
  * @param {any} variable 変数
  * @return {void} なし
@@ -329,9 +332,9 @@ function dump(label,variable){
   console.log(label+' (type='+whichType(variable)+')\n',variable);
 }
 
-/** 文字列・オブジェクトを暗号化
- * @param {Object} arg 暗号化する文字列・オブジェクト
- * @param {String} passPhrase 共通暗号鍵
+/** encrypt: 文字列・オブジェクトを暗号化
+ * @param {string|object} arg 暗号化する文字列・オブジェクト
+ * @param {String} passPhrase 暗号鍵
  * @return {String} 暗号化された文字列
  */
 function encrypt(arg,passPhrase){
@@ -349,9 +352,17 @@ function encrypt(arg,passPhrase){
   return encryptResult;
 }
 
-/** オブジェクトの構造を分析
+/** inspect: オブジェクトの構造を分析
+ * <br>
+ * 構造不明のオブジェクトの内容を分析・出力する。prototype/inspect.html参照。
+ * 
  * @param {any} arg - 分析対象の変数
  * @param {number} depth - 再帰階層の深さ。指定不要
+ * @return {object} 分析結果
+ * 
+ * @example <caption>分析結果例</caption>
+ * inspect({a:10,b:{c:true,d:['abc',Symbol('baa')],e:(x)=>x*4},f:new Date()})
+ * // -> {"a":"number","b":{"c":"boolean","d":["string","symbol"],"e":"function"},"f":"Date"}
  */
 function inspect(arg,depth=0){ 
   // エラー対策(RangeError: Maximum call stack size exceeded)
@@ -391,7 +402,7 @@ function inspect(arg,depth=0){
   return depth === 0 ? JSON.stringify(rv) : rv;
 }
 
-/** 変数の型を判定
+/** whichType: 変数の型を判定
  * @param {any} arg - 判定対象の変数
  * @returns {string} - 型の名前
  */
