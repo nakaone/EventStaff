@@ -1,4 +1,32 @@
-const config = szLib.setConfig(['MasterKey','AuthSheetId','PostURL','PostKey']);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: master.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: master.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>const config = szLib.setConfig(['MasterKey','AuthSheetId','PostURL','PostKey']);
 
 // ===========================================================
 // トリガー関数
@@ -12,10 +40,10 @@ const config = szLib.setConfig(['MasterKey','AuthSheetId','PostURL','PostKey']);
  * @param {object} e.parameter.data - 分岐先の処理に渡すオブジェクト
  * 
  * @return {object} 正常終了の場合は分岐先処理の戻り値、エラーの場合は以下。
- * <ul>
- * <li>isErr {boolean}  - true(固定)
- * <li>message {string} - エラーメッセージ
- * </ul>
+ * &lt;ul>
+ * &lt;li>isErr {boolean}  - true(固定)
+ * &lt;li>message {string} - エラーメッセージ
+ * &lt;/ul>
  */
 function doPost(e){
   console.log('管理局.doPost start. e.parameter='+JSON.stringify(e.parameter));
@@ -49,7 +77,7 @@ function doPost(e){
 }
 
 /** doGetTest: doGetのテスト
- * <br>
+ * &lt;br>
  * 結果はコンソールで確認
  * 
  * @param {} - なし
@@ -64,20 +92,20 @@ const doGetTest = () => {
       {key:'参加費',value:'既収'},
     ]}},
   ];
-  for( let i=0 ; i<testData.length ; i++ ){
+  for( let i=0 ; i&lt;testData.length ; i++ ){
     doGet({parameter:{v:szLib.encrypt(testData[i],config.MasterKey)}});
   }
 };
 
 /** doGet: 暗号化されたパラメータを復号、それに応じて処理を分岐
- * <br>
- * 返値はTextOutputのインスタンス。<br>
- * getContentで中の文字列を取得、parseすれば結果オブジェクトが得られる。<br>
+ * &lt;br>
+ * 返値はTextOutputのインスタンス。&lt;br>
+ * getContentで中の文字列を取得、parseすれば結果オブジェクトが得られる。&lt;br>
  * GAS公式: [Class TextOutput]{@link https://developers.google.com/apps-script/reference/content/text-output#getcontent}
  *
  * @param {object} e - const config = szLib.setConfig(['PostURL','PostKey']);
  * @param {object} e.parameter - パラメータ文字列
- * @param {object} e.parameter.v - グローバル変数PostKeyで暗号化された文字列。<br>復号すると以下のオブジェクトとなる
+ * @param {object} e.parameter.v - グローバル変数PostKeyで暗号化された文字列。&lt;br>復号すると以下のオブジェクトとなる
  * @param {string} e.parameter.v.func - 'post'固定(他は不正)
  * @param {object} e.parameter.v.data - [postMails]{@link postMails}の引数
  * 
@@ -115,50 +143,50 @@ function doGet(e) {
 }
 
 /** フォーム申込み時のメールの自動返信
- * <br>
- * 予約されたイベント関数なので、アローでは無くfunctionで定義。<br>
- * <br>
- * 受付番号として`range.rowStart`、一意キーとしてタイムスタンプ＋e-mail`values[0]+values[1]`を使用する。<br>
- * ※ namedValuesでも取得できるが、valuesがFormApp.getResponses()と同じ一次元配列なのでベターと判断。<br>
- * <br>
- * <ul>
- * <li>[メールの自動返信]{@link https://blog.hubspot.jp/google-forms-automatic-reply#f}
- * <li>[メールへのファイル添付]{@link https://my-funs.com/gas-mailapp/}
- * <li>[GASでHTMLメールを送る方法とインライン画像を埋め込む(画像挿入)方法]{@link https://auto-worker.com/blog/?p=2827}
- * </ul>
+ * &lt;br>
+ * 予約されたイベント関数なので、アローでは無くfunctionで定義。&lt;br>
+ * &lt;br>
+ * 受付番号として`range.rowStart`、一意キーとしてタイムスタンプ＋e-mail`values[0]+values[1]`を使用する。&lt;br>
+ * ※ namedValuesでも取得できるが、valuesがFormApp.getResponses()と同じ一次元配列なのでベターと判断。&lt;br>
+ * &lt;br>
+ * &lt;ul>
+ * &lt;li>[メールの自動返信]{@link https://blog.hubspot.jp/google-forms-automatic-reply#f}
+ * &lt;li>[メールへのファイル添付]{@link https://my-funs.com/gas-mailapp/}
+ * &lt;li>[GASでHTMLメールを送る方法とインライン画像を埋め込む(画像挿入)方法]{@link https://auto-worker.com/blog/?p=2827}
+ * &lt;/ul>
  * 
- * <p style="font-size:1.2rem">■スプレッドシート上のonFormSubmitに渡される引数</p>
+ * &lt;p style="font-size:1.2rem">■スプレッドシート上のonFormSubmitに渡される引数&lt;/p>
  * 
- * <ul>
- * <li>[スプレッドシートのコンテナバインドのフォーム送信時イベントオブジェクト]{@link https://tgg.jugani-japan.com/tsujike/2021/05/gas-form4/#toc2}
- * <li>GAS公式 Google スプレッドシートのイベント[フォーム送信]{@link https://developers.google.com/apps-script/guides/triggers/events#form-submit}
- * </ul>
- * <img src="https://i0.wp.com/tgg.jugani-japan.com/tsujike/wp-content/uploads/210426-001.png?w=1256&ssl=1" width="80%" />
- * <ul>
- * <li>range : [Range]{@link https://developers.google.com/apps-script/reference/spreadsheet/range} Object
- * </ul>
+ * &lt;ul>
+ * &lt;li>[スプレッドシートのコンテナバインドのフォーム送信時イベントオブジェクト]{@link https://tgg.jugani-japan.com/tsujike/2021/05/gas-form4/#toc2}
+ * &lt;li>GAS公式 Google スプレッドシートのイベント[フォーム送信]{@link https://developers.google.com/apps-script/guides/triggers/events#form-submit}
+ * &lt;/ul>
+ * &lt;img src="https://i0.wp.com/tgg.jugani-japan.com/tsujike/wp-content/uploads/210426-001.png?w=1256&amp;ssl=1" width="80%" />
+ * &lt;ul>
+ * &lt;li>range : [Range]{@link https://developers.google.com/apps-script/reference/spreadsheet/range} Object
+ * &lt;/ul>
  * 
- * <p style="font-size:1.2rem">■参考：フォーム上のonFormSubmitに渡される引数</p>
+ * &lt;p style="font-size:1.2rem">■参考：フォーム上のonFormSubmitに渡される引数&lt;/p>
  * 
- * <ul>
- * <li>GAS公式 [Google フォームのイベント]{@link https://developers.google.com/apps-script/guides/triggers/events#google_forms_events}
- * <li>[フォームのコンテナバインドのフォーム送信時イベントオブジェクト]{@link https://tgg.jugani-japan.com/tsujike/2021/05/gas-form5/#toc2}
- * </ul>
- * <img src="https://i0.wp.com/tgg.jugani-japan.com/tsujike/wp-content/uploads/210427-001.png?w=1256&ssl=1" width="80%" />
- * <ul>
- * <li>response : [Form Response]{@link https://developers.google.com/apps-script/reference/forms/form-response} Object
- * <ul>
- * <li>[getEditResponseUrl()]{@link https://developers.google.com/apps-script/reference/forms/form-response#geteditresponseurl}
- * <li>[getTimestamp()]{@link https://developers.google.com/apps-script/reference/forms/form-response#gettimestamp}
- * </ul>
- * <li>source : [Form]{@link https://developers.google.com/apps-script/reference/forms/form}
- * </ul>
+ * &lt;ul>
+ * &lt;li>GAS公式 [Google フォームのイベント]{@link https://developers.google.com/apps-script/guides/triggers/events#google_forms_events}
+ * &lt;li>[フォームのコンテナバインドのフォーム送信時イベントオブジェクト]{@link https://tgg.jugani-japan.com/tsujike/2021/05/gas-form5/#toc2}
+ * &lt;/ul>
+ * &lt;img src="https://i0.wp.com/tgg.jugani-japan.com/tsujike/wp-content/uploads/210427-001.png?w=1256&amp;ssl=1" width="80%" />
+ * &lt;ul>
+ * &lt;li>response : [Form Response]{@link https://developers.google.com/apps-script/reference/forms/form-response} Object
+ * &lt;ul>
+ * &lt;li>[getEditResponseUrl()]{@link https://developers.google.com/apps-script/reference/forms/form-response#geteditresponseurl}
+ * &lt;li>[getTimestamp()]{@link https://developers.google.com/apps-script/reference/forms/form-response#gettimestamp}
+ * &lt;/ul>
+ * &lt;li>source : [Form]{@link https://developers.google.com/apps-script/reference/forms/form}
+ * &lt;/ul>
  * 
- * <p style="font-size:1.2rem">■フォーム編集用URLの取得</p>
+ * &lt;p style="font-size:1.2rem">■フォーム編集用URLの取得&lt;/p>
  * 
- * <p>参加者の追加・削除やキャンセル登録のため、登録者(参加者)がフォームを編集する必要があるが、編集用URLはGoogle Spreadには記録されず、フォームの登録情報にしか存在しない。<br>
- * そこで①フォームの登録情報を全件取得し、②Google Spreadの登録日時＋e-mailから特定し、③特定された登録情報から編集用URLを取得、という手順を踏む。</p>
- * ※回答シートとフォームで添字が一致しないかと考えたが、結果的には一致していない。よって「タイムスタンプのgetTime()＋e-mail」を検索キーとする。<br>
+ * &lt;p>参加者の追加・削除やキャンセル登録のため、登録者(参加者)がフォームを編集する必要があるが、編集用URLはGoogle Spreadには記録されず、フォームの登録情報にしか存在しない。&lt;br>
+ * そこで①フォームの登録情報を全件取得し、②Google Spreadの登録日時＋e-mailから特定し、③特定された登録情報から編集用URLを取得、という手順を踏む。&lt;/p>
+ * ※回答シートとフォームで添字が一致しないかと考えたが、結果的には一致していない。よって「タイムスタンプのgetTime()＋e-mail」を検索キーとする。&lt;br>
  * 
  * @param {Object} e - スプレッドシート上のonFormSubmitに渡される引数
  * @returns {object} 郵便局.doPostで処理された結果
@@ -239,7 +267,7 @@ function onFormSubmit(
 }
 
 /** onFormSubmitTest: onFormSubmitのテスト
- * <br>
+ * &lt;br>
  * 結果はコンソールで確認
  * 
  * @param {} - なし
@@ -256,7 +284,7 @@ const onFormSubmitTest = () => {
     [undefined,true,0,'abc',Symbol('foo'),(a) => a*2,new Date(),new RegExp('^.+'),[1,2]],
     {a:10,b:{c:true,d:['abc',Symbol('baa')],e:(x)=>x*4},f:new Date()},
   ];
-  for( let i=0 ; i<testData.length ; i++ ){
+  for( let i=0 ; i&lt;testData.length ; i++ ){
     try {
       console.log(testData[i] + ' => ' + szLib.inspect(testData[i]));
     } catch(e) {
@@ -269,7 +297,7 @@ const onFormSubmitTest = () => {
 // トリガーから呼ばれる関数・定義
 // ===========================================================
 /** auth1BTest: auth1Bのテスト
- * <br>
+ * &lt;br>
  * 結果はコンソールで確認
  * 
  * @param {} - なし
@@ -356,7 +384,7 @@ const auth1B = (arg) => {
 }
 
 /** auth2BTest: auth2Bのテスト
- * <br>
+ * &lt;br>
  * 結果はコンソールで確認
  * 
  * @param {} - なし
@@ -373,12 +401,12 @@ const auth2BTest = () => {
  * @param {string} arg.entryNo - 利用者が入力した受付番号
  * @param {string} arg.passCode - 利用者が入力したパスコード
  * @return {object} - 処理結果
- * <ul>
- * <li>isErr {boolean} - エラーならtrue
- * <li>message {string} - エラーの場合はメッセージ。正常終了ならundefined
- * <li>config {object} - configにセットする値(オブジェクト)
- * <li>menuFlags {number} - メニューの表示/非表示フラグの集合 
- * </ul>
+ * &lt;ul>
+ * &lt;li>isErr {boolean} - エラーならtrue
+ * &lt;li>message {string} - エラーの場合はメッセージ。正常終了ならundefined
+ * &lt;li>config {object} - configにセットする値(オブジェクト)
+ * &lt;li>menuFlags {number} - メニューの表示/非表示フラグの集合 
+ * &lt;/ul>
  */
 const auth2B = (arg) => {
   console.log('管理局.auth2B start. arg='+JSON.stringify(arg));
@@ -396,8 +424,8 @@ const auth2B = (arg) => {
     // パスコードが一致したかの判定
     const validCode = passCode === Number(participant['パスコード']);
     // 発行日時は一時間以内かの判定
-    const validTime = new Date().getTime() - new Date(participant['発行日時']).getTime() < 3600000;
-    if(  validCode && validTime ){
+    const validTime = new Date().getTime() - new Date(participant['発行日時']).getTime() &lt; 3600000;
+    if(  validCode &amp;&amp; validTime ){
       // 検証OK：表示に必要なURLとメニューフラグをconfigとして作成
       // (1) AuthLevelに応じたconfigを作成
       //     認証局:1, 放送局:2, 予約局:4, 管理局:8, 郵便局:16
@@ -406,7 +434,7 @@ const auth2B = (arg) => {
       const AuthLevel = participant.AuthLevel > 0 ? participant.AuthLevel : 6; // 既定値「参加者」
       const cObj = szLib.getSheetData('config');
       cObj.data.forEach(x => {
-        if( (x.AuthLevel & AuthLevel) > 0 ){
+        if( (x.AuthLevel &amp; AuthLevel) > 0 ){
           rv.config[x.key] = x.value;
         }
       });
@@ -482,12 +510,12 @@ const updateParticipant = (data) => {
  * 
  * @param {*} arg 
  * @returns {object} 作成されたメールデータ
- * <ul>
- * <li>timestamp {string} - 作成日時
- * <li>from {string} - Fromアドレス
- * <li>to {string} - Toアドレス
- * <li>message {string} - メール本文
- * </ul>
+ * &lt;ul>
+ * &lt;li>timestamp {string} - 作成日時
+ * &lt;li>from {string} - Fromアドレス
+ * &lt;li>to {string} - Toアドレス
+ * &lt;li>message {string} - メール本文
+ * &lt;/ul>
  */
 const postMessage = (arg) => {
   console.log('管理局.postMessage start. arg='+JSON.stringify(arg));
@@ -499,4 +527,26 @@ const postMessage = (arg) => {
   }
   console.log('管理局.postMessage end. v='+JSON.stringify(v));  
   return v;
-};
+};</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#auth1B">auth1B</a></li><li><a href="global.html#auth1BTest">auth1BTest</a></li><li><a href="global.html#auth2B">auth2B</a></li><li><a href="global.html#auth2BTest">auth2BTest</a></li><li><a href="global.html#candidates">candidates</a></li><li><a href="global.html#doGet">doGet</a></li><li><a href="global.html#doGetTest">doGetTest</a></li><li><a href="global.html#doPost">doPost</a></li><li><a href="global.html#onFormSubmit">onFormSubmit</a></li><li><a href="global.html#onFormSubmitTest">onFormSubmitTest</a></li><li><a href="global.html#postMessage">postMessage</a></li><li><a href="global.html#updateParticipant">updateParticipant</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Thu Nov 10 2022 18:03:55 GMT+0900 (日本標準時)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
