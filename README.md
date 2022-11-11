@@ -7,7 +7,7 @@
 [配達員](./doc/delivery/global.html) |
 [szLib](./doc/szLib/global.html) |
 EventStaff.js |
-library.js
+[library.js](./doc/library/global.html)
 
 # 開発の目的
 

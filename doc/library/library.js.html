@@ -1,16 +1,44 @@
-/* ===================================================
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: library.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: library.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/* ===================================================
   汎用ライブラリ(GAS,JavaScript共通)
 =================================================== */
 
 /** convertCharacters: 文字種を変換
- * <br><br>
- * 全角英数字は半角に、半角片仮名は全角に強制的に変換。<br>
- * 全角ひらがな<->全角カタカナは引数(kana)で指定。既定値はひらがなに変換。<br>
- * <br>参考：
- * <ul>
- * <li>[全角ひらがな⇔全角カタカナの文字列変換]{@link https://neko-note.org/javascript-hiragana-katakana/1024}
- * <li>[全角⇔半角の変換を行う(英数字、カタカナ)]{@link https://www.yoheim.net/blog.php?q=20191101}
- * </ul>
+ * &lt;br>&lt;br>
+ * 全角英数字は半角に、半角片仮名は全角に強制的に変換。&lt;br>
+ * 全角ひらがな&lt;->全角カタカナは引数(kana)で指定。既定値はひらがなに変換。&lt;br>
+ * &lt;br>参考：
+ * &lt;ul>
+ * &lt;li>[全角ひらがな⇔全角カタカナの文字列変換]{@link https://neko-note.org/javascript-hiragana-katakana/1024}
+ * &lt;li>[全角⇔半角の変換を行う(英数字、カタカナ)]{@link https://www.yoheim.net/blog.php?q=20191101}
+ * &lt;/ul>
  * @param {string} str - 変換対象文字列
  * @param {boolean} kana - true:ひらがな、false:カタカナ
  * @returns {string} 変換結果
@@ -56,7 +84,7 @@ function convertCharacters(str,kana=true){
   };
   rv = hankaku(rv);
 
-  // 全角カタカナ <-> 全角ひらがな
+  // 全角カタカナ &lt;-> 全角ひらがな
   const hRep = (x,offset,string) => { // offset:マッチした位置 string:文字列全部
     //console.log('hRep start.',x,offset,string);
     let rv = String.fromCharCode(x.charCodeAt(0) - 0x60);
@@ -165,7 +193,7 @@ const whichType = (arg = undefined) => {
  * @param {string} template.tag      - タグ
  * @param {string} template.children - 子要素。templateを再帰的に定義
  * @param {string} template.text - テキスト要素。'\t'の部分はvariableの値で置換
- * @param {string} template.skip - 「dObj[skip]=undefined⇒スキップ」の指定<br>例：参加者名が空欄なら名簿行を作成しない
+ * @param {string} template.skip - 「dObj[skip]=undefined⇒スキップ」の指定&lt;br>例：参加者名が空欄なら名簿行を作成しない
  * @param {string} template.variable - テキスト要素の'\t'に埋め込むdObjの要素(ex.variable='名前'⇒dObj['名前'])
  * @param {string} template.max - 不定回数繰り返す場合、その最大を指定
  * @param {string} template.class - クラス名。三項演算子なら評価結果()
@@ -185,20 +213,20 @@ const whichType = (arg = undefined) => {
  * @param {string} pFP - パン屑リストの表示名
  * 
  * @returns {object} 処理結果と生成されたノード
- * <ul>
- * <li>append {boolean} - 追加対象となる子要素ならtrue
- * <li>status {string} - 処理結果
- * <ul>
- * <li>'skipped' => テンプレートのskip条件を満たすため、生成を見送った子要素
- * <li>'variable' => テンプレートのtextが未指定なので、変数の値をそのままセット
- * <li>'replaced' => テンプレートのtext指定に基づき、プレースホルダ('\t')に変数の値をセット
- * <li>'fixed' => テンプレートのtext指定にプレースホルダがなく、textをそのままセット(固定文字列)
- * <li>'node' => セットする文字列が指定されていない要素(既定値)
- * </ul>
- * <li>result: 子要素のオブジェクト。エラー時はエラーオブジェクト
- * </ul>
+ * &lt;ul>
+ * &lt;li>append {boolean} - 追加対象となる子要素ならtrue
+ * &lt;li>status {string} - 処理結果
+ * &lt;ul>
+ * &lt;li>'skipped' => テンプレートのskip条件を満たすため、生成を見送った子要素
+ * &lt;li>'variable' => テンプレートのtextが未指定なので、変数の値をそのままセット
+ * &lt;li>'replaced' => テンプレートのtext指定に基づき、プレースホルダ('\t')に変数の値をセット
+ * &lt;li>'fixed' => テンプレートのtext指定にプレースホルダがなく、textをそのままセット(固定文字列)
+ * &lt;li>'node' => セットする文字列が指定されていない要素(既定値)
+ * &lt;/ul>
+ * &lt;li>result: 子要素のオブジェクト。エラー時はエラーオブジェクト
+ * &lt;/ul>
  * 
- * @example <caption>利用例</caption>
+ * @example &lt;caption>利用例&lt;/caption>
  * const template = [
  *   {tag:'div', class:'video', style:opt.video, children:[
  *     {tag:'video', style:'width:100%;'}]},
@@ -207,7 +235,7 @@ const whichType = (arg = undefined) => {
  *   {tag:'div', class:'finder', style:opt.finder , children:[
  *     {tag:'canvas', style:'width:100%'},]},
  * ]
- * for( let i=0 ; i<template.length ; i++ ){
+ * for( let i=0 ; i&lt;template.length ; i++ ){
  *   let o = genChild(template[i],{},'root');  // 全体の定義と'root'を渡す
  *   if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
  *     throw o.result;
@@ -239,15 +267,15 @@ const genChild = (template,dObj,pFP) => {
 
     // 1.3.内部関数の定義
     const addSeqNo = (cDef,no) => {
-      if( cDef.skip && cDef.skip !== '' ) cDef.skip += '_' + no;
-      if( cDef.variable && cDef.variable !== '' ) cDef.variable += '_' + no;
-      if( cDef.children && cDef.children.length > 0 ){
-        for( let i=0 ; i<cDef.children.length ; i++ )
+      if( cDef.skip &amp;&amp; cDef.skip !== '' ) cDef.skip += '_' + no;
+      if( cDef.variable &amp;&amp; cDef.variable !== '' ) cDef.variable += '_' + no;
+      if( cDef.children &amp;&amp; cDef.children.length > 0 ){
+        for( let i=0 ; i&lt;cDef.children.length ; i++ )
           addSeqNo(cDef.children[i],no);
       }
     };
 
-    if( sDef.skip.length > 0 && dObj[sDef.skip] && dObj[sDef.skip].length === 0 ){
+    if( sDef.skip.length > 0 &amp;&amp; dObj[sDef.skip] &amp;&amp; dObj[sDef.skip].length === 0 ){
       return {append:false, status:'skipped', result:null};
     }
 
@@ -297,28 +325,28 @@ const genChild = (template,dObj,pFP) => {
     //console.log('l.216 rv',rv.result);
 
     // 2.4.自要素に属性を追加
-    if( sDef.class && sDef.class.length > 0 ){
+    if( sDef.class &amp;&amp; sDef.class.length > 0 ){
       /* sDef.classが三項演算子の場合、評価結果をクラスとする。
         それ以外は文字列としてそのまま適用 */
       rv.result.className = sDef.class.match(/.+\?.+:.+/)
         ? eval(sDef.class) : sDef.class;
     }
     ['id','type','name','value','accept','capture','width','height','style'].forEach(x => {
-      if( sDef[x] && sDef[x].length > 0 ){
+      if( sDef[x] &amp;&amp; sDef[x].length > 0 ){
         rv.result.setAttribute(x,sDef[x]);
       }
     });
-    if( sDef.onclick && dObj[sDef.onclick] ){
+    if( sDef.onclick &amp;&amp; dObj[sDef.onclick] ){
       // ボタンクリックで遷移
       rv.result.setAttribute('onclick',"location.href='_'".replace('_',dObj[sDef.onclick]));
     }
-    if( sDef.checked && dObj[sDef.checked] ){
+    if( sDef.checked &amp;&amp; dObj[sDef.checked] ){
       // dObj[sDef.checked]がtrueならcheckedを追加
       rv.result.checked = true;
     }
     if( sDef.tag === 'select' ){  // select文の場合、子要素としてoptionを作成
       const options = sDef.opt.split(',');
-      for( let i=0 ; i<options.length ; i++ ){
+      for( let i=0 ; i&lt;options.length ; i++ ){
         let opt = document.createElement('option');
         opt.value = options[i];
         opt.appendChild(document.createTextNode(options[i]));
@@ -333,11 +361,11 @@ const genChild = (template,dObj,pFP) => {
     /* ========================================
       3. 子要素の作成
     ======================================== */
-    for( let i=0 ; i<(sDef.max === 0 ? 1 : sDef.max) ; i++ ){
+    for( let i=0 ; i&lt;(sDef.max === 0 ? 1 : sDef.max) ; i++ ){
       const cDef = JSON.parse(JSON.stringify(sDef));
       if( cDef.max > 0 )
         addSeqNo(cDef,i);  // 不定項目の場合、子孫全部ラベルを書き換え
-      for( let j=0 ; j<cDef.children.length ; j++ ){
+      for( let j=0 ; j&lt;cDef.children.length ; j++ ){
         const o = genChild(cDef.children[j],dObj,cFP);
         if( o.append ) rv.result.appendChild(o.result);
       }
@@ -357,9 +385,9 @@ const genChild = (template,dObj,pFP) => {
 };
 
 /** scanCode: QRコードのスキャン
- * <br>
- * 指定セレクタ以下にcanvas他の必要な要素を作成してスキャン実行、指定の後続処理を呼び出す。<br>
- * 呼び出す前に`config.scanCode = true`を実行しておくこと。<br>
+ * &lt;br>
+ * 指定セレクタ以下にcanvas他の必要な要素を作成してスキャン実行、指定の後続処理を呼び出す。&lt;br>
+ * 呼び出す前に`config.scanCode = true`を実行しておくこと。&lt;br>
  * 参考：[jsQRであっさりQRコードリーダ/メーカ](@link https://zenn.dev/sdkfz181tiger/articles/096dfb74d485db)
  * 
  * @param {function} callback - スキャン結果を受けた後続処理
@@ -405,7 +433,7 @@ const scanCode = (callback, arg={}) => {
     {tag:'div', class:'finder', style:opt.finder , children:[
       {tag:'canvas', style:'width:100%'},]},
   ]
-  for( let i=0 ; i<template.length ; i++ ){
+  for( let i=0 ; i&lt;template.length ; i++ ){
     let o = genChild(template[i],{},'root');  // 全体の定義と'root'を渡す
     if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
       throw o.result;
@@ -480,7 +508,7 @@ const scanCode = (callback, arg={}) => {
 }
 
 /** setQRcode: QRコードを指定位置にセット
- * <br>
+ * &lt;br>
  * [QRCode.jsを試してみた]{@link https://saitodev.co/article/QRCode.js%E3%82%92%E8%A9%A6%E3%81%97%E3%81%A6%E3%81%BF%E3%81%9F/}
  * 
  * @param {string} selector - 親要素のCSSセレクタ文字列
@@ -564,4 +592,26 @@ const toggleMenu = (arg=null,opt={}) => {
   }
 
   console.log('toggleMenu end.',v);
-}
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#convertCharacters">convertCharacters</a></li><li><a href="global.html#decrypt">decrypt</a></li><li><a href="global.html#dump">dump</a></li><li><a href="global.html#encrypt">encrypt</a></li><li><a href="global.html#genChild">genChild</a></li><li><a href="global.html#scanCode">scanCode</a></li><li><a href="global.html#setQRcode">setQRcode</a></li><li><a href="global.html#sha256">sha256</a></li><li><a href="global.html#toggleMenu">toggleMenu</a></li><li><a href="global.html#whichType">whichType</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Fri Nov 11 2022 15:46:44 GMT+0900 (日本標準時)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
