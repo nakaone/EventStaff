@@ -292,6 +292,9 @@ const auth1BTest = () => {
  *    isErr {boolean} : エラーならtrue
  *    message {string} : エラーの場合はメッセージ。正常終了ならundefined
  *    result {object} : 分岐先の処理が正常終了した場合の結果オブジェクト
+ * 
+ * @example <caption>引数の例</caption>
+ * 管理局.auth1B start. arg={"entryNo":"1.0","func":"auth1B","passPhrase":"GQD*4jzyk8!4aQ8r"}
  */
 const auth1B = (arg) => {
   console.log('管理局.auth1B start. arg='+JSON.stringify(arg));
@@ -423,7 +426,8 @@ const auth2B = (arg) => {
         message: !validCode ? 'パスコードが一致しません' : 'パスコードの有効期限が切れています',
       };
       // 検証結果記録用オブジェクトを作成
-      revice.push({key:'result',value:'NG'}).push({key:'message',value:rv.message});
+      revice.push({key:'result',value:'NG'});
+      revice.push({key:'message',value:rv.message});
     }
 
   } catch(e) {
