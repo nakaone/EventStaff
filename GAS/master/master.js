@@ -286,15 +286,19 @@ const auth1BTest = () => {
 }
 
 /** auth1B: 認証第一段階。パスコードを生成してメールで送付
- * @param {object} arg - 
- *    entryNo {string} : 利用者が入力した受付番号
+ * @param {object} arg            - POSTで渡されたデータ
+ * @param {string} arg.func       - 利用しない('auth1B'固定)
+ * @param {string} arg.entryNo    - 利用者が入力した受付番号
+ * @param {string} arg.passPhrase - 利用しない(config.Master.Key)
  * @return {object} - 処理結果
- *    isErr {boolean} : エラーならtrue
- *    message {string} : エラーの場合はメッセージ。正常終了ならundefined
- *    result {object} : 分岐先の処理が正常終了した場合の結果オブジェクト
+ * <ul>
+ * <li>isErr {boolean} : エラーならtrue
+ * <li>message {string} : エラーの場合はメッセージ。正常終了ならundefined
+ * <li>result {object} : 分岐先の処理が正常終了した場合の結果オブジェクト
+ * </ul>
  * 
  * @example <caption>引数の例</caption>
- * 管理局.auth1B start. arg={"entryNo":"1.0","func":"auth1B","passPhrase":"GQD*4jzyk8!4aQ8r"}
+ * 管理局.auth1B start. arg={"entryNo":"1.0","func":"auth1B","passPhrase":"GQD*4〜aQ8r"}
  */
 const auth1B = (arg) => {
   console.log('管理局.auth1B start. arg='+JSON.stringify(arg));
@@ -372,9 +376,11 @@ const auth2BTest = () => {
 }
 
 /** auth2B: 認証局から送られた受付番号とパスコードの正当性をチェック
- * @param {object} arg - 以下のメンバを持つオブジェクト
- * @param {string} arg.entryNo - 利用者が入力した受付番号
- * @param {string} arg.passCode - 利用者が入力したパスコード
+ * @param {object} arg            - POSTで渡されたデータ
+ * @param {string} arg.func       - 利用しない('auth1B'固定)
+ * @param {string} arg.entryNo    - 利用者が入力した受付番号
+ * @param {string} arg.passCode   - 利用者が入力したパスコード
+ * @param {string} arg.passPhrase - 利用しない(config.Master.Key)
  * @return {object} - 処理結果
  * <ul>
  * <li>isErr {boolean} - エラーならtrue
@@ -382,6 +388,9 @@ const auth2BTest = () => {
  * <li>config {object} - configにセットする値(オブジェクト)
  * <li>menuFlags {number} - メニューの表示/非表示フラグの集合 
  * </ul>
+ * 
+ * @example <caption>引数の例</caption>
+ * 管理局.auth2B start. arg={"func":"auth2B","entryNo":"1.0","passCode":"478608","passPhrase":"GQD*4〜aQ8r"}
  */
 const auth2B = (arg) => {
   console.log('管理局.auth2B start. arg='+JSON.stringify(arg));
@@ -446,8 +455,9 @@ const auth2B = (arg) => {
 
 /** candidates: 該当者リストの作成
  * 
- * @param {*} data 
- * @returns {object[]} - 該当者のマスタ上のデータ
+ * @param {object} data     - 以下のメンバを持つオブジェクト
+ * @param {string} data.key - 候補者検索のためのキーワード(受付番号、氏名読み)
+ * @returns {object[]}      - 該当者のマスタ上のデータ
  */
 const candidates = (data) => {
   console.log('管理局.candidates start.',data);
@@ -469,8 +479,38 @@ const candidates = (data) => {
 
 /** updateParticipant: 参加者情報を更新
  * 
- * @param {*} data 
- * @returns {object|array} updateSheetDataの更新結果
+ * @param {object} data              - 更新情報
+ * @param {object} data.target       - 対象者情報
+ * @param {string} data.target.key   - ユニークキーとなる項目名
+ * @param {any}    data.target.value - キー値
+ * @param {object[]} data.revice     - 更新内容
+ * @param {string} data.revice.key   - 更新対象項目名
+ * @param {string} data.revice.value - 更新する値
+ * @returns {object[]} updateSheetDataの更新結果
+ * <ul>
+ * <li>column {string} - 更新した項目
+ * <li>before {string} - 更新前の値
+ * <li>after  {string} - 更新後の値
+ * </ul>
+ * 
+ * @example <caption>引数の例</caption>
+ * 管理局.updateParticipant start. {
+ *    target: { key: '受付番号', value: 10 },
+ *    revice:[
+ *      { key: '状態', value: '入場済' },
+ *      { key: '参加費', value: '既収' },
+ *      { key: '①状態', value: '入場済' },
+ *      { key: '③参加費', value: '無し' }
+ *    ]
+ * }
+ * 
+ * @example <caption>戻り値の例</caption> 
+ * 管理局.updateParticipant end. [
+ *    { column: '状態', before: '', after: '入場済' },
+ *    { column: '参加費', before: '', after: '既収' },
+ *    { column: '①状態', before: '', after: '入場済' },
+ *    { column: '③参加費', before: '', after: '無し' }
+ * ]
  */
 const updateParticipant = (data) => {
   console.log('管理局.updateParticipant start.',data);
