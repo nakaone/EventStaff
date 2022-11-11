@@ -273,7 +273,7 @@ const initialize = (arg) => {  // 初期設定処理
   // 受付番号表示(QRコード)
   document.querySelector('#dispEntryNo h1').innerText
   = 'No.' + ('000'+config.entryNo).slice(-4);
-  setQRcode('#dispEntryNo .qrcode',{text:config.entryNo});
+  setQRcode('#dispEntryNo .qrcode',{text:('000'+config.entryNo).slice(-4)});
   // 進行予定画面
   document.querySelector("#schedule iframe").src = config.TableURL;
   // 校内案内図
@@ -428,7 +428,7 @@ const inputSearchKey = () => {  // 参加者の検索キーを入力
   },{
     selector:'#inputSearchKey .scanner',  // 設置位置指定
     RegExp:/^[0-9]+$/,  // 数字かチェック
-    alert: false,  // 読み込み時、内容をalert表示しない
+    alert: true,  // 読み込み時、内容をalert表示しない
   });
 
   // キーワード入力欄の値が変わったら検索するよう設定

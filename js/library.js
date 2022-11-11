@@ -362,9 +362,9 @@ const scanCode = (callback, arg={}) => { /* QRコードのスキャン
       // このタイミングでQRコードを判定
       let code = jsQR(img.data, img.width, img.height, {inversionAttempts: "dontInvert"});
 			if(code){
+        console.log('drawFinder: code='+JSON.stringify(code));
         // QRコード読み取り成功
 				drawRect(code.location);// ファインダ上のQRコードに枠を表示
-        console.log(code.data,callback);
         if( opt.alert ) alert(code.data);  // alert出力指定があれば出力
         if( code.data.match(opt.RegExp) ){
           // 正しい内容が読み込まれた場合
@@ -374,6 +374,7 @@ const scanCode = (callback, arg={}) => { /* QRコードのスキャン
         } else {
           // 不適切な、別のQRコードが読み込まれた場合
           alert('不適切なQRコードです。再読込してください。');
+          console.log('[scanCode.drawFinder] Error: not match pattern. code='+code.data);
           setTimeout(drawFinder, opt.interval);
         }
 			}
