@@ -1,73 +1,14 @@
+# JSDoc
+
+監視局 |
+認証局 |
+放送局 |
+[管理局](./doc/master/global.html) |
+[郵便局](./doc/post/global.html) |
+配達員 |
+[szLib](./doc/szLib/global.html)
+
 # 開発の目的
-
-参加者の追加・削除やキャンセル登録のため、登録者(参加者)がフォームを編集する必要があるが、編集用URLはGoogle Spreadには記録されず、フォームの登録情報にしか存在しない。
-そこで①フォームの登録情報を全件取得し、②Google Spreadの登録日時＋e-mailから特定し、③特定された登録情報から編集用URLを取得、という手順を踏む。</p>
-
-※回答シートとフォームで添字が一致しないかと考えたが、結果的には一致していない。よって「タイムスタンプのgetTime()＋e-mail」を検索キーとする。
-
-<details><summary>保留：メール送信エラー対応</summary>
-
-2022/10/25 10:52:23 `TypeError: Cannot read property 'getTimestamp' of undefined at onFormSubmit(コード:83:30)`発生。
-
-結論として再現しなかったので、対応を保留。以下はその調査時のメモ。
-
-- スプレッドシート上のonFormSubmitに渡される引数
-  - [スプレッドシートのコンテナバインドのフォーム送信時イベントオブジェクト](https://tgg.jugani-japan.com/tsujike/2021/05/gas-form4/#toc2)([公式](https://developers.google.com/apps-script/guides/triggers/events#form-submit))
-    - authMode
-    - namedValues : {質問名：回答}のハッシュ
-      - `e.namedValues['メールアドレス'][0]`等
-    - range : [Range](https://developers.google.com/apps-script/reference/spreadsheet/range) Object
-    - triggerUid
-    - values : 回答の一次元配列
-- 参考：フォーム上のonFormSubmitに渡される引数
-  - [フォームのコンテナバインドのフォーム送信時イベントオブジェクト](https://tgg.jugani-japan.com/tsujike/2021/05/gas-form5/#toc2)([公式](https://developers.google.com/apps-script/guides/triggers/events#form-submit_1))
-    - authMode
-    - response : [Form Response](https://developers.google.com/apps-script/reference/forms/form-response) Object
-      - [getEditResponseUrl()](https://developers.google.com/apps-script/reference/forms/form-response#geteditresponseurl)
-      - getRespondentEmail()
-      - [getTimestamp()](https://developers.google.com/apps-script/reference/forms/form-response#gettimestamp)
-    - source : [Form](https://developers.google.com/apps-script/reference/forms/form) Object
-    - triggerUid
-
-スプレッドシートのコンテナバインドに渡される引数にはForm Response情報は入っていないので修正用URLは取得できず、やはり全フォームデータを`FormApp.openById('〜').getResponses()`で一括取得して内容が一致するものを探さざるを得ない。
-
-ただFrom Responseのメソッドの説明を読むと「スクリプトが作成したが、まだ送信されていないフォーム レスポンスについては、このメソッドは null を返します」とある。<br>
-今回のエラーはこれが原因と思われるが、エラーが発生しないメールもあることからロジックではなくフォーム回答者の環境かタイミングの問題と推定。以下の再現テストを行なったが再現しないので保留。
-
-| ブラウザのアカウント | 入力メアド | 回答のコピーを送る | メールアドレスを収集 | 回答のコピーを回答者に送信 | 遅延 | ログ | メール |
-| :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
-| nakaone.kunihiro | nakaone.kunihiro | OFF | ON | リクエスト | 未設定 | 8:19:20 | OK |
-| ena.kaon | nakaone.kunihiro | OFF | ON | リクエスト | 未設定 | 8:23:52 | OK |
-| shimokita.oyaji | hiroko.n | ON | ON | リクエスト | 未設定 | 8:28:42 | OK |
-| hiro.n | hiroko.n | OFF | ON | リクエスト | 未設定 | 8:32:49 | OK |
-| nakaone.kunihiro | tnw | OFF | ON | リクエスト | 未設定 | 8:34:53 | OK |
-| hiroko.n | tamako@yahoo | OFF | ON | リクエスト | 未設定 | 8:46:09 | OK |
-
-</details>
-
-
-```
-// OK:フォームの編集画面
-const FormId = "1vlVbz6DM7hSFsijDPv63GUaz9cozSOxO5_O--SBR9cg";
-// NG:フォームの入力画面、回答後の「回答を記録しました」画面, 「回答を編集」のリンク先
-//const FormId = "1FAIpQLSewOvfxT2b_jomhMOTG6rw7qX6a_KtFYAz3gkyWPgc9lx7jfA";
-const formData = FormApp.openById(FormId).getResponses();
-```
-
-
-編集用URL・登録日時・e-mailの取得
-
-```
-for( let i=0 ; i<formData.length ; i++ ){
-  console.log("formData["+i+"] : "
-    + "getEditResponseUrl=" + formData[i].getEditResponseUrl() + "\n"
-    + "key = " + String(new Date(formData[i].getTimestamp()).getTime())
-    + formData[i].getRespondentEmail()
-  );
-}
-```
-
-getEditResponseUrl()他のメソッドの詳細については、Google公式 [Class FormResponse](https://developers.google.com/apps-script/reference/forms/form-response)参照。
 
 ## 現状
 

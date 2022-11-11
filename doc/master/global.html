@@ -164,7 +164,102 @@
 
             
 
-            <td class="description last">entryNo {string} : 利用者が入力した受付番号</td>
+            <td class="description last">POSTで渡されたデータ
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>func</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">利用しない('auth1B'固定)</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>entryNo</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">利用者が入力した受付番号</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>passPhrase</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">利用しない(config.Master.Key)</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -205,7 +300,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="master.js.html">master.js</a>, <a href="master.js.html#line296">line 296</a>
+        <a href="master.js.html">master.js</a>, <a href="master.js.html#line303">line 303</a>
     </li></ul></dd>
     
 
@@ -235,9 +330,11 @@
         
 <div class="param-desc">
     - 処理結果
-   isErr {boolean} : エラーならtrue
-   message {string} : エラーの場合はメッセージ。正常終了ならundefined
-   result {object} : 分岐先の処理が正常終了した場合の結果オブジェクト
+<ul>
+<li>isErr {boolean} : エラーならtrue
+<li>message {string} : エラーの場合はメッセージ。正常終了ならundefined
+<li>result {object} : 分岐先の処理が正常終了した場合の結果オブジェクト
+</ul>
 </div>
 
 
@@ -257,6 +354,13 @@
     
 
 
+
+
+    <h5>Example</h5>
+    
+        <p class="code-caption">引数の例</p>
+    
+    <pre class="prettyprint"><code>管理局.auth1B start. arg={"entryNo":"1.0","func":"auth1B","passPhrase":"GQD*4〜aQ8r"}</code></pre>
 
 
 
@@ -478,7 +582,7 @@
 
             
 
-            <td class="description last">以下のメンバを持つオブジェクト
+            <td class="description last">POSTで渡されたデータ
                 <h6>Properties</h6>
                 
 
@@ -500,6 +604,29 @@
     </thead>
 
     <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>func</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">利用しない('auth1B'固定)</td>
+        </tr>
+
     
 
         <tr>
@@ -547,6 +674,29 @@
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>passPhrase</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">利用しない(config.Master.Key)</td>
+        </tr>
+
+    
     </tbody>
 </table>
 
@@ -591,7 +741,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="master.js.html">master.js</a>, <a href="master.js.html#line383">line 383</a>
+        <a href="master.js.html">master.js</a>, <a href="master.js.html#line395">line 395</a>
     </li></ul></dd>
     
 
@@ -646,6 +796,13 @@
     
 
 
+
+
+    <h5>Example</h5>
+    
+        <p class="code-caption">引数の例</p>
+    
+    <pre class="prettyprint"><code>管理局.auth2B start. arg={"func":"auth2B","entryNo":"1.0","passCode":"478608","passPhrase":"GQD*4〜aQ8r"}</code></pre>
 
 
 
@@ -749,7 +906,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="master.js.html">master.js</a>, <a href="master.js.html#line365">line 365</a>
+        <a href="master.js.html">master.js</a>, <a href="master.js.html#line372">line 372</a>
     </li></ul></dd>
     
 
@@ -857,7 +1014,7 @@
             <td class="type">
             
                 
-<span class="param-type">*</span>
+<span class="param-type">object</span>
 
 
             
@@ -867,7 +1024,56 @@
 
             
 
-            <td class="description last"></td>
+            <td class="description last">以下のメンバを持つオブジェクト
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>key</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">候補者検索のためのキーワード(受付番号、氏名読み)</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -908,7 +1114,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="master.js.html">master.js</a>, <a href="master.js.html#line448">line 448</a>
+        <a href="master.js.html">master.js</a>, <a href="master.js.html#line462">line 462</a>
     </li></ul></dd>
     
 
@@ -2191,7 +2397,7 @@ GAS公式: <a href="https://developers.google.com/apps-script/reference/content/
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="master.js.html">master.js</a>, <a href="master.js.html#line492">line 492</a>
+        <a href="master.js.html">master.js</a>, <a href="master.js.html#line536">line 536</a>
     </li></ul></dd>
     
 
@@ -2255,7 +2461,7 @@ GAS公式: <a href="https://developers.google.com/apps-script/reference/content/
     
 
     
-    <h4 class="name" id="updateParticipant"><span class="type-signature"></span>updateParticipant<span class="signature">(data)</span><span class="type-signature"> &rarr; {object|array}</span></h4>
+    <h4 class="name" id="updateParticipant"><span class="type-signature"></span>updateParticipant<span class="signature">(data)</span><span class="type-signature"> &rarr; {Array.&lt;object>}</span></h4>
     
 
     
@@ -2305,7 +2511,7 @@ GAS公式: <a href="https://developers.google.com/apps-script/reference/content/
             <td class="type">
             
                 
-<span class="param-type">*</span>
+<span class="param-type">object</span>
 
 
             
@@ -2315,7 +2521,223 @@ GAS公式: <a href="https://developers.google.com/apps-script/reference/content/
 
             
 
-            <td class="description last"></td>
+            <td class="description last">更新情報
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>target</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">対象者情報
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>key</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">ユニークキーとなる項目名</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>value</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">any</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">キー値</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>revice</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;object></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">更新内容
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>key</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">更新対象項目名</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>value</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">更新する値</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -2356,7 +2778,7 @@ GAS公式: <a href="https://developers.google.com/apps-script/reference/content/
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="master.js.html">master.js</a>, <a href="master.js.html#line471">line 471</a>
+        <a href="master.js.html">master.js</a>, <a href="master.js.html#line515">line 515</a>
     </li></ul></dd>
     
 
@@ -2386,6 +2808,11 @@ GAS公式: <a href="https://developers.google.com/apps-script/reference/content/
         
 <div class="param-desc">
     updateSheetDataの更新結果
+<ul>
+<li>column {string} - 更新した項目
+<li>before {string} - 更新前の値
+<li>after  {string} - 更新後の値
+</ul>
 </div>
 
 
@@ -2396,10 +2823,7 @@ GAS公式: <a href="https://developers.google.com/apps-script/reference/content/
     </dt>
     <dd>
         
-<span class="param-type">object</span>
-|
-
-<span class="param-type">array</span>
+<span class="param-type">Array.&lt;object></span>
 
 
     </dd>
@@ -2408,6 +2832,30 @@ GAS公式: <a href="https://developers.google.com/apps-script/reference/content/
     
 
 
+
+
+    <h5>Examples</h5>
+    
+        <p class="code-caption">引数の例</p>
+    
+    <pre class="prettyprint"><code>管理局.updateParticipant start. {
+   target: { key: '受付番号', value: 10 },
+   revice:[
+     { key: '状態', value: '入場済' },
+     { key: '参加費', value: '既収' },
+     { key: '①状態', value: '入場済' },
+     { key: '③参加費', value: '無し' }
+   ]
+}</code></pre>
+
+        <p class="code-caption">戻り値の例</p>
+    
+    <pre class="prettyprint"><code>管理局.updateParticipant end. [
+   { column: '状態', before: '', after: '入場済' },
+   { column: '参加費', before: '', after: '既収' },
+   { column: '①状態', before: '', after: '入場済' },
+   { column: '③参加費', before: '', after: '無し' }
+]</code></pre>
 
 
 
@@ -2433,7 +2881,7 @@ GAS公式: <a href="https://developers.google.com/apps-script/reference/content/
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Thu Nov 10 2022 18:03:56 GMT+0900 (日本標準時)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Fri Nov 11 2022 11:30:54 GMT+0900 (日本標準時)
 </footer>
 
 <script> prettyPrint(); </script>
