@@ -5,7 +5,7 @@
 放送局 |
 [管理局](./doc/master/global.html) |
 [郵便局](./doc/post/global.html) |
-配達員 |
+[配達員](./doc/delivery/global.html) |
 [szLib](./doc/szLib/global.html)
 
 # 開発の目的
