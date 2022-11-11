@@ -1,12 +1,13 @@
 # JSDoc
 
-監視局 |
-認証局 |
+[認証局](./doc/auth/global.html) |
 [放送局](./doc/broad/global.html) |
 [管理局](./doc/master/global.html) |
 [郵便局](./doc/post/global.html) |
 [配達員](./doc/delivery/global.html) |
-[szLib](./doc/szLib/global.html)
+[szLib](./doc/szLib/global.html) |
+EventStaff.js |
+library.js
 
 # 開発の目的
 

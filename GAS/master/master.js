@@ -6,10 +6,10 @@ const config = szLib.setConfig(['MasterKey','AuthSheetId','PostURL','PostKey']);
 
 /** doPost: パラメータに応じて処理を分岐
  * 
- * @param {object} e - POSTされたデータ
- * @param {object} e.parameter - 実データ
+ * @param {object} e                      - POSTされたデータ
+ * @param {object} e.parameter            - 実データ
  * @param {string} e.parameter.passPhrase - 正当な要求であることを検証するための本APIの秘密鍵
- * @param {object} e.parameter.data - 分岐先の処理に渡すオブジェクト
+ * @param {object} e.parameter.data       - 分岐先の処理に渡すオブジェクト
  * 
  * @return {object} 正常終了の場合は分岐先処理の戻り値、エラーの場合は以下。
  * <ul>
@@ -114,7 +114,7 @@ function doGet(e) {
   .setMimeType(ContentService.MimeType.JSON);
 }
 
-/** フォーム申込み時のメールの自動返信
+/** onFormSubmit: フォーム申込み時のメールの自動返信
  * <br>
  * 予約されたイベント関数なので、アローでは無くfunctionで定義。<br>
  * <br>
