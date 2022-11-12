@@ -1,0 +1,317 @@
+<!DOCTYPE html><html lang="ja">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <meta http-equiv="Content-Script-Type" content="text/javascript">
+  <title>会員証</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    html, body {
+      margin: 0px;
+      padding: 0px;
+      /* font-size: 5vw;  基本となる文字サイズ */
+      font-size: 12pt;
+      box-sizing: border-box; /* 枠線は要素サイズに含める */
+    }
+
+    div {
+      margin: 0px;
+      padding: 0px;
+      display: flex;
+      display: -webkit-flex;
+      flex-direction: column;  /* row:横並び */
+      -webkit-justify-content: flex-start;
+      justify-content: flex-start;
+      -webkit-align-items: flex-start;
+      align-items: flex-start;
+    }
+
+    #wrapper {
+      width: 100vw;
+      flex-direction: row;  /* row:横並び */
+      flex-wrap: wrap;
+    }
+    div.member {
+      margin: 1rem;
+      padding: 1rem;
+      border: solid 5px pink;
+      width: calc(50% - 4rem - 10px);
+      flex-direction: row;  /* row:横並び */
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+    }
+    div.left {
+      padding: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+<div id="wrapper"></div>
+</body>
+<script src="js/qrcode.min.js" defer></script>
+<script>
+const template = {tag:'div', class:'member', id:'m\p', children:[
+  {tag:'div', class:'left', children:[
+    {tag:'div', class:'no', text:'受付番号：\t', variable:'pKey'},
+    {tag:'div', class:'name', variable:'member'},
+  ]},
+  {tag:'div', class:'qrcode'},
+]};
+
+const memberList = [
+  {member:'奥田　美香',pKey:'0001'},
+  {member:'榎田　道子',pKey:'0002'},
+  {member:'吉野　佳代子',pKey:'0003'},
+  {member:'新田　恵利',pKey:'0004'},
+  {member:'中島　美春',pKey:'0005'},
+  {member:'樹原　亜紀',pKey:'0006'},
+  {member:'友田　麻美子',pKey:'0008'},
+  {member:'国生　さゆり',pKey:'0010'},
+  {member:'名越　美香',pKey:'0012'},
+  {member:'佐藤　真由美',pKey:'0014'},
+  {member:'福永　恵規',pKey:'0016'},
+  {member:'河合　その子',pKey:'0017'},
+  {member:'内海　和子',pKey:'0018'},
+  {member:'富川　春美',pKey:'0019'},
+  {member:'立見　里歌',pKey:'0020'},
+  {member:'高井　麻巳子',pKey:'0021'},
+  {member:'城之内　早苗',pKey:'0022'},
+  {member:'永田　ルリ子',pKey:'0023'},
+  {member:'岩井　由紀子',pKey:'0024'},
+  {member:'寺本　容子',pKey:'0055'},
+  {member:'五味岡　たまき',pKey:'0056'},
+  {member:'白石　麻子',pKey:'0057'},
+  {member:'林　香織',pKey:'0059'},
+  {member:'三田　文代',pKey:'0060'},
+  {member:'吉沢　秋絵',pKey:'0063'},
+  {member:'赤坂　芳恵',pKey:'0065'},
+]
+
+/** genChild: テンプレートに差込データをセットした要素を生成
+ * 
+ * @param {object} template - 生成対象となる要素のテンプレート
+ * @param {string} template.tag      - タグ
+ * @param {string} template.children - 子要素。templateを再帰的に定義
+ * @param {string} template.text - テキスト要素。'\t'の部分はvariableの値で置換
+ * @param {string} template.skip - 「dObj[skip]=undefined⇒スキップ」の指定<br>例：参加者名が空欄なら名簿行を作成しない
+ * @param {string} template.variable - テキスト要素の'\t'に埋め込むdObjの要素(ex.variable='名前'⇒dObj['名前'])
+ * @param {string} template.max - 不定回数繰り返す場合、その最大を指定
+ * @param {string} template.class - クラス名。三項演算子なら評価結果()
+ * @param {string} template.id - setAttributeで設定
+ * @param {string} template.type - setAttributeで設定
+ * @param {string} template.name - setAttributeで設定
+ * @param {string} template.value - setAttributeで設定
+ * @param {string} template.accept - setAttributeで設定
+ * @param {string} template.capture - setAttributeで設定
+ * @param {string} template.width - setAttributeで設定
+ * @param {string} template.height - setAttributeで設定
+ * @param {string} template.style - setAttributeで設定
+ * @param {string} template.onclick - location.hrefする場合の遷移先URL
+ * @param {boolean} template.checked - trueならcheckedを追加
+ * @param {string} template.opt - tag="select"の場合に作成されるoptions。variableの値が選択された状態になる
+ * @param {object} dObj - 実データのオブジェクト
+ * @param {string} pFP - パン屑リストの表示名
+ * 
+ * @returns {object} 処理結果と生成されたノード
+ * <ul>
+ * <li>append {boolean} - 追加対象となる子要素ならtrue
+ * <li>status {string} - 処理結果
+ * <ul>
+ * <li>'skipped' => テンプレートのskip条件を満たすため、生成を見送った子要素
+ * <li>'variable' => テンプレートのtextが未指定なので、変数の値をそのままセット
+ * <li>'replaced' => テンプレートのtext指定に基づき、プレースホルダ('\t')に変数の値をセット
+ * <li>'fixed' => テンプレートのtext指定にプレースホルダがなく、textをそのままセット(固定文字列)
+ * <li>'node' => セットする文字列が指定されていない要素(既定値)
+ * </ul>
+ * <li>result: 子要素のオブジェクト。エラー時はエラーオブジェクト
+ * </ul>
+ * 
+ * @example <caption>利用例</caption>
+ * const template = [
+ *   {tag:'div', class:'video', style:opt.video, children:[
+ *     {tag:'video', style:'width:100%;'}]},
+ *   {tag:'div', class:'camera', style:opt.camera, children:[
+ *     {tag:'input', type:'file', accept:"image/*", capture:"camera", name:"file"}]},
+ *   {tag:'div', class:'finder', style:opt.finder , children:[
+ *     {tag:'canvas', style:'width:100%'},]},
+ * ]
+ * for( let i=0 ; i<template.length ; i++ ){
+ *   let o = genChild(template[i],{},'root');  // 全体の定義と'root'を渡す
+ *   if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
+ *     throw o.result;
+ *   } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
+ *     scanner.appendChild(o.result);
+ *   }
+ * }
+ */
+ const genChild = (template,dObj,pFP) => {
+  let rv = {append:true, status:'node', result:null};  // catch節でも使用する変数を、try節の前で宣言
+  try {
+
+    /* ========================================
+      1.前処理
+    ======================================== */
+    // 1.1.テンプレートの定義(メンバ)がundefinedにならないよう初期値を設定し、
+    //     'sDef'とする(structure definition)
+    const sDef = {  // template.specにある、文書構造定義に使用される項目
+      tag:'', children:[], text:'', skip:'', variable:'', max:0,
+      class:'', // 生成される要素(タグ)に指定する属性(現在classのみ)
+      ...template  // 既定値を指定値で上書き
+    };
+
+    // 1.2.現在の位置を示すパンくずリスト文字列を生成(current foot print)
+    const cFP = pFP + ' > '
+      + (sDef.tag.length === 0 ? '(no tag)' : sDef.tag)
+      + (sDef.class.length > 0 ? '.'+sDef.class : '');
+    console.log('genChild start: ' + cFP + '\n');
+
+    // 1.3.内部関数の定義
+    const addSeqNo = (cDef,no) => {
+      if( cDef.skip && cDef.skip !== '' ) cDef.skip += '_' + no;
+      if( cDef.variable && cDef.variable !== '' ) cDef.variable += '_' + no;
+      if( cDef.children && cDef.children.length > 0 ){
+        for( let i=0 ; i<cDef.children.length ; i++ )
+          addSeqNo(cDef.children[i],no);
+      }
+    };
+
+    if( sDef.skip.length > 0 && dObj[sDef.skip] && dObj[sDef.skip].length === 0 ){
+      return {append:false, status:'skipped', result:null};
+    }
+
+    /* ========================================
+      2. 自要素の作成
+    ======================================== */
+
+    // 2.1.dObj[skip]が空なら作成不要
+    if( sDef.skip.length > 0 ){
+      console.log('l.176 dObj['+sDef.skip+']='+dObj[sDef.skip]
+      + ', length='+String(dObj[sDef.skip]).length);
+      if( dObj[sDef.skip] !== undefined ){
+        if( String(dObj[sDef.skip]).length === 0 ){
+          console.log('genChild skipped: '+cFP);
+          return {append:false, status:'skipped', result:null};
+        }
+      }
+    }
+
+    // 2.2.中の文字列をstrとして作成
+    let str = '';
+    if( sDef.text.length === 0 ){
+      if( dObj[sDef.variable] !== undefined ){
+        rv.status = 'variable';
+        str = dObj[sDef.variable];
+      }
+    } else {
+      if( sDef.text.match(/\t/) ){
+        if( dObj[sDef.variable] !== undefined ){
+          rv.status = 'replaced';
+          str = sDef.text.replace(/\t/g,dObj[sDef.variable]);
+        }
+      } else {
+        rv.status = 'fixed';
+        str = sDef.text;
+      }
+    }
+
+    // 2.3.自要素(element)の生成
+    if( sDef.tag.length > 0 ){
+      rv.result = document.createElement(sDef.tag);
+      if( str )
+        rv.result.appendChild(document.createTextNode(str));
+    } else {
+      rv.result = document.createTextNode(str);
+    }
+    //console.log('l.216 rv',rv.result);
+
+    // 2.4.自要素に属性を追加
+    if( sDef.class && sDef.class.length > 0 ){
+      /* sDef.classが三項演算子の場合、評価結果をクラスとする。
+        それ以外は文字列としてそのまま適用 */
+      rv.result.className = sDef.class.match(/.+\?.+:.+/)
+        ? eval(sDef.class) : sDef.class;
+    }
+    // id等、テンプレートにpKeyの値を埋め込むもの
+    ['id'].forEach(x => {
+      if( sDef[x] && sDef[x].length > 0 ){
+        rv.result.setAttribute(x,sDef[x].replace(/\p/g,dObj.pKey));
+      }
+    });
+    // テンプレートの値をそのまま適用するもの
+    ['type','name','value','accept','capture','width','height','style'].forEach(x => {
+      if( sDef[x] && sDef[x].length > 0 ){
+        console.log('l.195',x,sDef[x],sDef);
+        rv.result.setAttribute(x,sDef[x]);
+      }
+    });
+    if( sDef.onclick && dObj[sDef.onclick] ){
+      // ボタンクリックで遷移
+      rv.result.setAttribute('onclick',"location.href='_'".replace('_',dObj[sDef.onclick]));
+    }
+    if( sDef.checked && dObj[sDef.checked] ){
+      // dObj[sDef.checked]がtrueならcheckedを追加
+      rv.result.checked = true;
+    }
+    if( sDef.tag === 'select' ){  // select文の場合、子要素としてoptionを作成
+      const options = sDef.opt.split(',');
+      for( let i=0 ; i<options.length ; i++ ){
+        let opt = document.createElement('option');
+        opt.value = options[i];
+        opt.appendChild(document.createTextNode(options[i]));
+        if( options[i] === dObj[sDef.variable] ){
+          opt.selected = true;
+        }
+        rv.result.appendChild(opt);
+      }
+    }
+    //console.log('l.225 rv',rv.result);
+
+    /* ========================================
+      3. 子要素の作成
+    ======================================== */
+    for( let i=0 ; i<(sDef.max === 0 ? 1 : sDef.max) ; i++ ){
+      const cDef = JSON.parse(JSON.stringify(sDef));
+      if( cDef.max > 0 )
+        addSeqNo(cDef,i);  // 不定項目の場合、子孫全部ラベルを書き換え
+      for( let j=0 ; j<cDef.children.length ; j++ ){
+        const o = genChild(cDef.children[j],dObj,cFP);
+        if( o.append ) rv.result.appendChild(o.result);
+      }
+    }
+    //console.log('l.239 rv',rv.result);
+
+    /* ========================================
+      5. 結果表示して作成した要素を返す
+    ======================================== */
+    console.log('genChild end: '+cFP+'\n',rv);
+    return rv;
+
+  } catch(e) {
+    console.error(e);
+    return rv;
+  }
+};
+
+const initialize = () => {
+  const w = document.body.clientWidth;
+  console.log('w='+w);
+  const wrapper = document.getElementById('wrapper');
+  for( let i=0 ; i<memberList.length ; i++ ){
+    let o = genChild(template,memberList[i],'root');  // 全体の定義と'root'を渡す
+    if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
+      throw o.result;
+    } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
+      wrapper.appendChild(o.result);
+      // QRコードのセット
+      new QRCode(document.getElementById('m'+memberList[i].pKey),
+        {text: memberList[i].pKey,width: 150,height: 150});
+    }
+  }
+}
+
+window.addEventListener('DOMContentLoaded', function(){ // 主処理
+  initialize();
+});
+
+</script>
+</html>
