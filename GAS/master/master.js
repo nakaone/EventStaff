@@ -6,10 +6,10 @@ const config = szLib.setConfig(['MasterKey','AuthSheetId','PostURL','PostKey']);
 
 /** doPost: パラメータに応じて処理を分岐
  * 
- * @param {object} e                      - POSTされたデータ
- * @param {object} e.parameter            - 実データ
+ * @param {object} e - POSTされたデータ
+ * @param {object} e.parameter - 実データ
  * @param {string} e.parameter.passPhrase - 正当な要求であることを検証するための本APIの秘密鍵
- * @param {object} e.parameter.data       - 分岐先の処理に渡すオブジェクト
+ * @param {object} e.parameter.data - 分岐先の処理に渡すオブジェクト
  * 
  * @return {object} 正常終了の場合は分岐先処理の戻り値、エラーの場合は以下。
  * <ul>
@@ -18,6 +18,8 @@ const config = szLib.setConfig(['MasterKey','AuthSheetId','PostURL','PostKey']);
  * </ul>
  */
 function doPost(e){
+  const elaps = szLib.getElaps();
+  elaps.start({department:'管理局',func:'doPost'});
   console.log('管理局.doPost start. e.parameter='+JSON.stringify(e.parameter));
   let rv = null;
   try {
@@ -42,6 +44,7 @@ function doPost(e){
     rv = {isErr:true, message:e.name+': '+e.message};
   } finally {
     console.log('管理局.doPost end. rv='+JSON.stringify(rv));
+    elaps.end(rv.isErr?rv.message:'OK');
     return ContentService
     .createTextOutput(JSON.stringify(rv,null,2))
     .setMimeType(ContentService.MimeType.JSON);
@@ -84,6 +87,8 @@ const doGetTest = () => {
  * @return {object} - 正常終了の場合、分岐先処理の戻り値。異常終了の場合は空配列
  */
 function doGet(e) {
+  const elaps = szLib.getElaps();
+  elaps.start({department:'管理局',func:'doGet'});
   console.log('管理局.doGet start.',e);
 
   // 'v'で渡されたクエリを復号
@@ -109,6 +114,7 @@ function doGet(e) {
   // 結果をJSON化して返す
   rv = JSON.stringify(rv,null,2);
   console.log('管理局.doGet end.',rv);
+  elaps.end(); //暫定
   return ContentService
   .createTextOutput(rv)
   .setMimeType(ContentService.MimeType.JSON);

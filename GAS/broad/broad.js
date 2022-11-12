@@ -96,10 +96,13 @@ function postMessage(data){
  * @returns {object[]} 投稿メッセージシートの全データ
  */
 function getMessages(){
+  const elaps = szLib.getElaps();
+  elaps.start({department:'放送局',func:'getMessages'});
   console.log('放送局.getMessages start.');
 
   const dObj = szLib.getSheetData('ログ');
   const rv = dObj.data;
   console.log('放送局.getMessages end. rv='+JSON.stringify(rv));
+  elaps.end();
   return rv;
 }
