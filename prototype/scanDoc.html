@@ -116,6 +116,12 @@ class webScanner {
     });
   }
 
+  stop(){
+    this.video.srcObject.getVideoTracks().forEach((track) => {
+      track.stop();
+    });
+  }
+
   /** 文書のスキャン */
   scanDoc(callback){
 
@@ -138,6 +144,9 @@ class webScanner {
     });
     // 採用ボタンクリック時
     this.adopt.addEventListener('click',() => {
+      // 正常終了時はスキャナを停止
+      this.scanner.innerHTML = '';
+      this.stop();
       // canvasからイメージをBASE64で取得
       const imageData = this.canvas.toDataURL('image/png',0.7)
       .replace('data:image/png;base64,','');  // GAS側で邪魔な'data:image/png〜'を削除
@@ -149,8 +158,6 @@ class webScanner {
         if( res.isErr ){
           alert(res.message);
         } else {
-          // 正常終了時はスキャナ領域を削除
-          this.scanner.innerHTML = '';
           console.log('scanDoc normal end.',res);
         }
       });
