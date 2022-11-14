@@ -1,0 +1,215 @@
+<!DOCTYPE html><html lang="ja">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <meta http-equiv="Content-Script-Type" content="text/javascript">
+  <title></title>
+  <style type="text/css">
+    html {font-size:10pt;  /* 基本となる文字サイズ */}
+    body {box-sizing: border-box;}  /* 枠線は要素サイズに含める */
+    div {
+      margin: 0px;
+      padding: 0px;
+      width: 100%;
+      display: flex;
+      display: -webkit-flex;
+      flex-direction: row;  /* row:横並び */
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+      -webkit-align-items: flex-start;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    #webScanner div {
+      margin-top: 1rem;
+      display: flex;
+      display: -webkit-flex;
+      flex-direction: row;  /* row:横並び */
+      -webkit-justify-content: space-around;
+      justify-content: space-around;
+    }
+  </style>
+  <!-- style type="text/css" media="print"></style -->
+</head>
+
+<body>
+  <div id="webScanner"></div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/browser-image-compression@latest/dist/browser-image-compression.js"></script>
+<script type="text/javascript">
+const config = {
+  MasterKey: 'vR4sw$P(*ZBex/Hp',  // GAS側の秘密鍵
+  endpoint: "https://script.google.com/macros/s/AKfycbwWOxoN2rrgth1H6cn4IbJWZi5awSXKKWs9gdAkQUvGxMawz7EavzQEUSg0jiQHVyGCVA/exec",
+}
+class webScanner {
+  constructor(arg={}){
+    console.log('webScanner.constructor start. opt='+JSON.stringify(arg));
+
+    // デバイスがサポートされているか確認
+    if (!('mediaDevices' in navigator) || !('getUserMedia' in navigator.mediaDevices)) {
+      const msg = 'デバイス(カメラ)がサポートされていません';
+      console.error('webScanner.constructor: '+msg);
+      alert(msg);
+      return;
+    }
+  
+    this.opt = {   // 未指定設定値に既定値を設定
+      selector: arg.selector || '#webScanner',  // 親要素のCSSセレクタ文字列
+      //video   : arg.video || false,    // 動画枠の表示/非表示
+      //canvas  : arg.canvas || true,    // 撮像結果の表示/非表示
+      interval: arg.interval || 0.25,  // 動画状態で撮像、読み込めなかった場合の時間間隔
+      RegExp  : arg.RegExp || new RegExp('.+'), // RegExpオブジェクトとして指定
+      alert   : arg.alert || false,    // 読み込み完了時に内容をalert表示するか
+    }
+    console.log('this.opt='+JSON.stringify(this.opt));
+
+    // カメラやファインダ等の作業用DIVを追加
+    this.scanner = document.querySelector(this.opt.selector);
+    this.scanner.innerHTML
+    = '<video autoplay></video>'
+    + '<canvas></canvas>'  // 撮影結果
+    + '<div>'  // カメラ操作ボタン
+    + '<input type="button" name="undo" value="◀" />'
+    + '<input type="button" name="shutter" value="[ ● ]" />'
+    + '<input type="button" name="adopt" value="▶" />'
+    + '</div>';
+    this.video = document.querySelector(this.opt.selector+' video');
+    this.video.style.display = 'block';
+    this.canvas = document.querySelector(this.opt.selector+' canvas');
+    this.canvas.style.display = 'none';
+    this.ctx = this.canvas.getContext('2d');
+
+    // カメラ操作ボタン関係の定義
+    this.buttons = document.querySelector(this.opt.selector+' div');
+    this.buttons.style.display = 'none'; //最初は全部隠蔽
+    this.undo = document.querySelector(this.opt.selector+' input[name="undo"]');
+    this.undo.disabled = true;  // 再撮影
+    this.shutter = document.querySelector(this.opt.selector+' input[name="shutter"]');
+    this.shutter.disabled = false;  // シャッター
+    this.adopt = document.querySelector(this.opt.selector+' input[name="adopt"]');
+    this.adopt.disabled = true;  // 採用
+
+    console.log('webScanner.constructor end.');
+  }
+
+  start(callback){
+    navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: "environment",
+      },
+      audio: false
+    }).then(stream => {
+      this.video.srcObject = stream;
+      this.video.setAttribute("playsinline", true);
+      this.video.play();
+      this.video.addEventListener("resize", () => {
+        // 親要素の横幅に合わせて表示する
+        const ratio = this.scanner.clientWidth / this.video.videoWidth;
+        const w = this.video.videoWidth * ratio;
+        const h = this.video.videoHeight * ratio;
+        this.video.width = this.canvas.width = w;
+        this.video.height = this.canvas.height = h;
+      });
+      callback(stream);
+    }).catch(e => {
+      alert('カメラを使用できません\n'+e.message);
+    });
+  }
+
+  /** 文書のスキャン */
+  scanDoc(callback){
+
+    // 再撮影ボタンクリック時
+    this.undo.addEventListener('click',(callback) => {
+      this.video.style.display = 'block';
+      this.canvas.style.display = 'none';
+      this.undo.disabled = true;
+      this.shutter.disabled = false;
+      this.adopt.disabled = true;
+    });
+    // シャッタークリック時
+    this.shutter.addEventListener('click',() => {
+      this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+      this.video.style.display = 'none';
+      this.canvas.style.display = 'block';
+      this.undo.disabled = false;
+      this.shutter.disabled = true;
+      this.adopt.disabled = false;
+    });
+    // 採用ボタンクリック時
+    this.adopt.addEventListener('click',() => {
+      // canvasからイメージをBASE64で取得
+      const imageData = this.canvas.toDataURL('image/png',0.7)
+      .replace('data:image/png;base64,','');  // GAS側で邪魔な'data:image/png〜'を削除
+      const postData = {
+        timestamp: getJPDateTime(),
+        image: imageData,
+      }
+      doPost(config.endpoint,config.MasterKey,'scanDoc',postData,res => {
+        if( res.isErr ){
+          alert(res.message);
+        } else {
+          // 正常終了時はスキャナ領域を削除
+          this.scanner.innerHTML = '';
+          console.log('scanDoc normal end.',res);
+        }
+      });
+      // 以下は圧縮検討時のメモ。削除可
+      //const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+      //imageCompression(imageData,{maxSizeMB:1,maxWidthOrHeight:1280}).then(data => {
+      //  this.ctx.putImageData(data,0,0,this.canvas.width,this.canvas.height);
+
+    })
+
+    // カメラ操作ボタンを表示
+    this.buttons.style.display = 'flex';
+
+    this.start(()=>{console.log('Camera getting started!')});
+  }
+}
+
+const doPost = (endpoint,passPhrase,func,data,callback) => {  // GASのdoPostを呼び出し、後続処理を行う
+  console.log("doPost start. ",endpoint,passPhrase,func,data,callback);
+
+  const postData = {
+    passPhrase: passPhrase,
+    func: func,
+    data: data,
+  };
+  console.log('l.169 postData='+JSON.stringify(postData));
+
+  // GASからの返信を受けたらcallbackを呼び出し
+  fetch(endpoint,{
+    "method": "POST",
+    "body": JSON.stringify(postData),
+    "Accept": "application/json",
+    "Content-Type": "application/json",
+  }).then(response => response.json())
+  .then(res => {
+    console.log("doPost end.",res);
+    callback(res);  // 成功した場合、後続処理を呼び出し
+  });
+}
+
+const doPostTest = () => {
+  postData = {a:10,b:'abc'};
+  doPost(config.endpoint,config.MasterKey,'scanDoc',postData,rv => {console.log('l.178',rv)});
+}
+
+/** getJPDateTime: yyyy-MM-ddThh:mm:ss.nnnZ形式で日本時間の日時文字列を取得
+ * @param {void} - なし
+ * @returns {string} yyyy-MM-ddThh:mm:ss.nnnZ形式で日本時間の日時文字列
+ */
+const getJPDateTime = () => {
+  const tObj = new Date();
+  return tObj.toLocaleString('ja-JP') + '.' + tObj.getMilliseconds();
+}
+
+window.addEventListener('DOMContentLoaded', () => { // 主処理
+  const scanner = new webScanner();
+  scanner.scanDoc();
+  //doPostTest();
+});
+
+</script>
+</html>
