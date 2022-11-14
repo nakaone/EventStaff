@@ -39,7 +39,7 @@
 <script type="text/javascript">
 const config = {
   MasterKey: 'vR4sw$P(*ZBex/Hp',  // GAS側の秘密鍵
-  endpoint: "https://script.google.com/macros/s/AKfycbwWOxoN2rrgth1H6cn4IbJWZi5awSXKKWs9gdAkQUvGxMawz7EavzQEUSg0jiQHVyGCVA/exec",
+  endpoint: "https://script.google.com/macros/s/AKfycbxCKMuKCVUm1teVCcF-TUq_8Om8blaVoExc9qdjExDILVfUJUPcns9GKcvUTmTdtgPiNA/exec",
 }
 class webScanner {
   constructor(arg={}){
@@ -148,8 +148,7 @@ class webScanner {
       this.scanner.innerHTML = '';
       this.stop();
       // canvasからイメージをBASE64で取得
-      const imageData = this.canvas.toDataURL('image/png',0.7)
-      .replace('data:image/png;base64,','');  // GAS側で邪魔な'data:image/png〜'を削除
+      const imageData = this.canvas.toDataURL('image/png',0.7);
       const postData = {
         timestamp: getJPDateTime(),
         image: imageData,

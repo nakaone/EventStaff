@@ -76,13 +76,16 @@ const scanDoc = (arg) => {
   console.log('scanDocTest.scanDoc start. arg='+JSON.stringify(arg));
   let rv = null;
   try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('list');
+
+    /* 画像としてシートに貼り付ける場合
     const decoded = Utilities.base64Decode(arg.image);
     const blob = Utilities.newBlob(decoded,'image/png',String(Date.now())+'.png');
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('list');
     const rowNum = sheet.getLastRow() + 1;
     sheet.getRange(rowNum,1).setValue(new Date(arg.timestamp));
     sheet.insertImage(blob,2,rowNum);
-    // 処理を記述
+    */
+    sheet.appendRow([arg.timestamp,arg.image]);
     rv = {isErr:false};
 
   } catch(e) {
@@ -91,5 +94,18 @@ const scanDoc = (arg) => {
   } finally {
     console.log('scanDocTest.scanDoc end. rv='+JSON.stringify(rv));
     return rv;
+  }
+}
+
+/**
+ * Class Sheet [getImages]{@link https://developers.google.com/apps-script/reference/spreadsheet/sheet?hl=ja#getimages}
+ * [Class OverGridImage]{@link https://developers.google.com/apps-script/reference/spreadsheet/over-grid-image}
+ */
+const refDoc = () => {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('list');
+  const images = sheet.getImages();
+  for( let image of images ){
+    console.log('A1='+image.getAnchorCell().getA1Notation());
+    console.log('URL='+image.getUrl());
   }
 }
