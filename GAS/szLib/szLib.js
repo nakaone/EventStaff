@@ -1,23 +1,15 @@
-/** getUrlKey: おまつり奉行関係のAPI URLと公開鍵を返す
+/** getUrl: おまつり奉行関係のAPI URLを返す
  * <br>
  * @param {string} arg - 局/htmlのコード名
- * @return {object} APIのURLと公開鍵。ローカル(html)は公開鍵のみ
+ * @return {object|string} APIのURLと共通鍵。引数がない場合は共通鍵
  */
-function getUrlKey(arg){
+ function getUrl(arg){
   const list = {
-    scanDoc:{
-      url: 'https://script.google.com/macros/s/AKfycbxvHrwr7MvnTUv_vh4DyTuxddznVEZv5_ubgj67Vp_0uesqhVfOXzOR0ToaM2aMGA_QbA/exec',
-      key: '0W6JJe1kO2C20F9d4SotCGsTCPULaF6B4GZCK5ns1XX4VojALQB/EF+MXWjAaBkxbcJUkCn4Y52Qp+YKBWSo28gPJCTJbJYEPrBpLN+bsLTeUdWd9BNXyxaCbdv4X4QioDlzizjoQ6SNliesTayZH9TxLCXIN/5167YVya7KpdM=',
-    },
-    GasPost: {
-      url: 'https://script.google.com/macros/s/AKfycbxo0SNEOcsjzi5UHSiRLrlrwUiXD5b6lx82FZO6tnw4-0ae5yosZA1oClCqKYdLNFfZEw/exec',
-      key: 'sfWZc8/fnbdOAzIJDDSNJdURmVJ7pQDBDvKJwFKPW7yN9VQwZFvLcfF4seLebFJc65PR4ynvaQxclPt6sdeRqtbUcqAPrrzVh/WvTmhg80KGSVuHQPatdzZbGzjdRLDYYIVtK9eibcwJOyLIRRS0zduJBTjU+/OfYNTUDpCK6X8=',
-    },
-    scanDocHtml:{
-      key: 'e6qEMag0Jr3D3mJG9At7qvx5+2lrPEiOhvIVadm0QjVaYT2FLiRCzkD+VXKxzarhk1PF5LbvCkbAIOfYP9O5lcy7AMQEAN59KfoQBYb3QnFODsFUNDSFA2JT74j2uib5fnwnuJVVnL36zqgSgnBEFYu3kHXnrS4hSP4Y/2+VwmU=',
-    },
+    key: "Hrwr7MvnTUv_vh4DyTuxddznVEjzi5UHSiRLrlrwUiXD5b6lx82FZO6t",
+    scanDoc: 'https://script.google.com/macros/s/AKfycbxvHrwr7MvnTUv_vh4DyTuxddznVEZv5_ubgj67Vp_0uesqhVfOXzOR0ToaM2aMGA_QbA/exec',
+    GasPost: 'https://script.google.com/macros/s/AKfycbxo0SNEOcsjzi5UHSiRLrlrwUiXD5b6lx82FZO6tnw4-0ae5yosZA1oClCqKYdLNFfZEw/exec',
   }
-  return list[arg];
+  return arg ? {key:list.key,url:list[arg]} : list.key;
 }
 
 /** getElaps: start/endメソッドをもつ負荷監視用オブジェクトを返す
