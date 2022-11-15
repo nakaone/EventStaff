@@ -1,5 +1,5 @@
 //const config = szLib.setConfig(['MasterKey','AuthSheetId','PostURL','PostKey']);
-config = {MasterKey: 'vR4sw$P(*ZBex/Hp'};
+const elaps = {account:'shimokitasho.oyaji@gmail.com',department:'scanDoc局'};
 
 const doPostTest = () => {
   const postData = {parameter:{
@@ -35,14 +35,14 @@ const GasPost = (arg) => {
  * </ul>
  */
 function doPost(e){
-  const elaps = szLib.getElaps();
-  elaps.start({department:'scanDoc',func:'doPost'});
+  elaps.startTime = Date.now();  // 開始時刻をセット
   console.log('scanDoc.doPost start.',e);
 
   const arg = JSON.parse(e.postData.getDataAsString()); // contentsでも可
   let rv = null;
   if( arg.passPhrase === szLib.getUrl() ){
     try {
+      elaps.func = arg.func; // 処理名をセット
       switch( arg.func ){
         case 'scanDoc':
           rv = scanDoc(arg.data);
@@ -56,7 +56,7 @@ function doPost(e){
       rv = {isErr:true, message:e.name+': '+e.message};
     } finally {
       console.log('scanDoc.doPost end. rv='+JSON.stringify(rv));
-      elaps.end(rv.isErr ? rv.message : 'OK');
+      szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');  // 結果を渡して書き込み
       return ContentService
       .createTextOutput(JSON.stringify(rv,null,2))
       .setMimeType(ContentService.MimeType.JSON);
@@ -64,7 +64,8 @@ function doPost(e){
   } else {
     rv = {isErr:true,message:'invalid passPhrase :'+e.parameter.passPhrase};
     console.error('scanDoc.doPost end. '+rv.message);
-    elaps.end(rv.isErr ? rv.message : 'OK');
+    console.log('end',elaps);
+    szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');
   }
 }
 

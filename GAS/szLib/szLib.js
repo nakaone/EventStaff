@@ -6,109 +6,29 @@
  function getUrl(arg){
   const list = {
     key: "Hrwr7MvnTUv_vh4DyTuxddznVEjzi5UHSiRLrlrwUiXD5b6lx82FZO6t",
-    scanDoc: 'https://script.google.com/macros/s/AKfycbxvHrwr7MvnTUv_vh4DyTuxddznVEZv5_ubgj67Vp_0uesqhVfOXzOR0ToaM2aMGA_QbA/exec',
+    scanDoc: 'https://script.google.com/macros/s/AKfycbwgcdpGuqWRqZBlXHPuaHI2AQcyHnRctmzBRzwCasa3WBak8ayM7-dDbHyd2Ii5GVPWsw/exec',
     GasPost: 'https://script.google.com/macros/s/AKfycbxo0SNEOcsjzi5UHSiRLrlrwUiXD5b6lx82FZO6tnw4-0ae5yosZA1oClCqKYdLNFfZEw/exec',
   }
   return arg ? {key:list.key,url:list[arg]} : list.key;
 }
 
-/** getElaps: start/endメソッドをもつ負荷監視用オブジェクトを返す
- * <br>
- * 実行時間(elaps)はdoPostでの受信〜結果返却を計測する(途中で呼ばれる関数は実行時間に含まれる)。<br>
- * doPost内部での分岐先処理は、switch文内でelaps.funcに関数名をセットすることで判断可能にする。<br>
- * 
- * @param {string} department - 局名
- * @returns {object} - start/end/setメソッドをもつオブジェクト
- * 
- * @example <caption>使用例</caption>
- * const elaps = szLib.getElaps('監督局'); // 局名をセット
- * 
- * function myFunction() {
- *   elaps.start();  // 開始直後にstart
- *   (中略)
- *   switch(arg.func){
- *     case 'trans01';
- *       elaps.set('func','trans01');  // 処理名をセット
- *       rv = trans01(arg.data);
- *       break;
- *     case 'trans02';
- *       elaps.set('func','trans02');  // 処理名をセット
- *       rv = trans02(arg.data);
- *       break;
- *   }
- *   elaps.end();  // returnの直前にend
- *   return rv;
- * }
- * (中略)
- */
-function getElaps(department=''){
-  const rv = {
-    startTime: null,  // 開始時刻
-    department: null, // 局名
-    func: null,       // 関数/メソッド名
-
-    /** start: 関数/メソッドの開始を記録
-     * @param {void}  - なし
-     * @returns {void} なし
-     */
-    start: () => {
-      this.startTime = Date.now();
-      this.account = Session.getActiveUser().getUserLoginId();
-    },
-
-    /** set: プロパティのセット
-     * @param {string} key - プロパティ名
-     * @param {any} value - セットする値
-     */
-    set: (key,value) => {
-      this[key] = value;
-    },
-
-    /** end: ログへの書き込み
-     * <br>
-     * なおelaps計算の+140msは、テスト結果より推測した本処理のオーバヘッド
-     * @param {string} result - 処理結果('OK'またはエラーメッセージ)
-     * @returns {void} なし
-     */
-    end: (result='OK') => {
-      SpreadsheetApp.openById("1V-9LgZlRDhuHUgKdDdUvJHu34FAi6hEwe2cAcPbz2TA").getSheetByName("log").appendRow([
-        this.startTime,   //timestamp
-        this.account,     // account
-        this.department,  // department
-        this.func,        // function/method
-        Date.now() - this.startTime + 140, // elaps
-        result            // result
-      ]);
-    }
-  }
-  rv.set('department',department);
-  return rv;
-}
-
-const getElapsTest = () => {
-  console.log(Date.now());
-  const f = (arg) => {
-    const elaps = getElaps('テスト04');
-    elaps.start();
-    switch( arg % 2 ){
-      case 0: elaps.set('func','even'); break;
-      case 1: elaps.set('func','odd');  break;
-    }
-    elaps.end('OK');
-  }
-
-  for( let i=0 ; i<1 ; i++ ){
-    f(i);
-  }
-  console.log(Date.now());
+function elaps(arg,result=''){
+  SpreadsheetApp.openById("1V-9LgZlRDhuHUgKdDdUvJHu34FAi6hEwe2cAcPbz2TA").getSheetByName("log").appendRow([
+    getJPDateTime(arg.startTime),   // timestamp
+    arg.account,     // account
+    arg.department,  // department
+    arg.func,        // function/method
+    Date.now() - arg.startTime + 140, // elaps
+    result          // result
+  ]);
 }
 
 /** getJPDateTime: yyyy-MM-ddThh:mm:ss.nnnZ形式で日本時間の日時文字列を取得
  * @param {void} - なし
- * @returns {string} yyyy-MM-ddThh:mm:ss.nnnZ形式で日本時間の日時文字列
+ * @returns {string} yyyy/MM/dd hh:mm:ss.nnn形式で日本時間の日時文字列
  */
-const getJPDateTime = () => {
-  const tObj = new Date();
+const getJPDateTime = (arg) => {
+  const tObj = arg ? new Date(arg) : new Date();
   return tObj.toLocaleString('ja-JP') + '.' + tObj.getMilliseconds();
 }
 
