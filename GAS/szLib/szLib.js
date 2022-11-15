@@ -1,3 +1,25 @@
+/** getUrlKey: おまつり奉行関係のAPI URLと公開鍵を返す
+ * <br>
+ * @param {string} arg - 局/htmlのコード名
+ * @return {object} APIのURLと公開鍵。ローカル(html)は公開鍵のみ
+ */
+function getUrlKey(arg){
+  const list = {
+    scanDoc:{
+      url: 'https://script.google.com/macros/s/AKfycbxvHrwr7MvnTUv_vh4DyTuxddznVEZv5_ubgj67Vp_0uesqhVfOXzOR0ToaM2aMGA_QbA/exec',
+      key: '0W6JJe1kO2C20F9d4SotCGsTCPULaF6B4GZCK5ns1XX4VojALQB/EF+MXWjAaBkxbcJUkCn4Y52Qp+YKBWSo28gPJCTJbJYEPrBpLN+bsLTeUdWd9BNXyxaCbdv4X4QioDlzizjoQ6SNliesTayZH9TxLCXIN/5167YVya7KpdM=',
+    },
+    GasPost: {
+      url: 'https://script.google.com/macros/s/AKfycbxo0SNEOcsjzi5UHSiRLrlrwUiXD5b6lx82FZO6tnw4-0ae5yosZA1oClCqKYdLNFfZEw/exec',
+      key: 'sfWZc8/fnbdOAzIJDDSNJdURmVJ7pQDBDvKJwFKPW7yN9VQwZFvLcfF4seLebFJc65PR4ynvaQxclPt6sdeRqtbUcqAPrrzVh/WvTmhg80KGSVuHQPatdzZbGzjdRLDYYIVtK9eibcwJOyLIRRS0zduJBTjU+/OfYNTUDpCK6X8=',
+    },
+    scanDocHtml:{
+      key: 'e6qEMag0Jr3D3mJG9At7qvx5+2lrPEiOhvIVadm0QjVaYT2FLiRCzkD+VXKxzarhk1PF5LbvCkbAIOfYP9O5lcy7AMQEAN59KfoQBYb3QnFODsFUNDSFA2JT74j2uib5fnwnuJVVnL36zqgSgnBEFYu3kHXnrS4hSP4Y/2+VwmU=',
+    },
+  }
+  return list[arg];
+}
+
 /** getElaps: start/endメソッドをもつ負荷監視用オブジェクトを返す
  * <br>
  * 実行時間(elaps)はdoPostでの受信〜結果返却を計測する(途中で呼ばれる関数は実行時間に含まれる)。<br>
@@ -87,6 +109,15 @@ const getElapsTest = () => {
     f(i);
   }
   console.log(Date.now());
+}
+
+/** getJPDateTime: yyyy-MM-ddThh:mm:ss.nnnZ形式で日本時間の日時文字列を取得
+ * @param {void} - なし
+ * @returns {string} yyyy-MM-ddThh:mm:ss.nnnZ形式で日本時間の日時文字列
+ */
+const getJPDateTime = () => {
+  const tObj = new Date();
+  return tObj.toLocaleString('ja-JP') + '.' + tObj.getMilliseconds();
 }
 
 /** getSheetData: 指定シートから全データ取得
@@ -294,7 +325,7 @@ function updateSheetData(dObj,post,opt={append:true}){
  * @param {boolean} kana - true:ひらがな、false:カタカナ
  * @returns {string} 変換結果
  */
- function convertCharacters(str,kana=true){ 
+function convertCharacters(str,kana=true){ 
   let rv = str;
   // 全角英数字 -> 半角英数字
   rv = rv.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => {

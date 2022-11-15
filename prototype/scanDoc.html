@@ -37,10 +37,11 @@
 </body>
 <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@latest/dist/browser-image-compression.js"></script>
 <script type="text/javascript">
-const config = {
+/*const config = {
   MasterKey: 'vR4sw$P(*ZBex/Hp',  // GAS側の秘密鍵
-  endpoint: "https://script.google.com/macros/s/AKfycbxCKMuKCVUm1teVCcF-TUq_8Om8blaVoExc9qdjExDILVfUJUPcns9GKcvUTmTdtgPiNA/exec",
-}
+  endpoint: "https://script.google.com/macros/s/AKfycbzN_CaABB3iR-3dKli20PB7y9dvIAKzCTVkzEF8npMcf7lqQ39ZfyRI_Pi6HdJj85JPGA/exec",
+}*/
+
 class webScanner {
   constructor(arg={}){
     console.log('webScanner.constructor start. opt='+JSON.stringify(arg));
@@ -174,12 +175,23 @@ class webScanner {
   }
 }
 
-const doPost = (endpoint,passPhrase,func,data,callback) => {  // GASのdoPostを呼び出し、後続処理を行う
-  console.log("doPost start. ",endpoint,passPhrase,func,data,callback);
+/** doPost: GASのdoPostを呼び出し、後続処理を行う
+ * <br>
+ * 処理内部で使用する公開鍵・秘密鍵はszLib.getUrlKey()で取得。
+ * 
+ * @param {object}   arg          - 引数
+ * @param {string}   arg.from     - 送信側のコード名(平文)
+ * @param {string}   arg.to       - 受信側のコード名(平文)
+ * @param {any}      arg.data     - 処理対象データ
+ * @param {function} arg.callback - GAS処理結果を受けた後続処理
+ * @returns {void} なし
+*/
+const doPost = (arg) => {
+  console.log("doPost start.",arg);
 
   const postData = {
-    passPhrase: passPhrase,
-    func: func,
+    from: arg.from,
+    func: func, // 送信側秘密鍵と受信側公開鍵で暗号化された処理名(GAS側で処理分岐の際のキー文字列)
     data: data,
   };
   console.log('l.169 postData='+JSON.stringify(postData));
