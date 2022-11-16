@@ -1,123 +1,59 @@
-const config = szLib.setConfig(['MasterKey','AuthSheetId','PostURL','PostKey']);
-
-// ===========================================================
-// トリガー関数
-// ===========================================================
+const elaps = {account:'shimokitasho.oyaji@gmail.com',department:'管理局'};
+const conf = szLib.getConf();
 
 /** doPost: パラメータに応じて処理を分岐
- * 
- * @param {object} e - POSTされたデータ
- * @param {object} e.parameter - 実データ
- * @param {string} e.parameter.passPhrase - 正当な要求であることを検証するための本APIの秘密鍵
- * @param {object} e.parameter.data - 分岐先の処理に渡すオブジェクト
- * 
+ * @param {object} e - Class UrlFetchApp [fetch(url, params)]{@link https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app#fetchurl,-params}の"Make a POST request with a JSON payload"参照
+ * @param {object} arg - データ部分。JSON.parse(e.postData.getDataAsString())の結果
+ * @param {string} arg.passPhrase - 共通鍵。szLib.getUrl()で取得
+ * @param {string} arg.from       - 送信先(自分)
+ * @param {string} arg.to         - 送信元
+ * @param {string} arg.func       - 分岐する処理名
+ * @param {string} arg.data       - 処理対象データ
  * @return {object} 正常終了の場合は分岐先処理の戻り値、エラーの場合は以下。
  * <ul>
  * <li>isErr {boolean}  - true(固定)
  * <li>message {string} - エラーメッセージ
  * </ul>
  */
-function doPost(e){
-  const elaps = szLib.getElaps();
-  elaps.start({department:'管理局',func:'doPost'});
-  console.log('管理局.doPost start. e.parameter='+JSON.stringify(e.parameter));
+ function doPost(e){
+  elaps.startTime = Date.now();  // 開始時刻をセット
+  console.log('管理局.doPost start.',e);
+
+  const arg = JSON.parse(e.postData.getDataAsString()); // contentsでも可
   let rv = null;
-  try {
-
-    // 秘密鍵が一致しなければ配送拒否
-    if( e.parameter.passPhrase !== config.MasterKey ){
-      throw new Error('鍵が一致しません');
+  if( arg.passPhrase === conf.Master.key ){
+    try {
+      elaps.func = arg.func; // 処理名をセット
+      switch( arg.func ){
+        case 'auth1B':
+          rv = auth1B(arg.data);
+          break;
+        case 'auth2B':
+          rv = auth2B(arg.data);
+          break;
+        case 'candidates':
+          rv = candidates(arg.data);
+          break;
+        case 'updateParticipant':
+          rv = updateParticipant(arg.data);
+          break;
+      }
+    } catch(e) {
+      // Errorオブジェクトをrvとするとmessageが欠落するので再作成
+      rv = {isErr:true, message:e.name+': '+e.message};
+    } finally {
+      console.log('管理局.doPost end. rv='+JSON.stringify(rv));
+      szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');  // 結果を渡して書き込み
+      return ContentService
+      .createTextOutput(JSON.stringify(rv,null,2))
+      .setMimeType(ContentService.MimeType.JSON);
     }
-
-    // 秘密鍵が一致したら処理分岐
-    switch( e.parameter.func ){
-      case 'auth1B':
-        rv = auth1B(e.parameter);
-        break;
-      case 'auth2B':
-        rv = auth2B(e.parameter);
-        break;
-    }
-
-  } catch(e) {
-    // Errorオブジェクトをrvとするとmessageが欠落するので再作成
-    rv = {isErr:true, message:e.name+': '+e.message};
-  } finally {
-    console.log('管理局.doPost end. rv='+JSON.stringify(rv));
-    elaps.end(rv.isErr?rv.message:'OK');
-    return ContentService
-    .createTextOutput(JSON.stringify(rv,null,2))
-    .setMimeType(ContentService.MimeType.JSON);
+  } else {
+    rv = {isErr:true,message:'invalid passPhrase :'+e.parameter.passPhrase};
+    console.error('管理局.doPost end. '+rv.message);
+    console.log('end',elaps);
+    szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');
   }
-}
-
-/** doGetTest: doGetのテスト
- * <br>
- * 結果はコンソールで確認
- * 
- * @param {} - なし
- * @return {void} なし
- */
-const doGetTest = () => {
-  const testData = [
-    //{func:'test',data:{from:'嶋津',to:'スタッフ',message:'ふがふが'}},
-    //{func:'search',data:{key:'ナ'}},
-    {func:'update',data:{target:{key:'受付番号',value:12},revice:[
-      {key:'状態',value:'参加'},
-      {key:'参加費',value:'既収'},
-    ]}},
-  ];
-  for( let i=0 ; i<testData.length ; i++ ){
-    doGet({parameter:{v:szLib.encrypt(testData[i],config.MasterKey)}});
-  }
-};
-
-/** doGet: 暗号化されたパラメータを復号、それに応じて処理を分岐
- * <br>
- * 返値はTextOutputのインスタンス。<br>
- * getContentで中の文字列を取得、parseすれば結果オブジェクトが得られる。<br>
- * GAS公式: [Class TextOutput]{@link https://developers.google.com/apps-script/reference/content/text-output#getcontent}
- *
- * @param {object} e - const config = szLib.setConfig(['PostURL','PostKey']);
- * @param {object} e.parameter - パラメータ文字列
- * @param {object} e.parameter.v - グローバル変数PostKeyで暗号化された文字列。<br>復号すると以下のオブジェクトとなる
- * @param {string} e.parameter.v.func - 'post'固定(他は不正)
- * @param {object} e.parameter.v.data - [postMails]{@link postMails}の引数
- * 
- * @return {object} - 正常終了の場合、分岐先処理の戻り値。異常終了の場合は空配列
- */
-function doGet(e) {
-  const elaps = szLib.getElaps();
-  elaps.start({department:'管理局',func:'doGet'});
-  console.log('管理局.doGet start.',e);
-
-  // 'v'で渡されたクエリを復号
-  arg = szLib.decrypt(e.parameter.v,config.MasterKey);
-  console.log('管理局.arg',szLib.whichType(arg),arg);
-
-  let rv = [];
-  switch( arg.func ){  // 処理指定により分岐
-    case 'search':  // 該当者の検索
-      rv = candidates(arg.data);
-      break;
-    case 'update':  // 参加者情報の更新
-      rv = updateParticipant(arg.data);
-      break;
-    case 'post':  // 【要削除】掲示板への投稿
-      rv = postMessage(arg.data);
-      break;
-    case 'test':  // テスト用
-      rv = arg.data;  // 何もせず、そのまま返す
-      break;
-  }
-
-  // 結果をJSON化して返す
-  rv = JSON.stringify(rv,null,2);
-  console.log('管理局.doGet end.',rv);
-  elaps.end(); //暫定
-  return ContentService
-  .createTextOutput(rv)
-  .setMimeType(ContentService.MimeType.JSON);
 }
 
 /** onFormSubmit: フォーム申込み時のメールの自動返信
@@ -169,10 +105,8 @@ function doGet(e) {
  * @param {Object} e - スプレッドシート上のonFormSubmitに渡される引数
  * @returns {object} 郵便局.doPostで処理された結果
  */
-function onFormSubmit(
-  e={namedValues:{'メールアドレス':['nakaone.kunihiro@gmail.com']}} // テスト用既定値
-) {
-  console.log('管理局.onFormSubmit start. e.namedValues='+JSON.stringify(e.namedValues));
+function onFormSubmit(e){
+  console.log('管理局.onFormSubmit start. e='+JSON.stringify(e));
 
   // 1.受付番号の採番
   // 「回答」シート上で書き込まれた行番号＋「当日」上のデータ件数−ヘッダ1行×2シート
@@ -214,81 +148,18 @@ function onFormSubmit(
   // 2.4.シートに編集用URLを保存
   sheet.getRange("T"+e.range.rowStart).setValue(editURL); // 編集用URLはT列
 
-  /* 3. 返信メールの送付
-    v = {func:'post',data:{
-      passPhrase string : 共通鍵
-      template  string : テンプレート名。郵便局スプレッドシートのシート名
-      recipient string : 宛先メールアドレス
-      variables {        テンプレートで置換する{変数名:実値}オブジェクト
-        name string    : 申請者名
-        entryNo string : 受付番号(0パディングした4桁の数字)
+  // 3. 返信メールの送付
+  const response = szLib.fetchGAS({from:'Master',to:'Post',func:'postMails',data:{
+    template: '申込への返信',
+    data: [{
+      recipient: e.namedValues['メールアドレス'][0],
+      variables  : {
+        name     : e.namedValues['申請者氏名'][0],
+        entryNo  : entryNo,
       }
-    }}
-  */
-  const vObj = {
-    func: 'post',
-    data: {
-      template   : '申込への返信',
-      data: [{
-        recipient  : e.namedValues['メールアドレス'][0],
-        variables  : {
-          name     : e.namedValues['申請者氏名'][0].match(/^([^　]+)/)[1],  // 姓のみ
-          entryNo  : entryNo,
-        }
-      }],
-    }
-  };
-  const endpoint = config.PostURL + '?v=' + szLib.encrypt(vObj,config.PostKey);
-
-  const response = UrlFetchApp.fetch(endpoint).getContentText();
+    }],
+  }});
   console.log('管理局.onFormSubmit end. response='+response);
-}
-
-/** onFormSubmitTest: onFormSubmitのテスト
- * <br>
- * 結果はコンソールで確認
- * 
- * @param {} - なし
- * @return {void} なし
- */
-const onFormSubmitTest = () => {
-  const testData = [
-    undefined,
-    true,0,'abc',
-    //42n,
-    Symbol('foo'),
-    (a) => a*2,
-    new Date(),new RegExp('^.+'),[1,2],
-    [undefined,true,0,'abc',Symbol('foo'),(a) => a*2,new Date(),new RegExp('^.+'),[1,2]],
-    {a:10,b:{c:true,d:['abc',Symbol('baa')],e:(x)=>x*4},f:new Date()},
-  ];
-  for( let i=0 ; i<testData.length ; i++ ){
-    try {
-      console.log(testData[i] + ' => ' + szLib.inspect(testData[i]));
-    } catch(e) {
-      console.log(JSON.stringify(testData[i]) + ' => ' + szLib.inspect(testData[i]));
-    }
-  }
-}
-
-// ===========================================================
-// トリガーから呼ばれる関数・定義
-// ===========================================================
-/** auth1BTest: auth1Bのテスト
- * <br>
- * 結果はコンソールで確認
- * 
- * @param {} - なし
- * @return {void} なし
- */
-const auth1BTest = () => {
-  const params = ['MasterKey','PostURL','PostKey'];
-
-  const c = szLib.setConfig(params);
-  console.log(szLib.setConfig(params));
-  console.log(JSON.stringify(c));
-  params.forEach(x => {config[x] = c[x]});
-  auth1B(1);
 }
 
 /** auth1B: 認証第一段階。パスコードを生成してメールで送付
@@ -313,51 +184,26 @@ const auth1B = (arg) => {
 
     // 01.申込者情報の取得とパスコードの生成
     const entryNo = Number(arg.entryNo);
-    const dObj = szLib.getSheetData('マスタ');
-    const participant = dObj.data.filter(x => {return Number(x['受付番号']) === entryNo})[0];
-    console.log('管理局.participant='+JSON.stringify(participant));
+    const dObj = szLib.szSheet({sheetName:'マスタ'});
+    const participant = dObj.lookup('受付番号',Number(x['受付番号']));
+    //console.log('管理局.participant='+JSON.stringify(participant));
     const passCode = ('00000' + Math.floor(Math.random() * 1000000)).slice(-6);
     //console.log('管理局.passCode='+passCode);
 
     // 02.マスタにパスコードを記録
-    const regData = {
-      target: {key:'受付番号',value:entryNo},
-      revice: [
-        {key:'パスコード',value:passCode},
-        {key:'発行日時',value:new Date()},
-      ]
-    };
-    console.log('管理局.regData='+JSON.stringify(regData));
-    szLib.updateSheetData(dObj,regData);
+    dObj.update('受付番号',entryNo,[
+      {column:'パスコード',value:passCode},
+      {column:'発行日時',value:new Date()},
+    ])
 
     // 03.メール送信要求
-    //  postMails: 依頼された定型メールの配信
-    // @param {object} arg - 以下のメンバを持つオブジェクト
-    //    template (string) : メールのテンプレートが定義された郵便局のシート名
-    //    data : [{
-    //      recipient (string) : 宛先メールアドレス
-    //      variables {label1:value1, label2:value2, ...}
-    //    },{..},..]
-    const vObj = {
-      func: 'post',
-      data: {
-        template: 'パスコード通知',
-        data: [{
-          recipient: participant['メール'],
-          variables: {passCode : passCode},
-        }],
-      }
-    };
-    console.log('管理局.vObj='+JSON.stringify(vObj));
-    const endpoint = config.PostURL + '?v=' + szLib.encrypt(vObj,config.PostKey);
-    console.log('管理局.endpoint='+endpoint+'\nconfig='+JSON.stringify(config));
-    const response = JSON.parse(UrlFetchApp.fetch(endpoint).getContentText());
-    console.log('管理局.response='+JSON.stringify(response));
-    if( response.length === 0 ){
-      rv = {isErr:false};
-    } else {
-      rv = {isErr:true,message:response[0].recipient+'\n'+response[0].message};
-    }
+    rv = szLib.fetchGAS({from:'Master',to:'Post',func:'postMails',data:{
+      template: 'パスコード通知',
+      data: [{
+        recipient: participant['メール'],
+        variables: {passCode : passCode},
+      }],
+    }});
 
   } catch(e) {
     // Errorオブジェクトをrvとするとmessageが欠落するので再作成
@@ -366,19 +212,6 @@ const auth1B = (arg) => {
     console.log('管理局.auth1B end. rv='+JSON.stringify(rv));
     return rv;
   }
-}
-
-/** auth2BTest: auth2Bのテスト
- * <br>
- * 結果はコンソールで確認
- * 
- * @param {} - なし
- * @return {void} なし
- */
-const auth2BTest = () => {
-  const t = {entryNo:3,passCode:988293};
-  const rv = auth2B(t);
-  console.log(rv);
 }
 
 /** auth2B: 認証局から送られた受付番号とパスコードの正当性をチェック
@@ -401,7 +234,7 @@ const auth2BTest = () => {
 const auth2B = (arg) => {
   console.log('管理局.auth2B start. arg='+JSON.stringify(arg));
   let rv = null;
-  const dObj = szLib.getSheetData('マスタ');  // finallyで使用なのでtry外で宣言
+  const dObj = szLib.szSheet({sheetName:'マスタ'});  // finallyで使用なのでtry外で宣言
   const entryNo = Number(arg.entryNo);  // finallyで使用なのでtry外で宣言
   try {
 
@@ -414,15 +247,15 @@ const auth2B = (arg) => {
     // パスコードが一致したかの判定
     const validCode = passCode === Number(participant['パスコード']);
     // 発行日時は一時間以内かの判定
-    const validTime = new Date().getTime() - new Date(participant['発行日時']).getTime() < 3600000;
+    const validTime = new Date().getTime() - new Date(participant['発行日時']).getTime() < conf.Master.validTime;
     if(  validCode && validTime ){
       // 検証OK：表示に必要なURLとメニューフラグをconfigとして作成
-      // (1) AuthLevelに応じたconfigを作成
+      // (1) AuthLevelに応じたconfigを作成。管理局「AuthLevel」シートが原本
       //     認証局:1, 放送局:2, 予約局:4, 管理局:8, 郵便局:16
       rv = {isErr:false, config:{}};
       participant.AuthLevel = Number(participant.AuthLevel);
-      const AuthLevel = participant.AuthLevel > 0 ? participant.AuthLevel : 6; // 既定値「参加者」
-      const cObj = szLib.getSheetData('config');
+      const AuthLevel = participant.AuthLevel > 0 ? participant.AuthLevel : conf.Master.defaultAuthLevel;
+      const cObj = szLib.szSheet({sheetName:'config'});
       cObj.data.forEach(x => {
         if( (x.AuthLevel & AuthLevel) > 0 ){
           rv.config[x.key] = x.value;
@@ -433,7 +266,7 @@ const auth2B = (arg) => {
       // (2) 参加申請フォームの編集用URL
       rv.config.entryURL = participant['編集用URL'];
       // (3) 表示するメニューのフラグ(menuFlags)
-      rv.menuFlags = participant.menuFlags || 8431; // 既定値「参加者」
+      rv.menuFlags = participant.menuFlags || conf.Master.defaultMenuFlags;
     } else {
       // 検証NG：エラー通知
       rv = {
@@ -468,15 +301,21 @@ const auth2B = (arg) => {
 const candidates = (data) => {
   console.log('管理局.candidates start.',data);
 
-  const dObj = szLib.getSheetData('マスタ'); // データをシートから取得
+  const dObj = szLib.szSheet({sheetName:'マスタ'}); // データをシートから取得
   let result = [];
   const sKey = String(data.key);
   if( sKey.match(/^[0-9]+$/) ){
     console.log('管理局.number='+Number(sKey));
     result = dObj.data.filter(x => {return Number(x['受付番号']) === Number(sKey)});
   } else if( sKey.match(/^[ァ-ヾ　]+$/) ){
-    console.log('管理局.kana='+sKey);
+    console.log('管理局.katakana='+sKey);
     result = dObj.data.filter(x => {return x['読み'].indexOf(sKey) === 0});
+  } else if( sKey.match(/^[ぁ-ゟ　]+$/) ){
+    console.log('管理局.hiragana='+sKey);
+    result = dObj.data.filter(x => {return x['読み'].indexOf(sKey) === 0});
+  } else {
+    console.log('管理局.kanji='+sKey);
+    result = dObj.data.filter(x => {return x['氏名'].indexOf(sKey) === 0});
   }
 
   console.log('管理局.candidates end. result='+JSON.stringify(result));
@@ -500,53 +339,15 @@ const candidates = (data) => {
  * </ul>
  * 
  * @example <caption>引数の例</caption>
- * 管理局.updateParticipant start. {
- *    target: { key: '受付番号', value: 10 },
- *    revice:[
- *      { key: '状態', value: '入場済' },
- *      { key: '参加費', value: '既収' },
- *      { key: '①状態', value: '入場済' },
- *      { key: '③参加費', value: '無し' }
- *    ]
- * }
  * 
  * @example <caption>戻り値の例</caption> 
- * 管理局.updateParticipant end. [
- *    { column: '状態', before: '', after: '入場済' },
- *    { column: '参加費', before: '', after: '既収' },
- *    { column: '①状態', before: '', after: '入場済' },
- *    { column: '③参加費', before: '', after: '無し' }
- * ]
  */
 const updateParticipant = (data) => {
   console.log('管理局.updateParticipant start.',data);
 
-  const dObj = szLib.getSheetData('マスタ'); // データをシートから取得
-  const rv = szLib.updateSheetData(dObj,data);
+  const dObj = szLib.szSheet({sheetName:'マスタ'}); // データをシートから取得
+  const rv = dObj.update(data.target.key,data.target.value,revice);
 
   console.log('管理局.updateParticipant end.',rv);
   return rv;
 }
-
-/** 【要削除】postMessage: 掲示板への投稿データを作成する
- * 
- * @param {*} arg 
- * @returns {object} 作成されたメールデータ
- * <ul>
- * <li>timestamp {string} - 作成日時
- * <li>from {string} - Fromアドレス
- * <li>to {string} - Toアドレス
- * <li>message {string} - メール本文
- * </ul>
- */
-const postMessage = (arg) => {
-  console.log('管理局.postMessage start. arg='+JSON.stringify(arg));
-  const v = {
-    timestamp: new Date().toLocaleString('ja-JP'),
-    from: arg.from,
-    to: arg.to,
-    message: arg.message,
-  }
-  console.log('管理局.postMessage end. v='+JSON.stringify(v));  
-  return v;
-};

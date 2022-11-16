@@ -18,6 +18,9 @@ function getConf(){
     Master: { // 管理局
       key: '',
       url: '',
+      validTime: 3600000, // パスコードの有効時間。ミリ秒
+      defaultAuthLevel: 6,  // AuthLevelの既定値。参加者相当
+      defaultMenuFlags: 8431, // menuFlagsの既定値。参加者相当
     },
     Form: {   // 申請フォーム
       url: '',
