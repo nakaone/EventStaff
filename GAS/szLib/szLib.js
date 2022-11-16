@@ -4,38 +4,44 @@
  * </ul>
  */
 
-/** szConf: おまつり奉行用の各種パラメータ */
-const szConf = {
-  Auth: {   // 認証局
-    // 認証局は誰でもアクセス可なので、key は設定しない
-    url: '',
-  },
-  Master: { // 管理局
-    key: '',
-    url: '',
-  },
-  Form: {   // 申請フォーム
-    url: '',
-  },
-  Broad: {  // 放送局
-    key: '',
-    url: '',
-  },
-  Post: {   // 郵便局
-    key: '',
-    url: '',
-  },
-  Delivery: { // 配送局(配達員) ※将来的に放送局も使用予定
-    key: '',
-    url: '',
-  },
-  Monitor: {  // 監督局
-    key: '',
-    url: '',
-    spreadId: '1V-9LgZlRDhuHUgKdDdUvJHu34FAi6hEwe2cAcPbz2TA',
-    sheetName: 'log', // ↑ログを記入するスプレッドのID　←シート名
-    overhead: 140, // ログを書き込む際に発生するオーバーヘッドタイム。ミリ秒
-  },
+/** getConf: おまつり奉行用の各種パラメータを取得
+ * @param {void} - なし
+ * @returns {object} おまつり奉行用の各種パラメータ
+ */
+function getConf(){
+  return {
+    Auth: {   // 認証局
+      // 認証局は誰でもアクセス可なので、key は設定しない
+      key: '',  // undefinedにならないよう設定するダミー
+      url: '',
+    },
+    Master: { // 管理局
+      key: '',
+      url: '',
+    },
+    Form: {   // 申請フォーム
+      url: '',
+    },
+    Broad: {  // 放送局
+      key: '',
+      url: '',
+    },
+    Post: {   // 郵便局
+      key: '',
+      url: '',
+    },
+    Delivery: { // 配送局(配達員) ※将来的に放送局も使用予定
+      key: '',
+      url: '',
+    },
+    Monitor: {  // 監督局
+      key: '',
+      url: '',
+      spreadId: '1V-9LgZlRDhuHUgKdDdUvJHu34FAi6hEwe2cAcPbz2TA',
+      sheetName: 'log', // ↑ログを記入するスプレッドのID　←シート名
+      overhead: 140, // ログを書き込む際に発生するオーバーヘッドタイム。ミリ秒
+    },
+  };
 }
 
 /** elaps: 監督局ログシートへの書き込み
@@ -59,6 +65,39 @@ function elaps(arg,result=''){
   ]);
 }
 
+/** fetchGAS: GASのdoPostを呼び出し、後続処理を行う
+ * <br>
+ * 処理内部で使用する公開鍵・秘密鍵はszLib.getUrlKey()で取得。<br>
+ * なおhtml版のarg.callbackはGAS版では存在しない。
+ * 
+ * @param {object}   arg          - 引数
+ * @param {string}   arg.from     - 送信側のコード名(Auth, Master等)
+ * @param {string}   arg.to       - 受信側のコード名
+ * @param {string}   arg.func     - GAS側で処理分岐の際のキー文字列
+ * @param {any}      arg.data     - 処理対象データ
+ * @returns {void} なし
+ */
+ const fetchGAS = (arg) => {
+  console.log('fetchGAS start. arg='+JSON.stringify(arg));
+  const conf = getConf();
+  const options = {
+    'method': 'post',
+    'contentType': 'application/json',
+    'payload' : JSON.stringify({
+      passPhrase  : conf[arg.to].key,
+      from: arg.from,
+      to: arg.to,
+      func: arg.func,
+      data: arg.data,
+    }),
+  }
+  const res = UrlFetchApp.fetch(config.MasterURL,options).getContentText();
+  console.log('sender.GasPost.res=',typeof res,res);
+  const rObj = JSON.parse(res);
+  console.log('sender.GasPost.rObj',typeof rObj,rObj);
+  return rObj;
+}
+
 /** getJPDateTime: 指定日時文字列を作成
  * @param {any} dt - 作成する日時の指定。省略時は現在時刻
  * @param {string} locale - 作成する形式
@@ -73,7 +112,7 @@ function getJPDateTime(dt=null,locale='ja-JP'){
  * @param {object} arg - 引数
  * @param {string} arg.spreadId - 外部スプレッドシートのID
  * @param {string} arg.sheetName - シート名
- * @param {number} arg.headerRow - ヘッダ行の行番号(>0)。項目名は重複不可
+ * @param {number} arg.headerRow - ヘッダ行の行番号(>0)。既定値1。項目名は重複不可
  * @returns {object} 取得したシートのデータ
  * <ul>
  * <li>sheet  {object}   - getSheetで取得したシートのオブジェクト
