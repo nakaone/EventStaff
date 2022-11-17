@@ -1,4 +1,4 @@
-const elaps = {account:'shimokitasho.oyaji@gmail.com',department:'郵便局'};
+const elaps = {account:'shimokitasho.oyaji@gmail.com',department:'郵便局conf'};
 const conf = szLib.getConf();
 
 /** doPost: パラメータに応じて処理を分岐
@@ -56,7 +56,7 @@ const conf = szLib.getConf();
  * @param {string} arg.template - メールのテンプレートが定義された郵便局のシート名
  * @param {object[]} arg.data - 個別メールの宛先、実引数
  * @param {string} arg.data.recipient - 宛先メールアドレス
- * @param {object} arg.variables - 「仮引数：実引数」形式のオブジェクト
+ * @param {object} arg.variables - 「仮引数：実引数」形式のオブジェクト(仮引数は英字)
  * @return {object[]} 全件正常終了なら空配列、エラーは以下のオブジェクトを返す
  * <ul>
  * <li>recipient {string} - エラーとなった配信先
@@ -67,51 +67,53 @@ const postMails = (arg) => {
   console.log('郵便局.postMails start. arg='+JSON.stringify(arg));
   let rv = [];   // 失敗の配列。[{recipient:(string),message:(string)}, {..}, ..]
 
-  // 事前準備
-  const templateObj = szLib.getSheetData(arg.template);
+  /* 01. 事前準備：メールのプロトタイプを作成
+    Class [GmailApp](https://developers.google.com/apps-script/reference/gmail/gmail-app)
+      sendEmail(recipient, subject, body, options)   */
+  // (1) テンプレートとして指定されたシートからtObj[パラメータ名]で値を参照可能に
+  const templateObj = szLib.szSheet(arg.template);
   const tObj = {};
   templateObj.data.forEach(x => { tObj[x.parameters] = x.value});
-  const logObj = szLib.szSheet('配達記録');
-
-  // テンプレートをシートから取得
+  
+  // (2) メールのプロトタイプを作成
   const prototype = JSON.stringify({
-    //passPhrase  : null,
-    //recipient   : null,
-    subject     : tObj.subject,
-    body        : tObj.template,
-    // 以下options
-    //attachments : null,
-    bcc         : tObj.bcc || undefined,
-    cc          : tObj.cc || undefined,
-    //from        : null,
-    //inlineImages: null,
-    name        : tObj.name || undefined,
-    noReply     : tObj.noReply || undefined,
-    replyTo     : tObj.replyTo || undefined,
-    htmlBody    : null,
+    recipient: null,
+    subject: tObj.subject,
+    body: templateObj.template,
+    options: {
+      attachments: undefined,
+      bcc: tObj.bcc || undefined,
+      cc: tObj.cc || undefined,
+      from: undefined,
+      htmlBody: '',
+      inlineImages: undefined,
+      name: tObj.name || undefined,
+      noReply: tObj.noReply || undefined,
+      replyTo: tObj.replyTo || undefined,
+    }
   });
-  //console.log('prototype='+prototype);
 
-  // 一通ずつ文面を作成、配信
+  // 02.一通ずつ文面を作成、配信
+  const logObj = szLib.szSheet('配達記録');
   for( let i=0 ; i<arg.data.length ; i++ ){
     const m = arg.data[i];
     //console.log('m='+JSON.stringify(m));
     const mail = JSON.parse(prototype);
     try {
-      // テンプレートから配信員に渡すオブジェクトを作成
+      // (1) 宛先の設定
       mail.recipient = m.recipient;
       //console.log('mail.recipient='+mail.recipient);
 
-      // テンプレートの仮引数を実引数で置換
+      // (2) 文面の作成(テンプレートの仮引数を実引数で置換)
       for( let x in m.variables ){
         const rex = new RegExp('::' + x + '::','g');
         mail.body = mail.body.replace(rex,m.variables[x]);
         //console.log('rex='+rex+'\nm.variables[x]='+m.variables[x]+'\nmail.body='+mail.body);
       }
 
-      // HTMLメールの場合、options.htmlBodyをセット
+      // (3) HTMLメールの場合、options.htmlBodyをセット
       if( tObj.html.toLowerCase() === 'true' ){
-        mail.htmlBody = mail.body;
+        mail.options.htmlBody = mail.body;
         mail.body = mail.body
         .replace(/[\s\S]+<body>([\s\S]+?)<\/body>[\s\S]+/,'$1')   // body内部のみ抽出
         .replace(/<a href="([^"]+?)".*?>([^<]+?)<\/a>/g,'$2($1)') // hrefはアドレス表示
@@ -119,12 +121,12 @@ const postMails = (arg) => {
       }
       //console.log('mail.body='+mail.body+'\nhtmlBody='+mail.htmlBody);
 
-      // 配達員を選定
+      // (4) 配達員を選定
       const deliObj = szLib.szSheet('配達員');
       delivery = deliObj.lookup('next',true);
       //console.log('delivery='+JSON.stringify(delivery));
 
-      // 配達員に発送指示を送信
+      // (5) 配達員に発送指示を送信
       const res = szLib.fetchGAS({
         from    : 'Post',
         to      : 'Delivery',
@@ -138,14 +140,13 @@ const postMails = (arg) => {
         rv.push({recipient:mail.recipient,message:res.message});
       }
 
-      // 配達記録に追記
-      const t = new Date();
-      logObj.appendRow([
-        szLib.getJPDateTime(),  // timestamp
-        m,  // arg
-        delivery.account,  // delivery
-        res.isErr ? 'NG' : 'OK',
-      ]);
+      // (6) 配達記録に追記
+      logObj.append({
+        timestamp: szLib.getJPDateTime(),
+        arg: m,
+        delivery: delivery.account,
+        result: (res.isErr ? 'NG' : 'OK'),
+      });
     } catch(e) {
       rv.push({recipient:mail.recipient,message:e.message});
     }
