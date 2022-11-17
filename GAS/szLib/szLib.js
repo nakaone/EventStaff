@@ -4,6 +4,11 @@
  * </ul>
  */
 
+/** authorize: 各種権限の取得
+ * シートの参照(シート毎)
+ * メールの発信
+ */
+
 /** getConf: おまつり奉行用の各種パラメータを取得
  * @param {void} - なし
  * @returns {object} おまつり奉行用の各種パラメータ
@@ -77,27 +82,28 @@ function elaps(arg,result=''){
  * @param {string}   arg.from     - 送信側のコード名(Auth, Master等)
  * @param {string}   arg.to       - 受信側のコード名
  * @param {string}   arg.func     - GAS側で処理分岐の際のキー文字列
+ * @param {string}   arg.endpoint - 受信側のコード名からURLが判断できない(配達員の)場合に指定
+ * @param {string}   arg.key      - endpoint指定の場合はその鍵も併せて指定
  * @param {any}      arg.data     - 処理対象データ
  * @returns {void} なし
  */
  const fetchGAS = (arg) => {
   console.log('fetchGAS start. arg='+JSON.stringify(arg));
   const conf = getConf();
-  const options = {
+  const endpoint = arg.endpoint || conf[arg.to].url;
+  const key = arg.key || conf[arg.to].key;
+
+  const rObj = JSON.parse(UrlFetchApp.fetch(endpoint,{
     'method': 'post',
     'contentType': 'application/json',
     'payload' : JSON.stringify({
-      passPhrase  : conf[arg.to].key,
+      passPhrase  : key,
       from: arg.from,
       to: arg.to,
       func: arg.func,
       data: arg.data,
-    }),
-  }
-  const res = UrlFetchApp.fetch(config.MasterURL,options).getContentText();
-  console.log('sender.GasPost.res=',typeof res,res);
-  const rObj = JSON.parse(res);
-  console.log('sender.GasPost.rObj',typeof rObj,rObj);
+    }),  
+  }).getContentText());
   return rObj;
 }
 
@@ -112,7 +118,7 @@ function getJPDateTime(dt=null,locale='ja-JP'){
 }
 
 /** szSheet: シートのデータ取得等、CRUDするメソッドを持つオブジェクトを返す
- * @param {object} arg - 引数
+ * @param {object|string} arg - 文字列の場合、コンテナのシートでヘッダ行は1行目と看做す
  * @param {string} arg.spreadId - 外部スプレッドシートのID
  * @param {string} arg.sheetName - シート名
  * @param {number} arg.headerRow - ヘッダ行の行番号(>0)。既定値1。項目名は重複不可
@@ -129,16 +135,21 @@ function getJPDateTime(dt=null,locale='ja-JP'){
  */
 function szSheet(arg){
   const rv = {};
-  if( 'spreadId' in arg ){
-    rv.sheet = SpreadsheetApp.openById(arg.spreadId).getSheetByName(arg.sheetName);
+  if( typeof arg === 'string' ){  // 文字列のみ ⇒ シート名の指定
+    rv.sheet = SpreadsheetApp.getActive().getSheetByName(arg);
+    rv.headerRow = 1; // ヘッダ行は1行目(固定)
   } else {
-    rv.sheet = SpreadsheetApp.getActive().getSheetByName(arg.sheetName);
-  }  
+    if( 'spreadId' in arg ){
+      rv.sheet = SpreadsheetApp.openById(arg.spreadId).getSheetByName(arg.sheetName);
+    } else {
+      rv.sheet = SpreadsheetApp.getActive().getSheetByName(arg.sheetName);
+    }  
+    rv.headerRow = arg.headerRow || 1;  // ヘッダ行の既定値は1行目
+  }
 
   // データの取得・加工
   rv.raw = rv.sheet.getDataRange().getValues();
   const raw = JSON.parse(JSON.stringify(rv.raw));
-  rv.headerRow = arg.headerRow || 1;  // ヘッダ行の既定値は1行目
   rv.keys = raw.splice(rv.headerRow-1,1)[0];
   rv.data = raw.splice(rv.headerRow-1).map(row => {
     const obj = {};

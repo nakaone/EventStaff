@@ -1,81 +1,49 @@
-const config = szLib.setConfig(['PostURL','PostKey']);
+const elaps = {account:'shimokitasho.oyaji@gmail.com',department:'郵便局'};
+const conf = szLib.getConf();
 
-/** authorize: 郵便局の初期化
- * <br>
- * doGetのテストも兼ね、sendEmail等の権限付与が必要な機能を一通り呼び出す。<br>
- * 結果はコンソールで確認する。
- * @param {} - なし
- * @return {void} なし
- */
-const authorize = () => {
-  console.log('郵便局.authorize start.');
-  const testData = [{   // 正常パターン
-      recipient: 'nakaone.kunihiro@gmail.com',
-      variables: {no:1, delivery:'deli01', timestamp:'2022/11/01 00:00:00.000'}
-    },{   // 宛先無し
-      recipient: '',
-      variables: {no:2, delivery:'deli01', timestamp:'2022/11/02 00:00:00.000'}
-    },{   // 不適切な宛先(正常終了するが発信者宛エラーメール)
-      recipient: 'hogohogo1172931@fuga.hoge.foo.baa',
-      variables: {no:3, delivery:'deli01', timestamp:'2022/11/03 00:00:00.000'}
-    },{   // 実引数'no'が未定義
-      recipient: 'nakaone.kunihiro@gmail.com',
-      variables: {delivery:'deli01', timestamp:'2022/11/01 00:00:00.000'}
-    }
-  ];
-  const rv = doGet({parameter:{v:
-    szLib.encrypt({func:'post',data:{template:'郵便局初期化',data:testData}},config.PostKey)
-  }});
-  const rObj = JSON.parse(rv.getContent());
-  console.log('郵便局.authorize end. rv='+JSON.stringify(rObj));
-}
-
-/** doGet: 郵便局への配信依頼受付
- * <br>
- * 返値はTextOutputのインスタンス。<br>
- * getContentで中の文字列を取得、parseすれば結果オブジェクトが得られる。<br>
- * GAS公式: [Class TextOutput]{@link https://developers.google.com/apps-script/reference/content/text-output#getcontent}
- *
- * @param {object} e - const config = szLib.setConfig(['PostURL','PostKey']);
- * @param {object} e.parameter - パラメータ文字列
- * @param {object} e.parameter.v - グローバル変数PostKeyで暗号化された文字列。<br>復号すると以下のオブジェクトとなる
- * @param {string} e.parameter.v.func - 'post'固定(他は不正)
- * @param {object} e.parameter.v.data - [postMails]{@link postMails}の引数
- * 
- * @return {object} - 正常終了の場合はpostMailsの戻り値。エラーの場合は以下のメンバを持つオブジェクト
+/** doPost: パラメータに応じて処理を分岐
+ * @param {object} e - Class UrlFetchApp [fetch(url, params)]{@link https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app#fetchurl,-params}の"Make a POST request with a JSON payload"参照
+ * @param {object} arg - データ部分。JSON.parse(e.postData.getDataAsString())の結果
+ * @param {string} arg.passPhrase - 共通鍵。szLib.getUrl()で取得
+ * @param {string} arg.from       - 送信先(自分)
+ * @param {string} arg.to         - 送信元
+ * @param {string} arg.func       - 分岐する処理名
+ * @param {string} arg.data       - 処理対象データ
+ * @return {object} 正常終了の場合は分岐先処理の戻り値、エラーの場合は以下。
  * <ul>
- * <li>isErr {boolean} - 'true'(固定)
+ * <li>isErr {boolean}  - true(固定)
  * <li>message {string} - エラーメッセージ
  * </ul>
-*/
-function doGet(e){
-  console.log('郵便局.doGet start.',e);
-  let rv = null;
-  try {
-    // 'v'で渡されたクエリを復号
-    const arg = szLib.decrypt(e.parameter.v,config.PostKey);
-    if( !arg.func ){
-      throw new Error("必要な引数が見つかりません");
-    }
-    console.log('arg='+JSON.stringify(arg));
+ */
+ function doPost(e){
+  elaps.startTime = Date.now();  // 開始時刻をセット
+  console.log('郵便局.doPost start.',e);
 
-    switch( arg.func ){  // 処理指定により分岐
-      case 'post':  // メールの送信
-        rv = postMails(arg.data);
-        break;
-      case 'test':  // テスト用
-        rv = {isErr:false};  // 何もせず正常終了とする
-        break;
+  const arg = JSON.parse(e.postData.getDataAsString()); // contentsでも可
+  let rv = null;
+  if( arg.passPhrase === conf.Master.key ){
+    try {
+      elaps.func = arg.func; // 処理名をセット
+      switch( arg.func ){
+        case 'postMails':
+          rv = postMails(arg.data);
+          break;
+      }
+    } catch(e) {
+      // Errorオブジェクトをrvとするとmessageが欠落するので再作成
+      rv = {isErr:true, message:e.name+': '+e.message};
+    } finally {
+      console.log('郵便局.doPost end. rv='+JSON.stringify(rv));
+      szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');  // 結果を渡して書き込み
+      return ContentService
+      .createTextOutput(JSON.stringify(rv,null,2))
+      .setMimeType(ContentService.MimeType.JSON);
     }
-  } catch(e) {
-    rv = {isErr:true, message:e.name+': '+e.message};
-  } finally {
-    // 結果をJSON化して返す
-    rv = JSON.stringify(rv,null,2);
-    console.log('郵便局.doGet end. rv='+rv);
-    return ContentService
-    .createTextOutput(rv)
-    .setMimeType(ContentService.MimeType.JSON);
+  } else {
+    rv = {isErr:true,message:'invalid passPhrase :'+e.parameter.passPhrase};
+    console.error('郵便局.doPost end. '+rv.message);
+    console.log('end',elaps);
+    szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');
   }
 }
 
@@ -103,7 +71,7 @@ const postMails = (arg) => {
   const templateObj = szLib.getSheetData(arg.template);
   const tObj = {};
   templateObj.data.forEach(x => { tObj[x.parameters] = x.value});
-  const logObj = SpreadsheetApp.getActive().getSheetByName('配達記録');
+  const logObj = szLib.szSheet('配達記録');
 
   // テンプレートをシートから取得
   const prototype = JSON.stringify({
@@ -152,29 +120,19 @@ const postMails = (arg) => {
       //console.log('mail.body='+mail.body+'\nhtmlBody='+mail.htmlBody);
 
       // 配達員を選定
-      const delivery = szLib.getSheetData('配達員').data.filter(x => {
-        return x.next.toLowerCase() === 'true'})[0];
+      const deliObj = szLib.szSheet('配達員');
+      delivery = deliObj.lookup('next',true);
       //console.log('delivery='+JSON.stringify(delivery));
-      const endpoint = delivery.endpoint;  // 配達員のURL
-      mail.passPhrase = delivery.passPhrase;
 
       // 配達員に発送指示を送信
-      //  UrlFetchApp.fetch
-      //  https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app#fetch(String,Object)
-      //  返値はClass HTTPResponse
-      //  https://developers.google.com/apps-script/reference/url-fetch/http-response
-      const options = {
-        'method': 'post',
-        'headers': {
-          'contentType': 'application/json',
-        },
-        'payload': mail,
-      }
-      const r0 = UrlFetchApp.fetch(endpoint,options);
-      //console.log('r0='+JSON.stringify(r0));
-      const r1 = r0.getContentText("UTF-8");
-      //console.log('r1='+JSON.stringify(r1));
-      const res = JSON.parse(r1);
+      const res = szLib.fetchGAS({
+        from    : 'Post',
+        to      : 'Delivery',
+        func    : 'sendMail',
+        endpoint: delivery.endpoint,
+        key     : delivery.passPhrase,
+        data    : mail,
+      });
       console.log('郵便局.res='+JSON.stringify(res));
       if( res.isErr ){
         rv.push({recipient:mail.recipient,message:res.message});
@@ -183,7 +141,7 @@ const postMails = (arg) => {
       // 配達記録に追記
       const t = new Date();
       logObj.appendRow([
-        t.toLocaleString('ja-JP') + '.' + t.getMilliseconds(),  // timestamp
+        szLib.getJPDateTime(),  // timestamp
         m,  // arg
         delivery.account,  // delivery
         res.isErr ? 'NG' : 'OK',
