@@ -7,7 +7,8 @@
 ================================================================== */
 
 const elaps = {account:'shimokitasho.oyaji@gmail.com',department:'配達員'};
-const conf = szLib.getConf();
+//const conf = szLib.getConf();
+const passPhrase = 'psp2*ZRTS/GXr9C4';
 
 /** doPost: パラメータに応じて処理を分岐
  * @param {object} e - Class UrlFetchApp [fetch(url, params)]{@link https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app#fetchurl,-params}の"Make a POST request with a JSON payload"参照
@@ -29,7 +30,7 @@ const conf = szLib.getConf();
 
   const arg = JSON.parse(e.postData.getDataAsString()); // contentsでも可
   let rv = null;
-  if( arg.passPhrase === conf.Master.key ){
+  if( arg.passPhrase === passPhrase ){
     try {
       elaps.func = arg.func; // 処理名をセット
       switch( arg.func ){

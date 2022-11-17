@@ -21,7 +21,7 @@ const conf = szLib.getConf();
 
   const arg = JSON.parse(e.postData.getDataAsString()); // contentsでも可
   let rv = null;
-  if( arg.passPhrase === conf.Master.key ){
+  if( arg.passPhrase === conf.Post.key ){
     try {
       elaps.func = arg.func; // 処理名をセット
       switch( arg.func ){
@@ -74,7 +74,7 @@ const postMails = (arg) => {
   const templateObj = szLib.szSheet(arg.template);
   const tObj = {};
   templateObj.data.forEach(x => { tObj[x.parameters] = x.value});
-  
+
   // (2) メールのプロトタイプを作成
   const prototype = JSON.stringify({
     recipient: null,

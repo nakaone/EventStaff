@@ -1,76 +1,53 @@
-const config = szLib.setConfig(['BroadKey']);
+const elaps = {account:'shimokitasho.oyaji@gmail.com',department:'放送局'};
+const conf = szLib.getConf();
 
-// ===========================================================
-// トリガー関数
-// ===========================================================
-/** doGetTest: doGetのテスト
- * @param {*} x - なし
- * @returns void - 結果はコンソールで確認
+/** doPost: パラメータに応じて処理を分岐
+ * @param {object} e - Class UrlFetchApp [fetch(url, params)]{@link https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app#fetchurl,-params}の"Make a POST request with a JSON payload"参照
+ * @param {object} arg - データ部分。JSON.parse(e.postData.getDataAsString())の結果
+ * @param {string} arg.passPhrase - 共通鍵。szLib.getUrl()で取得
+ * @param {string} arg.from       - 送信先(自分)
+ * @param {string} arg.to         - 送信元
+ * @param {string} arg.func       - 分岐する処理名
+ * @param {string} arg.data       - 処理対象データ
+ * @return {object} 正常終了の場合は分岐先処理の戻り値、エラーの場合は以下。
+ * <ul>
+ * <li>isErr {boolean}  - true(固定)
+ * <li>message {string} - エラーメッセージ
+ * </ul>
  */
-const doGetTest = () => {
-  const tStr = (x) => {
-    return x.toLocaleString('ja-JP') + '.' + x.getMilliseconds();
-  };
-  const testData = [
-    {func:'postMessage',data:{
-      timestamp: tStr(new Date()),
-      from: '嶋津パパ',
-      to: '嶋津ママ',
-      message: '追加のテスト',
-    }},
-    {func:'getMessages',data:{}},
-  ];
-  for( let i=0 ; i<testData.length ; i++ ){
-    doGet({parameter:{v:szLib.encrypt(testData[i],config.BroadKey)}});
+function doPost(e){
+  elaps.startTime = Date.now();  // 開始時刻をセット
+  console.log('放送局.doPost start.',e);
+
+  const arg = JSON.parse(e.postData.getDataAsString()); // contentsでも可
+  let rv = null;
+  if( arg.passPhrase === conf.Broad.key ){
+    try {
+      elaps.func = arg.func; // 処理名をセット
+      switch( arg.func ){
+        case 'postMessage':
+          rv = postMessage(arg.data);
+          break;
+        case 'getMessages':
+          rv = getMessages(arg.data);
+          break;
+      }
+    } catch(e) {
+      // Errorオブジェクトをrvとするとmessageが欠落するので再作成
+      rv = {isErr:true, message:e.name+': '+e.message};
+    } finally {
+      console.log('放送局.doPost end. rv='+JSON.stringify(rv));
+      szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');  // 結果を渡して書き込み
+      return ContentService
+      .createTextOutput(JSON.stringify(rv,null,2))
+      .setMimeType(ContentService.MimeType.JSON);
+    }
+  } else {
+    rv = {isErr:true,message:'invalid passPhrase :'+e.parameter.passPhrase};
+    console.error('放送局.doPost end. '+rv.message);
+    console.log('end',elaps);
+    szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');
   }
-};
-
-/** doGet: 放送局への配信依頼受付
- * <br>
- * 返値はTextOutputのインスタンス。<br>
- * getContentで中の文字列を取得、parseすれば結果オブジェクトが得られる。<br>
- * GAS公式: [Class TextOutput]{@link https://developers.google.com/apps-script/reference/content/text-output#getcontent}
- *
- * @param {object} e - const config = szLib.setConfig(['PostURL','PostKey']);
- * @param {object} e.parameter - パラメータ文字列
- * @param {object} e.parameter.v - グローバル変数PostKeyで暗号化された文字列。<br>復号すると以下のオブジェクトとなる
- * @param {string} e.parameter.v.func - 'post'固定(他は不正)
- * @param {object} e.parameter.v.data - [postMails]{@link postMails}の引数
- * 
- * @return {object} - 正常終了の場合はpostMessage/getMessagesの戻り値。エラーの場合は空配列。
- * 
- * @example <caption>引数の例</caption>
- * 放送局.doGet start. {
- *   contextPath: '',
- *   parameter: { v: 'VTJG〜E9PQ==' },
- *   parameters: { v: [ 'VTJG〜E9PQ==' ] },
- *   queryString: 'v=VTJG〜E9PQ==',
- *   contentLength: -1
- * }
- */
-function doGet(e) {
-  console.log('放送局.doGet start.',e);
-
-  // 'v'で渡されたクエリを復号
-  arg = szLib.decrypt(e.parameter.v,config.BroadKey);
-  console.log('放送局.arg',szLib.whichType(arg),arg);
-
-  let rv = [];
-  switch( arg.func ){  // 処理指定により分岐
-    case 'postMessage':  // 掲示板への投稿
-      rv = postMessage(arg.data);
-      break;
-    case 'getMessages':  // 掲示板からメッセージの取得
-      rv = getMessages();
-      break;
-  }
-
-  // 結果をJSON化して返す
-  rv = JSON.stringify(rv,null,2);
-  console.log('放送局.doGet end.',rv);
-  return ContentService
-  .createTextOutput(rv)
-  .setMimeType(ContentService.MimeType.JSON);
 }
 
 /** postMessage: お知らせの投稿
@@ -84,9 +61,8 @@ function doGet(e) {
  */
 function postMessage(data){
   console.log('放送局.postMessage start. data='+JSON.stringify(data));
-
-  const dObj = szLib.getSheetData('ログ');
-  const rv = szLib.updateSheetData(dObj,data);
+  const dObj = szLib.szSheet('ログ');
+  const rv = dObj.update(data);
   console.log('放送局.postMessage end.',JSON.stringify(rv));
   return rv;
 }
@@ -96,13 +72,9 @@ function postMessage(data){
  * @returns {object[]} 投稿メッセージシートの全データ
  */
 function getMessages(){
-  const elaps = szLib.getElaps();
-  elaps.start({department:'放送局',func:'getMessages'});
   console.log('放送局.getMessages start.');
-
-  const dObj = szLib.getSheetData('ログ');
+  const dObj = szLib.szSheet('ログ');
   const rv = dObj.data;
   console.log('放送局.getMessages end. rv='+JSON.stringify(rv));
-  elaps.end();
   return rv;
 }
