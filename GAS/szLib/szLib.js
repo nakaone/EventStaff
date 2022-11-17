@@ -18,7 +18,7 @@ function getConf(){
     Auth: {   // 認証局
       // 認証局は誰でもアクセス可なので、key は設定しない
       key: '',  // undefinedにならないよう設定するダミー
-      url: '',
+      url: 'https://script.google.com/macros/s/AKfycbyDrQRT5MWLl_eyNtg6vYRR-uX1nxq5mqEtfDv5vqYWNi_zbtDkBylHmHo0EHxrBDw-5w/exec',
     },
     Master: { // 管理局
       key: '',

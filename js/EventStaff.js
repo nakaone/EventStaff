@@ -334,7 +334,10 @@ class Broadcast {
 }
 
 const config = {
-  AuthURL: "https://script.google.com/macros/s/AKfycbxCXpmamk-zGGckxIuCwEfP4Ac24sRKmO3DcFuBBW2UaNJK87RBr50eykjxKJ2D324k-w/exec",
+  Auth:{
+    key: '',
+    url: 'https://script.google.com/macros/s/AKfycbyDrQRT5MWLl_eyNtg6vYRR-uX1nxq5mqEtfDv5vqYWNi_zbtDkBylHmHo0EHxrBDw-5w/exec',
+  },
   editParticipant: {tag:"div", class:"table", children:[
     {tag:"div", class:"tr entry", children:[
       {tag:"div", class:"td entryNo", variable:"受付番号"},
@@ -438,25 +441,24 @@ const getEntryNo = () => {  // 受付番号入力時処理
     document.querySelector('#entryNo .entryNo input[type="button"]').disabled = null;
     return;
   }
-  const endpoint = config.AuthURL;
   config.entryNo = Number(document.querySelector('#entryNo input').value);
-  const sendData = {  // 認証局へ受付番号をPOSTで送る
-    func: 'auth1A',
-    data: {
-      entryNo: config.entryNo,
-    }
-  };
-  doPost(endpoint,sendData,(response) => {
-    console.log('getEntryNo response = '+JSON.stringify(response));
-    if( response.isErr ){
-      document.querySelector('#entryNo .entryNo .message').innerHTML
-        = '<p class="error">' + response.message + '</p>';
-    } else {
-      // 受付番号入力欄を隠蔽
-      document.querySelector('#entryNo .entryNo').style.display = 'none';
-      // パスコード入力画面を開く
-      document.querySelector('#entryNo .passCode').style.display = 'block';
-    }
+  const res = fetchGAS({
+    from     : 'getEntryNo',
+    to       : 'Auth',
+    func     : 'auth1A',
+    data     : config.entryNo,
+    callback : (response) => {
+      console.log('getEntryNo response = '+JSON.stringify(response));
+      if( response.isErr ){
+        document.querySelector('#entryNo .entryNo .message').innerHTML
+          = '<p class="error">' + response.message + '</p>';
+      } else {
+        // 受付番号入力欄を隠蔽
+        document.querySelector('#entryNo .entryNo').style.display = 'none';
+        // パスコード入力画面を開く
+        document.querySelector('#entryNo .passCode').style.display = 'block';
+      }
+    },
   });
 }
 
