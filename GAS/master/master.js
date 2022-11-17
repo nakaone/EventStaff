@@ -5,8 +5,8 @@ const conf = szLib.getConf();
  * @param {object} e - Class UrlFetchApp [fetch(url, params)]{@link https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app#fetchurl,-params}の"Make a POST request with a JSON payload"参照
  * @param {object} arg - データ部分。JSON.parse(e.postData.getDataAsString())の結果
  * @param {string} arg.passPhrase - 共通鍵。szLib.getUrl()で取得
- * @param {string} arg.from       - 送信先(自分)
- * @param {string} arg.to         - 送信元
+ * @param {string} arg.from       - 送信元
+ * @param {string} arg.to         - 送信先(自分)
  * @param {string} arg.func       - 分岐する処理名
  * @param {string} arg.data       - 処理対象データ
  * @return {object} 正常終了の場合は分岐先処理の戻り値、エラーの場合は以下。

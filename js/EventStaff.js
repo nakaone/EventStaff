@@ -1,4 +1,195 @@
-class Broad {
+/** Participant: 参加者の検索、情報更新 */
+class Participant {
+
+  /** inputSearchKey: 参加者の検索キーを入力
+   * 
+   */
+  inputSearchKey(){
+    console.log('inputSearchKey start.');
+    changeScreen('inputSearchKey','該当者の検索');
+  
+    // スキャンまたは値入力時の動作を定義
+    const strEl = document.querySelector('#inputSearchKey input[type="text"]');
+  
+    // スキャナから読み込まれた文字列をinput欄にセット
+    const callback = (keyPhrase) => {
+      changeScreen('loading');
+      config.scanCode = false;  // スキャンを停止
+      document.querySelector('#inputSearchKey .scanner')
+        .innerHTML = ''; // スキャナ用DIV内を除去
+      doGet(config.MasterURL,config.MasterKey,{func:'search',data:{key:keyPhrase}},(data) => {
+        if( data.length === 0 ){
+          alert("該当する参加者は存在しませんでした");
+        } else if( data.length > 1){
+          selectParticipant(data);  // 該当が複数件なら選択画面へ
+        } else {
+          editParticipant(data[0]);  // 該当が1件のみなら編集画面へ
+        }
+      });
+    };
+  
+    // スキャナを起動
+    config.scanCode = true;
+    scanCode((code) => {
+      console.log('scanCode: ' + code);
+      strEl.value = code; // 念の為入力欄にもセット
+      callback(code);
+    },{
+      selector:'#inputSearchKey .scanner',  // 設置位置指定
+      RegExp:/^[0-9]+$/,  // 数字かチェック
+      alert: false,  // 読み込み時、内容をalert表示しない
+    });
+  
+    // キーワード入力欄の値が変わったら検索するよう設定
+    document.querySelector('#inputSearchKey input[type="button"]')
+    .addEventListener('click',() => {
+      const keyPhrase = convertCharacters(strEl.value,false);
+      console.log('keyPhrase: '+ strEl.value + ' -> ' + keyPhrase );
+      callback(keyPhrase);
+    });
+  
+    console.log('inputSearchKey end.');
+  }
+  
+  /** selectParticipant: 複数検索結果からの選択
+   * 
+   * @param {*} arg 
+   */
+  selectParticipant(arg){
+    console.log('selectParticipant start.',arg);
+    changeScreen('selectParticipant','該当者リスト');
+  
+    const editArea = document.querySelector("#selectParticipant");
+    editArea.innerHTML = '<p>検索結果が複数あります。選択してください。</p>';
+    for( let i=0 ; i<arg.length ; i++ ){
+      const o = document.createElement('div');
+      o.innerText = arg[i]['氏名'] + '(' + arg[i]['読み'] + ')';
+      o.addEventListener('click',() => {
+        editParticipant(arg[i]);  // 選択後編集画面へ
+      });
+      editArea.appendChild(o);
+    }
+  
+    console.log('selectParticipant end.');
+  }
+  
+  /** editParticipant: 検索結果の内容編集
+   * 
+   * @param {*} arg 
+   */
+  editParticipant(arg){
+    console.log('editParticipant start.',arg);
+    changeScreen('editParticipant','参加者情報入力');
+  
+    // 該当が1件のみなら編集画面へ
+    const editArea = document.querySelector('#editParticipant .edit');
+    editArea.innerHTML = '';
+  
+    // [01] データクレンジング
+    arg['受付番号'] = ('000'+arg['受付番号']).slice(-4);  // 0パディング
+    arg['登録日時'] = new Date(arg['登録日時']).toLocaleString('ja-JP');
+    // 「取消」の文字列が入っていればtrue
+    arg['取消'] = arg['取消'].length === 0 ? "無し" : "有り";
+    ['','①','②','③'].forEach(x => {
+      if( arg[x+'状態'].length === 0 )
+        arg[x+'状態'] = arg[x+'氏名'].length === 0 ? '未登録' : '未入場';
+      if( arg[x+'参加費'].length === 0 )
+        arg[x+'参加費'] = arg[x+'氏名'].length === 0 ? '無し' : '未収';
+    });
+  
+    // [02] 各要素への値設定
+  
+    // 要素の作成とセット
+    let o = genChild(config.editParticipant,arg,'root');  // 全体の定義と'root'を渡す
+    if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
+      throw o.result;
+    } else if( o.append ){  // 追加フラグがtrue
+      // 親要素に追加
+      editArea.appendChild(o.result);
+  
+      // 「詳細」ボタンクリック時の処理を定義
+      document.querySelector('#editParticipant .entry input[type="button"]')
+      .addEventListener('click', () => {
+        const detail = document.querySelector('#editParticipant .detail');
+        const button = document.querySelector('#editParticipant .entry input[type="button"]');
+        if( button.value === '詳細' ){
+          button.value = '閉じる';
+          detail.style.display = 'block';
+        } else {
+          button.value = '詳細';
+          detail.style.display = 'none';
+        }
+      });
+  
+      // 編集用URLをQRコードで表示
+      // https://saitodev.co/article/QRCode.js%E3%82%92%E8%A9%A6%E3%81%97%E3%81%A6%E3%81%BF%E3%81%9F/
+      setQRcode('#editParticipant .qrcode',{text:arg['編集用URL']});
+  
+      // 「申込フォームを表示」ボタンクリック時の遷移先を定義
+      document.querySelector('#editParticipant .form input[type="button"]')
+        .onclick = () => window.open(arg['編集用URL'], '_blank');
+    }
+  
+    console.log('editParticipant end.');
+  }
+  
+  /** updateParticipant: 参加者情報更新
+   * @param {void} - なし
+   */
+  updateParticipant(){
+    console.log('updateParticipant start.');
+  
+    const sList = {
+      status:'#editParticipant [name="status0_"]',
+      fee:'#editParticipant [name="fee0_"]',
+    };
+    const prefix = ['','①','②','③'];
+  
+    // 更新用のデータオブジェクトの作成
+    const postData = {func:'update',data:{
+      target:{
+        key: '受付番号',  //更新対象のレコードを特定する為の項目名
+        value: Number(document.querySelector("#editParticipant .entryNo")
+          .innerText), //キーの値
+      } ,
+      revice: [],
+    }};
+    for( let i=0 ; i<4 ; i++ ){
+      const s = document.querySelector(sList.status.replace('_',i));
+      postData.data.revice.push({
+        key: prefix[i]+'状態',  // 更新対象の項目名
+        value: s.options[s.selectedIndex].value,  // 更新後の値
+      });
+      const f = document.querySelector(sList.fee.replace('_',i));
+      postData.data.revice.push({
+        key: prefix[i]+'参加費',
+        value: f.options[f.selectedIndex].value,
+      });
+    }
+    doGet(config.MasterURL,config.MasterKey,postData,(data) => {
+      // 結果表示
+      let result = '<p>以下の変更を行いました。</p>';
+      if( data.length > 0 ){
+        for( let i=0 ; i<data.length ; i++ ){
+          result += '<p>_1 : _2 => _3</p>'
+            .replace('_1',data[i].column)
+            .replace('_2',data[i].before)
+            .replace('_3',data[i].after);
+        }
+      } else {
+        result = '<p>変更点はありませんでした。</p>';
+      }
+      document.querySelector('#editParticipant .result').innerHTML = result;
+      console.log('updateParticipant end.',JSON.stringify(data));
+    });
+  }
+
+}
+
+/** Broadcast: お知らせへの投稿、配信
+ * 
+ */
+class Broadcast {
   
   constructor(url=config.BroadURL,key=config.BroadKey,interval=config.BroadInterval){
     this.url = url;
@@ -10,6 +201,40 @@ class Broad {
       + '\nkey=' + this.key
       + '\ninterval=' + this.interval
     );
+
+    // お知らせ画面「投稿する」ボタンの動作を定義
+    const postButton = document.querySelector('#home .PostArea input');
+    postButton.addEventListener('click',() => {
+      const post = document.querySelector('#home .postMessage');
+      if( postButton.value === '投稿する' ){
+        postButton.value = '閉じる';
+        post.style.display = 'block';
+      } else {
+        postButton.value = '投稿する';
+        post.style.display = 'none';
+      }
+    });
+
+    // 新規のお知らせが来たら末尾を表示するよう設定
+    // https://at.sachi-web.com/blog-entry-1516.html
+    const msgArea = document.getElementById('BroadArea');
+    const mo = new MutationObserver(() => {
+      console.log('mutation detected');
+      msgArea.scrollTop = msgArea.scrollHeight;
+    });
+    mo.observe(msgArea,{
+      childList: true,
+      attributes: true,
+      characterData: true,
+      subtree: true,//孫以降のノードの変化も検出
+      attributeOldValue: true,//変化前の属性データを記録する
+      characterDataOldValue: true,//変化前のテキストノードを記録する
+      attributeFilter: [],//配列で記述した属性だけを見張る
+    });
+
+    // 掲示板定期更新開始
+    config.Broad = new Broad(config.BroadURL,config.BroadKey,config.BroadInterval);
+    config.Broad.start();
   }
 
   start(){
@@ -75,6 +300,36 @@ class Broad {
       msgEl.scrollIntoView(false);
       console.log('getMessages periodical end: '+msg);
     })
+  }
+
+  /** postMessage: メッセージを投稿
+   * 
+   */
+  postMessage(){
+    console.log('postMessage start.');
+  
+    // 投稿領域を閉める
+    document.querySelector('#home .PostArea input').value = '投稿する';
+    document.querySelector('#home .postMessage').style.display = 'none';
+  
+    const msg = {
+      timestamp: (()=>{
+        const tObj = new Date();
+        return tObj.toLocaleString('ja-JP') + '.' + tObj.getMilliseconds();
+      })(),
+      from: document.querySelector('#home .postMessage [name="from"]').value,
+      to: '',
+      message: document.querySelector('#home .postMessage [name="message"]').value,
+    }
+    const toEl = document.querySelector('#home .postMessage [name="to"]');
+    const toNum = toEl.selectedIndex;
+    msg.to = toEl.options[toNum].value;
+  
+    doGet(config.BroadURL,config.BroadKey,{func:'postMessage',data:msg},(response) => {
+      console.log(response);
+      config.Broad.periodical(); // 掲示板を更新
+    });
+    console.log('postMessage end.',JSON.stringify(msg));
   }
 }
 
@@ -255,19 +510,6 @@ const initialize = (arg) => {  // 初期設定処理
   config.BroadInterval = Number(arg.config.BroadInterval) || 30000;
   console.log('initialize.config',config);
 
-  // お知らせ画面
-  // 「投稿する」ボタンの動作を定義
-  const postButton = document.querySelector('#home .PostArea input');
-  postButton.addEventListener('click',() => {
-    const post = document.querySelector('#home .postMessage');
-    if( postButton.value === '投稿する' ){
-      postButton.value = '閉じる';
-      post.style.display = 'block';
-    } else {
-      postButton.value = '投稿する';
-      post.style.display = 'none';
-    }
-  });
   // 参加者の変更・取消　※Googleのサイトはiframe不可
   document.querySelector('nav a.entryURL').href = config.entryURL;
   // 受付番号表示(QRコード)
@@ -307,29 +549,16 @@ const initialize = (arg) => {  // 初期設定処理
     = ( config.menuFlags & x.flag ) > 0 ? 'block' : 'none';
   });
 
-  // 新規のお知らせが来たら末尾を表示するよう設定
-  // https://at.sachi-web.com/blog-entry-1516.html
-  const msgArea = document.getElementById('BroadArea');
-  const mo = new MutationObserver(() => {
-    console.log('mutation detected');
-    msgArea.scrollTop = msgArea.scrollHeight;
-  });
-  mo.observe(msgArea,{
-    childList: true,
-    attributes: true,
-    characterData: true,
-    subtree: true,//孫以降のノードの変化も検出
-    attributeOldValue: true,//変化前の属性データを記録する
-    characterDataOldValue: true,//変化前のテキストノードを記録する
-    attributeFilter: [],//配列で記述した属性だけを見張る
-  });
-
-  // 掲示板定期更新開始
-  config.Broad = new Broad(config.BroadURL,config.BroadKey,config.BroadInterval);
-  config.Broad.start();
-
   changeScreen();// ホーム画面表示
   console.log("initialize end.",config);
+}
+
+/** periodical: 定期的処理の開始/停止
+ * 
+ */
+const periodical = () => {
+  // 掲示板の巡回
+  // configの更新
 }
 
 const changeScreen = (scrId='home',titleStr='お知らせ') => {  // 表示画面の切り替え
@@ -357,242 +586,6 @@ const changeScreen = (scrId='home',titleStr='お知らせ') => {  // 表示画�
     document.querySelector('#home input[name="from"]').value = config.handleName;
   }
   console.log("changeScreen end.");*/
-}
-
-const doGet = (endpoint,passPhrase,postData,callback) => {  // GASのdoGetを呼び出し、後続処理を行う
-  console.log("doGet start."
-    + '\nendpoint='+endpoint
-    + '\npassPhrase='+passPhrase
-    + '\npostData='+JSON.stringify(postData)
-  );
-
-  // GASに渡すデータを作成
-  const v = encrypt(postData,passPhrase);
-  dump('v',v);
-
-  // エンドポイントを作成
-  const ep = endpoint + '?v=' + v;
-  dump('ep',ep);
-
-  // GASからの返信を受けたらcallbackを呼び出し
-  fetch(ep,{"method": "GET"})
-  .then(response => response.json())
-  .then(data => {
-    console.log("doGet end.",data);
-    callback(data);  // 成功した場合、後続処理を呼び出し
-  });
-
-}
-
-const doPost = (endpoint,postData,callback) => {  // GASのdoPostを呼び出し、後続処理を行う
-  console.log("doPost start. ",postData,callback);
-
-  // GASからの返信を受けたらcallbackを呼び出し
-  fetch(endpoint,{
-    "method": "POST",
-    "body": JSON.stringify(postData),
-    "Content-Type": "application/json",
-  }).then(response => response.json())
-  .then(data => {
-    console.log("doPost end.",data);
-    callback(data);  // 成功した場合、後続処理を呼び出し
-  });
-}
-
-const inputSearchKey = () => {  // 参加者の検索キーを入力
-  console.log('inputSearchKey start.');
-  changeScreen('inputSearchKey','該当者の検索');
-
-  // スキャンまたは値入力時の動作を定義
-  const strEl = document.querySelector('#inputSearchKey input[type="text"]');
-
-  // スキャナから読み込まれた文字列をinput欄にセット
-  const callback = (keyPhrase) => {
-    changeScreen('loading');
-    config.scanCode = false;  // スキャンを停止
-    document.querySelector('#inputSearchKey .scanner')
-      .innerHTML = ''; // スキャナ用DIV内を除去
-    doGet(config.MasterURL,config.MasterKey,{func:'search',data:{key:keyPhrase}},(data) => {
-      if( data.length === 0 ){
-        alert("該当する参加者は存在しませんでした");
-      } else if( data.length > 1){
-        selectParticipant(data);  // 該当が複数件なら選択画面へ
-      } else {
-        editParticipant(data[0]);  // 該当が1件のみなら編集画面へ
-      }
-    });
-  };
-
-  // スキャナを起動
-  config.scanCode = true;
-  scanCode((code) => {
-    console.log('scanCode: ' + code);
-    strEl.value = code; // 念の為入力欄にもセット
-    callback(code);
-  },{
-    selector:'#inputSearchKey .scanner',  // 設置位置指定
-    RegExp:/^[0-9]+$/,  // 数字かチェック
-    alert: false,  // 読み込み時、内容をalert表示しない
-  });
-
-  // キーワード入力欄の値が変わったら検索するよう設定
-  document.querySelector('#inputSearchKey input[type="button"]')
-  .addEventListener('click',() => {
-    const keyPhrase = convertCharacters(strEl.value,false);
-    console.log('keyPhrase: '+ strEl.value + ' -> ' + keyPhrase );
-    callback(keyPhrase);
-  });
-
-  console.log('inputSearchKey end.');
-}
-
-const selectParticipant = (arg) => {  // 複数検索結果からの選択
-  console.log('selectParticipant start.',arg);
-  changeScreen('selectParticipant','該当者リスト');
-
-  const editArea = document.querySelector("#selectParticipant");
-  editArea.innerHTML = '<p>検索結果が複数あります。選択してください。</p>';
-  for( let i=0 ; i<arg.length ; i++ ){
-    const o = document.createElement('div');
-    o.innerText = arg[i]['氏名'] + '(' + arg[i]['読み'] + ')';
-    o.addEventListener('click',() => {
-      editParticipant(arg[i]);  // 選択後編集画面へ
-    });
-    editArea.appendChild(o);
-  }
-
-  console.log('selectParticipant end.');
-}
-
-const editParticipant = (arg) => {  // 検索結果の内容編集
-  console.log('editParticipant start.',arg);
-  changeScreen('editParticipant','参加者情報入力');
-
-  // 該当が1件のみなら編集画面へ
-  const editArea = document.querySelector('#editParticipant .edit');
-  editArea.innerHTML = '';
-
-  // [01] データクレンジング
-  arg['受付番号'] = ('000'+arg['受付番号']).slice(-4);  // 0パディング
-  arg['登録日時'] = new Date(arg['登録日時']).toLocaleString('ja-JP');
-  // 「取消」の文字列が入っていればtrue
-  arg['取消'] = arg['取消'].length === 0 ? "無し" : "有り";
-  ['','①','②','③'].forEach(x => {
-    if( arg[x+'状態'].length === 0 )
-      arg[x+'状態'] = arg[x+'氏名'].length === 0 ? '未登録' : '未入場';
-    if( arg[x+'参加費'].length === 0 )
-      arg[x+'参加費'] = arg[x+'氏名'].length === 0 ? '無し' : '未収';
-  });
-
-  // [02] 各要素への値設定
-
-  // 要素の作成とセット
-  let o = genChild(config.editParticipant,arg,'root');  // 全体の定義と'root'を渡す
-  if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
-    throw o.result;
-  } else if( o.append ){  // 追加フラグがtrue
-    // 親要素に追加
-    editArea.appendChild(o.result);
-
-    // 「詳細」ボタンクリック時の処理を定義
-    document.querySelector('#editParticipant .entry input[type="button"]')
-    .addEventListener('click', () => {
-      const detail = document.querySelector('#editParticipant .detail');
-      const button = document.querySelector('#editParticipant .entry input[type="button"]');
-      if( button.value === '詳細' ){
-        button.value = '閉じる';
-        detail.style.display = 'block';
-      } else {
-        button.value = '詳細';
-        detail.style.display = 'none';
-      }
-    });
-
-    // 編集用URLをQRコードで表示
-    // https://saitodev.co/article/QRCode.js%E3%82%92%E8%A9%A6%E3%81%97%E3%81%A6%E3%81%BF%E3%81%9F/
-    setQRcode('#editParticipant .qrcode',{text:arg['編集用URL']});
-
-    // 「申込フォームを表示」ボタンクリック時の遷移先を定義
-    document.querySelector('#editParticipant .form input[type="button"]')
-      .onclick = () => window.open(arg['編集用URL'], '_blank');
-  }
-
-  console.log('editParticipant end.');
-}
-
-const updateParticipant = () => {  // 参加者情報更新
-  console.log('updateParticipant start.');
-
-  const sList = {
-    status:'#editParticipant [name="status0_"]',
-    fee:'#editParticipant [name="fee0_"]',
-  };
-  const prefix = ['','①','②','③'];
-
-  // 更新用のデータオブジェクトの作成
-  const postData = {func:'update',data:{
-    target:{
-      key: '受付番号',  //更新対象のレコードを特定する為の項目名
-      value: Number(document.querySelector("#editParticipant .entryNo")
-        .innerText), //キーの値
-    } ,
-    revice: [],
-  }};
-  for( let i=0 ; i<4 ; i++ ){
-    const s = document.querySelector(sList.status.replace('_',i));
-    postData.data.revice.push({
-      key: prefix[i]+'状態',  // 更新対象の項目名
-      value: s.options[s.selectedIndex].value,  // 更新後の値
-    });
-    const f = document.querySelector(sList.fee.replace('_',i));
-    postData.data.revice.push({
-      key: prefix[i]+'参加費',
-      value: f.options[f.selectedIndex].value,
-    });
-  }
-  doGet(config.MasterURL,config.MasterKey,postData,(data) => {
-    // 結果表示
-    let result = '<p>以下の変更を行いました。</p>';
-    if( data.length > 0 ){
-      for( let i=0 ; i<data.length ; i++ ){
-        result += '<p>_1 : _2 => _3</p>'
-          .replace('_1',data[i].column)
-          .replace('_2',data[i].before)
-          .replace('_3',data[i].after);
-      }
-    } else {
-      result = '<p>変更点はありませんでした。</p>';
-    }
-    document.querySelector('#editParticipant .result').innerHTML = result;
-    console.log('updateParticipant end.',JSON.stringify(data));
-  });
-}
-
-const postMessage = () => { // メッセージを投稿
-  console.log('postMessage start.');
-
-  // 投稿領域を閉める
-  document.querySelector('#home .PostArea input').value = '投稿する';
-  document.querySelector('#home .postMessage').style.display = 'none';
-
-  const msg = {
-    timestamp: (()=>{
-      const tObj = new Date();
-      return tObj.toLocaleString('ja-JP') + '.' + tObj.getMilliseconds();
-    })(),
-    from: document.querySelector('#home .postMessage [name="from"]').value,
-    to: '',
-    message: document.querySelector('#home .postMessage [name="message"]').value,
-  }
-  const toEl = document.querySelector('#home .postMessage [name="to"]');
-  const toNum = toEl.selectedIndex;
-  msg.to = toEl.options[toNum].value;
-
-  doGet(config.BroadURL,config.BroadKey,{func:'postMessage',data:msg},(response) => {
-    console.log(response);
-    config.Broad.periodical(); // 掲示板を更新
-  });
-  console.log('postMessage end.',JSON.stringify(msg));
 }
 
 const onThatDay = (arg) => { // 参加フォームURLのQRコード表示
@@ -627,49 +620,55 @@ const showSummary = () => {  // 集計表の表示
   console.log("showSummary end.");
 }
 
+/** toggleMenu: メニューの開閉
+ * 
+ * @param {boolean} arg - 無し(単純開閉切換)またはtrue(強制オープン)
+ * @param {object} opt - オプション
+ * @param {string} opt.openIcon - 「三」アイコンを置く場所(CSSセレクタ)
+ * @param {string} opt.closeIcon - 「×」アイコンを置く場所(CSSセレクタ)
+ * @param {string} opt.nav - メニューの場所(CSSセレクタ)
+ * 
+ * @returns {void} なし
+ */
+ const toggleMenu = (arg=null,opt={}) => {
+  console.log('toggleMenu start.',arg);
+
+  // 操作対象要素を取得
+  const o = {
+    openIcon: opt.openIcon || 'header .openIcon',
+    closeIcon: opt.closeIcon || 'header .closeIcon',
+    nav: opt.nav || 'nav',
+  }
+  const openIcon = document.querySelector(o.openIcon); // 「三」アイコン
+  const closeIcon = document.querySelector(o.closeIcon); // 「×」アイコン
+  const nav = document.querySelector(o.nav);
+
+  const v = {  // 現状をisActiveに取得
+    isActive: nav.style.display === 'grid',
+  }
+
+  // 行うべき動作を判定。引数無しなら現状の反対
+  v.action = arg === null ? !v.isActive : arg;
+
+  if( v.action ){  // 現在閉じているメニューを開く
+    openIcon.style.display = 'none';
+    closeIcon.style.display = 'flex';
+    nav.style.display = 'grid';
+  } else {       // 現在開いているメニューを閉じる
+    openIcon.style.display = 'flex';
+    closeIcon.style.display = 'none';
+    nav.style.display = 'none';
+  }
+
+  console.log('toggleMenu end.',v);
+}
+
+/** 主処理
+ * <br>
+ * [DOMが構築されたときに初期化処理が行われるように設定]{@link https://pisuke-code.com/jquery-is-not-defined-solution/}
+ */
 window.addEventListener('DOMContentLoaded', function(){ // 主処理
-  // Err: "Uncaught ReferenceError: jsQR is not defined"
-  // -> DOMが構築されたときに初期化処理が行われるように設定
-  // https://pisuke-code.com/jquery-is-not-defined-solution/
-  console.log("participant start.",config);
   // 受付番号入力画面表示
   // getPassCode正常終了時、そこからinitializeを呼び出す
   changeScreen('entryNo','ログイン');
-  //テストモード。開発終了時は直上の1行を有効化し、initializeの呼び出しを削除
-  /*initialize({
-    // スタッフ用
-    config:{
-      AuthURL: "https://script.google.com/macros/s/AKfycbxCXpmamk-zGGckxIuCwEfP4Ac24sRKmO3DcFuBBW2UaNJK87RBr50eykjxKJ2D324k-w/exec",
-      Broad :{url: 'https://script.google.com/macros/s/AKfycbyy6eMsgTQ…Ab1bnEQ4ypfkr9AJhehtyuwfOmEhSNa1VhSI49avynvm/exec', key: 'RD+qF6F6E#,,V7+v', interval: 30000, onGoing: true, IntervalId: 1},
-      BroadInterval: 30000,
-      BroadKey: "RD+qF6F6E#,,V7+v",
-      BroadURL: "https://script.google.com/macros/s/AKfycbyy6eMsgTQz7b3wNi0rr3PxAb1bnEQ4ypfkr9AJhehtyuwfOmEhSNa1VhSI49avynvm/exec",
-      EnqueteURL: "https://docs.google.com/forms/d/16r3luYQRiLVmI9xqaD4FuaSlUqTRGvI8nAGrjGcg8lc/viewform",
-      FormURL: "https://docs.google.com/forms/d/e/1FAIpQLSfIJ4IFsBI5pPXsLz2jlTBczzIn8QZQL4r6QHqxZmSeDOhwUA/viewform",
-      MapURL: "materials/map.html",
-      MasterKey: "GQD*4jzyk8!4aQ8r",
-      MasterURL: "https://script.google.com/macros/s/AKfycbxO9cvQx8Ihy2fa-Yb5hGihfwVDmV5_K_PbMHP2tH16RjzBH3KQHt4EI9hJZmm_Mdw7hA/exec",
-      SiteURL: "https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97",
-      TableURL: "materials/timetable/WBS.html",
-      entryNo: 1,
-      entryURL: "",
-    },
-    menuFlags: 9192,
-    // 参加者
-    config:{
-      BoardInterval: 30000,
-      BroadKey: "RD+qF6F6E#,,V7+v",
-      BroadURL: "https://script.google.com/macros/s/AKfycbyy6eMsgTQz7b3wNi0rr3PxAb1bnEQ4ypfkr9AJhehtyuwfOmEhSNa1VhSI49avynvm/exec",
-      EnqueteURL: "https://docs.google.com/forms/d/16r3luYQRiLVmI9xqaD4FuaSlUqTRGvI8nAGrjGcg8lc/viewform",
-      FormURL: "https://docs.google.com/forms/d/e/1FAIpQLSfIJ4IFsBI5pPXsLz2jlTBczzIn8QZQL4r6QHqxZmSeDOhwUA/viewform",
-      MapURL: "materials/map.html",
-      MasterKey: "GQD*4jzyk8!4aQ8r",
-      MasterURL: "https://script.google.com/macros/s/AKfycbxO9cvQx8Ihy2fa-Yb5hGihfwVDmV5_K_PbMHP2tH16RjzBH3KQHt4EI9hJZmm_Mdw7hA/exec",
-      SiteURL: "https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97",
-      TableURL: "materials/timetable/WBS.html",
-      entryURL: ""
-    },
-    menuFlags: 8431,
-  });
-  */
 });

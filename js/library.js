@@ -1,3 +1,228 @@
+/** webScanner: QRコードや文書をスキャン
+ * <br>
+ * 指定セレクタ以下にcanvas他の必要な要素を作成してスキャン実行、指定の後続処理を呼び出す。<br>
+ * 呼び出す前に`config.scanCode = true`を実行しておくこと。<br>
+ * 参考：[jsQRであっさりQRコードリーダ/メーカ](@link https://zenn.dev/sdkfz181tiger/articles/096dfb74d485db)
+ */
+class webScanner {
+  /** constructor
+   * @param {object} arg 
+   * @param {string} arg.selector - 親要素のCSSセレクタ文字列
+   * @param {number} arg.interval - 動画状態で撮像、読み込めなかった場合の時間間隔
+   * @param {object} arg.RegExp - QRコードスキャン時、内容が適切か判断
+   * @param {boolean} arg.alert - 読み込み完了時に内容をalert表示するか
+   * @returns {void} なし
+   */
+  constructor(arg={}){
+    console.log('webScanner.constructor start. opt='+JSON.stringify(arg));
+
+    // デバイスがサポートされているか確認
+    if (!('mediaDevices' in navigator) || !('getUserMedia' in navigator.mediaDevices)) {
+      const msg = 'デバイス(カメラ)がサポートされていません';
+      console.error('webScanner.constructor: '+msg);
+      alert(msg);
+      return;
+    }
+  
+    this.opt = {   // 未指定設定値に既定値を設定
+      selector: arg.selector || '#webScanner',  // 親要素のCSSセレクタ文字列
+      //video   : arg.video || false,    // 動画枠の表示/非表示
+      //canvas  : arg.canvas || true,    // 撮像結果の表示/非表示
+      interval: arg.interval || 0.25,  // 動画状態で撮像、読み込めなかった場合の時間間隔
+      RegExp  : arg.RegExp || new RegExp('.+'), // RegExpオブジェクトとして指定
+      alert   : arg.alert || false,    // 読み込み完了時に内容をalert表示するか
+    }
+    console.log('this.opt='+JSON.stringify(this.opt));
+
+    console.log('webScanner.constructor end.');
+  }
+
+  /** start: カメラを起動する
+   * @param {function} callback - 後続処理
+   * @returns {void} なし
+   */
+  start(callback){
+    navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: "environment",
+      },
+      audio: false
+    }).then(stream => {
+      this.video.srcObject = stream;
+      this.video.setAttribute("playsinline", true);
+      this.video.play();
+      this.video.addEventListener("resize", () => {
+        // 親要素の横幅に合わせて表示する
+        const ratio = this.scanner.clientWidth / this.video.videoWidth;
+        const w = this.video.videoWidth * ratio;
+        const h = this.video.videoHeight * ratio;
+        this.video.width = this.canvas.width = w;
+        this.video.height = this.canvas.height = h;
+      });
+      callback(stream);
+    }).catch(e => {
+      alert('カメラを使用できません\n'+e.message);
+    });
+  }
+
+  /** stop: カメラを停止する
+   * @param {void} - なし
+   * @returns {void} なし
+   */
+  stop(){
+    this.video.srcObject.getVideoTracks().forEach((track) => {
+      track.stop();
+    });
+  }
+
+  /** scanDoc: 文書のスキャン */
+  scanDoc(callback){
+
+    // 親要素にカメラやファインダ等の作業用DIVを追加
+    this.scanner = document.querySelector(this.opt.selector);
+    this.scanner.innerHTML
+    = '<video autoplay></video>'
+    + '<canvas></canvas>'  // 撮影結果
+    + '<div>'  // カメラ操作ボタン
+    + '<input type="button" name="undo" value="◀" />'
+    + '<input type="button" name="shutter" value="[ ● ]" />'
+    + '<input type="button" name="adopt" value="▶" />'
+    + '</div>';
+    this.video = document.querySelector(this.opt.selector+' video');
+    this.video.style.display = 'block';
+    this.canvas = document.querySelector(this.opt.selector+' canvas');
+    this.canvas.style.display = 'none';
+    this.ctx = this.canvas.getContext('2d');
+
+    // カメラ操作ボタン関係の定義
+    this.buttons = document.querySelector(this.opt.selector+' div');
+    this.buttons.style.display = 'none'; //最初は全部隠蔽
+    this.undo = document.querySelector(this.opt.selector+' input[name="undo"]');
+    this.undo.disabled = true;  // 再撮影
+    this.shutter = document.querySelector(this.opt.selector+' input[name="shutter"]');
+    this.shutter.disabled = false;  // シャッター
+    this.adopt = document.querySelector(this.opt.selector+' input[name="adopt"]');
+    this.adopt.disabled = true;  // 採用
+
+    // 1. スキャナのボタン操作時の定義
+    // (1) 再撮影ボタンクリック時
+    this.undo.addEventListener('click',(callback) => {
+      this.video.style.display = 'block';
+      this.canvas.style.display = 'none';
+      this.undo.disabled = true;
+      this.shutter.disabled = false;
+      this.adopt.disabled = true;
+    });
+    // (2) シャッタークリック時
+    this.shutter.addEventListener('click',() => {
+      this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+      this.video.style.display = 'none';
+      this.canvas.style.display = 'block';
+      this.undo.disabled = false;
+      this.shutter.disabled = true;
+      this.adopt.disabled = false;
+    });
+    // (3) 採用ボタンクリック時
+    this.adopt.addEventListener('click',() => {
+      // 正常終了時はスキャナを停止
+      this.scanner.innerHTML = '';
+      this.stop();
+      // canvasからイメージをBASE64で取得
+      const imageData = this.canvas.toDataURL('image/png',0.7);
+      const postData = {
+        timestamp: getJPDateTime(),
+        image: imageData,
+      }
+      fetchGAS({
+        from: 'scanDocHtml',
+        to:   'scanDoc',
+        func: 'scanDoc',
+        data: postData,
+        callback: res => {
+          if( res.isErr ){
+            alert(res.message);
+          } else {
+            console.log('scanDoc normal end.',res);
+          }
+        }
+      });
+      // 以下は圧縮検討時のメモ。削除可
+      //const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+      //imageCompression(imageData,{maxSizeMB:1,maxWidthOrHeight:1280}).then(data => {
+      //  this.ctx.putImageData(data,0,0,this.canvas.width,this.canvas.height);
+
+    })
+
+    // 2. カメラ操作ボタンを表示してカメラを起動
+    this.buttons.style.display = 'flex';
+    this.start(()=>{console.log('Camera getting started!')});
+  }
+
+  /** scanQR: QRコードスキャン
+   * @param {function} callback - 後続処理
+   * @returns {void} なし
+   */
+  scanQR(callback){
+    // 動画撮影用Webカメラを起動
+    const userMedia = {audio:false, video:{facingMode: "environment"}};
+    navigator.mediaDevices.getUserMedia(userMedia).then((stream)=>{
+      video.srcObject = stream;
+      video.setAttribute("playsinline", true);
+      video.play();
+      this.drawFinder(callback);  // 起動が成功したらdrawFinderを呼び出す
+    }).catch(e => {
+      alert('カメラを使用できません\n'+e.message);
+    });
+  }
+  
+  drawFinder(){  // キャンバスに描画する
+    // スキャン実行フラグが立っていなかったら終了
+    if( !config.scanCode )  return;
+    if(video.readyState === video.HAVE_ENOUGH_DATA){
+      canvas.height = video.videoHeight;
+      canvas.width = video.videoWidth;
+      this.ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      let img = this.ctx.getImageData(0, 0, canvas.width, canvas.height);
+      // このタイミングでQRコードを判定
+      let code = jsQR(img.data, img.width, img.height, {inversionAttempts: "dontInvert"});
+			if(code){
+        console.log('drawFinder: code='+JSON.stringify(code));
+        // QRコード読み取り成功
+				this.drawRect(code.location);// ファインダ上のQRコードに枠を表示
+        if( opt.alert ) alert(code.data);  // alert出力指定があれば出力
+        if( code.data.match(opt.RegExp) ){
+          // 正しい内容が読み込まれた場合
+          callback(code.data);
+          config.scanCode = false;
+          scanner.innerHTML = ''; // 作業用DIVを除去
+        } else {
+          // 不適切な、別のQRコードが読み込まれた場合
+          alert('不適切なQRコードです。再読込してください。');
+          console.log('[scanCode.drawFinder] Error: not match pattern. code='+code.data);
+          setTimeout(drawFinder, opt.interval);
+        }
+			}
+    }
+    setTimeout(drawFinder, opt.interval);
+  }
+
+  drawRect(location){  // ファインダ上のQRコードに枠を表示
+    this.drawLine(location.topLeftCorner,     location.topRightCorner);
+		this.drawLine(location.topRightCorner,    location.bottomRightCorner);
+		this.drawLine(location.bottomRightCorner, location.bottomLeftCorner);
+		this.drawLine(location.bottomLeftCorner,  location.topLeftCorner);
+  }
+
+  drawLine(begin, end){  // ファインダ上に線を描画
+		this.ctx.lineWidth = 4;
+		this.ctx.strokeStyle = "#FF3B58";
+		this.ctx.beginPath();
+		this.ctx.moveTo(begin.x, begin.y);
+		this.ctx.lineTo(end.x, end.y);
+		this.ctx.stroke();
+	}
+}
+
 /* ===================================================
   汎用ライブラリ(GAS,JavaScript共通)
 =================================================== */
@@ -88,63 +313,15 @@ function convertCharacters(str,kana=true){
   return rv;
 }
 
-/** decrypt: 文字列を復号(＋オブジェクト化)
- * @param {string} arg 暗号化された文字列
- * @param {string} passPhrase 暗号鍵
- * @return {string|object} 復号化された文字列・オブジェクト
+/** getJPDateTime: 指定日時文字列を作成
+ * @param {any} dt - 作成する日時の指定。省略時は現在時刻
+ * @param {string} locale - 作成する形式
+ * @returns {string} 指定形式＋ミリ秒の日時文字列
  */
-const decrypt = (arg,passPhrase) => { // 対象を復号化
-  console.log('decrypt start.\n'+arg);
-  const decodePath = decodeURIComponent(arg);
-  const data = CryptoJS.enc.Base64
-    .parse(decodePath.toString()).toString(CryptoJS.enc.Latin1);
-  const bytes = CryptoJS.AES.decrypt(data, passPhrase)
-    .toString(CryptoJS.enc.Utf8)
-
-  let rv = null;
-  try {
-    rv = JSON.parse(bytes);
-  } catch(e) {
-    rv = bytes;
-  } finally {
-    console.log('decrypt end.\ntype='+whichType(rv)+'\n',rv);
-    return rv;
-  }
-};
-
-/** dump: 変数の型と値をコンソールに出力。デバッグ用
- * @param {string} label 変数名
- * @param {any} variable 変数
- * @return {void} なし
- */
-const dump = (label,variable) => {  // コンソールに変数の内容出力
-  console.log(label
-    + ' (type=' +whichType(variable)
-    + ', length=' + variable.length + ')\n'
-    , variable
-  );
+function getJPDateTime(dt=null,locale='ja-JP'){
+  const tObj = dt === null ? new Date() : new Date(dt);
+  return tObj.toLocaleString(locale) + '.' + tObj.getMilliseconds();
 }
-
-/** encrypt: 文字列・オブジェクトを暗号化
- * @param {string|object} arg 暗号化する文字列・オブジェクト
- * @param {String} passPhrase 暗号鍵
- * @return {String} 暗号化された文字列
- */
-const encrypt = (arg,passPhrase) => { // 対象を暗号化
-  const str = JSON.stringify(arg);
-  console.log('encript start.\ntype='+whichType(arg)
-    + '\n' + str + '\npassPhrase='+passPhrase);
-
-  //const utf8_plain = CryptoJS.enc.Utf8.parse(str);
-  const encrypted = CryptoJS.AES.encrypt( str, passPhrase );  // Obj
-  // crypto-jsで複合化するとMalformed UTF-8 data になった件
-  // https://zenn.dev/naonao70/articles/a2f7df87f9f736
-  const encryptResult = CryptoJS.enc.Base64
-    .stringify(CryptoJS.enc.Latin1.parse(encrypted.toString()));
-
-  console.log("encript end.\n"+encryptResult);
-  return encryptResult;
-};
 
 /** whichType: 変数の型を判定
  * @param {any} arg - 判定対象の変数
@@ -158,6 +335,51 @@ const whichType = (arg = undefined) => {
 /* ===================================================
   汎用ライブラリ(JavaScript専用,非GAS)
 =================================================== */
+
+/** fetchGAS: GASのdoPostを呼び出し、後続処理を行う
+ * <br>
+ * 処理内部で使用する公開鍵・秘密鍵はszLib.getUrlKey()で取得。
+ * 
+ * @param {object}   arg          - 引数
+ * @param {string}   arg.from     - 送信側のコード名(平文)
+ * @param {string}   arg.to       - 受信側のコード名(平文)
+ * @param {string}   arg.func     - GAS側で処理分岐の際のキー文字列
+ * @param {any}      arg.data     - 処理対象データ
+ * @param {function} arg.callback - GAS処理結果を受けた後続処理
+ * @returns {void} なし
+ * 
+ * @example <caption>使用例</caption>
+      const res = fetchGAS({
+        from     : 'inputSearchKey',
+        to       : 'Master',
+        func     : 'candidates',
+        data     : {..},
+        callback : r => {...},
+      });
+ */
+const fetchGAS = (arg) => {
+  console.log("fetchGAS start.",arg);
+
+  const endpoint = config[arg.to];
+
+  // GASからの返信を受けたらcallbackを呼び出し
+  fetch(endpoint.url,{
+    "method": "POST",
+    "body": JSON.stringify({
+      passPhrase: endpoint.key,
+      from: arg.from,
+      to:   arg.to,
+      func: arg.func,
+      data: arg.data,
+    }),
+    "Accept": "application/json",
+    "Content-Type": "application/json",
+  }).then(response => response.json())
+  .then(res => {
+    console.log("fetchGAS end.",res);
+    arg.callback(res);  // 成功した場合、後続処理を呼び出し
+  });
+}
 
 /** genChild: テンプレートに差込データをセットした要素を生成
  * 
@@ -356,157 +578,6 @@ const genChild = (template,dObj,pFP) => {
   }
 };
 
-/** scanCode: QRコードのスキャン
- * <br>
- * 指定セレクタ以下にcanvas他の必要な要素を作成してスキャン実行、指定の後続処理を呼び出す。<br>
- * 呼び出す前に`config.scanCode = true`を実行しておくこと。<br>
- * 参考：[jsQRであっさりQRコードリーダ/メーカ](@link https://zenn.dev/sdkfz181tiger/articles/096dfb74d485db)
- * 
- * @param {function} callback - スキャン結果を受けた後続処理
- * @param {object} arg - パラメータ
- * @param {string} arg.selector - 親要素のCSSセレクタ文字列
- * @param {boolean} arg.video - 動画枠の表示/非表示
- * @param {boolean} arg.camera - 静止画の表示/非表示
- * @param {boolean} arg.finder - 撮像結果の表示/非表示
- * @param {number} arg.interval - 動画状態で撮像、読み込めなかった場合の時間間隔
- * @param {object} arg.RegExp - 取得結果が適正か判断するための正規表現
- * @param {boolean} arg.alert - 読み込み完了時に内容をalert表示するならtrue
- * @returns {void} なし
- */
-const scanCode = (callback, arg={}) => {
-  // スキャン実行フラグが立っていなかったら終了
-  if( !config.scanCode )  return;
-
-  console.log('scanCode start. arg='+JSON.stringify(arg));
-  
-  const opt = {   // 未指定設定値に既定値を設定
-    selector: arg.selector || '#scanCode',  // 親要素のCSSセレクタ文字列
-    video   : arg.video || false,    // 動画枠の表示/非表示
-    camera  : arg.camera || false,   // 静止画の表示/非表示
-    finder  : arg.finder || true,    // 撮像結果の表示/非表示
-    interval: arg.interval || 0.25,  // 動画状態で撮像、読み込めなかった場合の時間間隔
-    RegExp  : arg.RegExp || new RegExp('.+'), // RegExpオブジェクトとして指定
-    alert   : arg.alert || false,    // 読み込み完了時に内容をalert表示するか
-  }
-
-  // 初期処理：カメラやファインダ等の作業用DIVを追加
-  // 親要素の取得、幅を指定
-  const scanner = document.querySelector(opt.selector);
-  //scanner.style.width = opt.width;
-  // 作業用DIVのスタイル指定
-  ['video','camera','finder'].forEach(x => {
-    opt[x] = 'width:100%; display:' + ( opt[x] ? 'flex' : 'none' );
-  })
-  const template = [
-    {tag:'div', class:'video', style:opt.video, children:[
-      {tag:'video', style:'width:100%;'}]},
-    {tag:'div', class:'camera', style:opt.camera, children:[
-      {tag:'input', type:'file', accept:"image/*", capture:"camera", name:"file"}]},
-    {tag:'div', class:'finder', style:opt.finder , children:[
-      {tag:'canvas', style:'width:100%'},]},
-  ]
-  for( let i=0 ; i<template.length ; i++ ){
-    let o = genChild(template[i],{},'root');  // 全体の定義と'root'を渡す
-    if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
-      throw o.result;
-    } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
-      scanner.appendChild(o.result);
-    }
-  }
-
-  const video = document.querySelector(opt.selector+' .video video');
-  const camera = document.querySelector(opt.selector+' .camera input');
-  const canvas = document.querySelector(opt.selector+' .finder canvas');
-  const ctx = canvas.getContext('2d');
-
-  // 動画撮影用Webカメラを起動
-  const userMedia = {audio:false, video:{facingMode: "environment"}};
-  navigator.mediaDevices.getUserMedia(userMedia).then((stream)=>{
-    video.srcObject = stream;
-    video.setAttribute("playsinline", true);
-    video.play();
-    drawFinder(callback);  // 起動が成功したらdrawFinderを呼び出す
-  }).catch(e => {
-    alert('カメラを使用できません\n'+e.message);
-  });
-
-  const drawFinder = () => {  // キャンバスに描画する
-    // スキャン実行フラグが立っていなかったら終了
-    if( !config.scanCode )  return;
-    if(video.readyState === video.HAVE_ENOUGH_DATA){
-      canvas.height = video.videoHeight;
-      canvas.width = video.videoWidth;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      let img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      // このタイミングでQRコードを判定
-      let code = jsQR(img.data, img.width, img.height, {inversionAttempts: "dontInvert"});
-			if(code){
-        console.log('drawFinder: code='+JSON.stringify(code));
-        // QRコード読み取り成功
-				drawRect(code.location);// ファインダ上のQRコードに枠を表示
-        if( opt.alert ) alert(code.data);  // alert出力指定があれば出力
-        if( code.data.match(opt.RegExp) ){
-          // 正しい内容が読み込まれた場合
-          callback(code.data);
-          config.scanCode = false;
-          scanner.innerHTML = ''; // 作業用DIVを除去
-        } else {
-          // 不適切な、別のQRコードが読み込まれた場合
-          alert('不適切なQRコードです。再読込してください。');
-          console.log('[scanCode.drawFinder] Error: not match pattern. code='+code.data);
-          setTimeout(drawFinder, opt.interval);
-        }
-			}
-    }
-    setTimeout(drawFinder, opt.interval);
-  }
-
-  const drawRect = (location) => {  // ファインダ上のQRコードに枠を表示
-    drawLine(location.topLeftCorner,     location.topRightCorner);
-		drawLine(location.topRightCorner,    location.bottomRightCorner);
-		drawLine(location.bottomRightCorner, location.bottomLeftCorner);
-		drawLine(location.bottomLeftCorner,  location.topLeftCorner);
-  }
-
-  const drawLine = (begin, end) => {  // ファインダ上に線を描画
-		ctx.lineWidth = 4;
-		ctx.strokeStyle = "#FF3B58";
-		ctx.beginPath();
-		ctx.moveTo(begin.x, begin.y);
-		ctx.lineTo(end.x, end.y);
-		ctx.stroke();
-	}
-
-}
-
-/** setQRcode: QRコードを指定位置にセット
- * <br>
- * [QRCode.jsを試してみた]{@link https://saitodev.co/article/QRCode.js%E3%82%92%E8%A9%A6%E3%81%97%E3%81%A6%E3%81%BF%E3%81%9F/}
- * 
- * @param {string} selector - 親要素のCSSセレクタ文字列
- * @param {object} opt - オプション
- * @param {string} opt.text - QRコードにセットする文字列
- * @param {number} opt.width - 生成されるQRコードの幅
- * @param {number} opt.height - 生成されるQRコードの高さ
- * @param {number} opt.colorDark - 描画色
- * @param {number} opt.colorLight - 背景色
- * 
- * @returns {void} なし
- */
-const setQRcode = (selector,opt) => {
-
-  const qrDiv = document.querySelector(selector);
-  qrDiv.innerHTML = ""; // Clear
-  new QRCode(qrDiv,{  // 第一引数のqrcodeはCSSセレクタ
-    text: opt.text,
-    width: opt.width || 200,  // QRコードの幅と高さ
-    height: opt.height || 200,
-    colorDark: opt.colorDark || "#000000",
-    colorLight: opt.colorLight || "#ffffff",
-    correctLevel: QRCode.CorrectLevel.H
-  });
-}
-
 /** sha256: テキストをsha256でハッシュ化
  * 
  * @param {string} text - 暗号化対象のテキスト
@@ -521,47 +592,4 @@ function sha256(text,callback){
     return Array.from(new Uint8Array(digest)).map(v => v.toString(16).padStart(2,'0')).join('')
   }
   sha(text).then((hash) => callback(hash));
-}
-
-/** toggleMenu: メニューの開閉
- * 
- * @param {boolean} arg - 無し(単純開閉切換)またはtrue(強制オープン)
- * @param {object} opt - オプション
- * @param {string} opt.openIcon - 「三」アイコンを置く場所(CSSセレクタ)
- * @param {string} opt.closeIcon - 「×」アイコンを置く場所(CSSセレクタ)
- * @param {string} opt.nav - メニューの場所(CSSセレクタ)
- * 
- * @returns {void} なし
- */
-const toggleMenu = (arg=null,opt={}) => {
-  console.log('toggleMenu start.',arg);
-
-  // 操作対象要素を取得
-  const o = {
-    openIcon: opt.openIcon || 'header .openIcon',
-    closeIcon: opt.closeIcon || 'header .closeIcon',
-    nav: opt.nav || 'nav',
-  }
-  const openIcon = document.querySelector(o.openIcon); // 「三」アイコン
-  const closeIcon = document.querySelector(o.closeIcon); // 「×」アイコン
-  const nav = document.querySelector(o.nav);
-
-  const v = {  // 現状をisActiveに取得
-    isActive: nav.style.display === 'grid',
-  }
-
-  // 行うべき動作を判定。引数無しなら現状の反対
-  v.action = arg === null ? !v.isActive : arg;
-
-  if( v.action ){  // 現在閉じているメニューを開く
-    openIcon.style.display = 'none';
-    closeIcon.style.display = 'flex';
-    nav.style.display = 'grid';
-  } else {       // 現在開いているメニューを閉じる
-    openIcon.style.display = 'flex';
-    closeIcon.style.display = 'none';
-    nav.style.display = 'none';
-  }
-
-  console.log('toggleMenu end.',v);
 }

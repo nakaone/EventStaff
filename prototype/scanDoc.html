@@ -230,7 +230,7 @@ const fetchGAS = (arg) => {
  * @param {void} - なし
  * @returns {string} yyyy-MM-ddThh:mm:ss.nnnZ形式で日本時間の日時文字列
  */
- const getJPDateTime = () => {
+const getJPDateTime = () => {
   const tObj = new Date();
   return tObj.toLocaleString('ja-JP') + '.' + tObj.getMilliseconds();
 }
