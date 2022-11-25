@@ -99,7 +99,6 @@ sequenceDiagram
   participant Form as 申込受付<br>(フォーム)
   participant Master as 管理局
   participant Post as 郵便局
-  participant Agent as 配信局
   participant Agency as 資源局
 
   camera ->> Form : QRコードから参加申請フォームへ誘導
@@ -112,6 +111,25 @@ sequenceDiagram
   Master ->> Agency : logElaps()
   Master ->> Post : 返信メール送信依頼
   deactivate Master
+```
+
+- 返信メールには以下の内容を記載する。
+  - 受付番号
+  - GitHub URL
+- 返信メール送信依頼以降、引き続き「2.メール配信」に続く
+
+## 2. メール配信
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor mail as メーラ
+  participant Master as 管理局
+  participant Post as 郵便局
+  participant Agent as 配信局
+  participant Agency as 資源局
+
+  Master ->> Post : メール送信依頼
   activate Post
   Note right of Post : PostMails()
   Post ->>+ Agency : 配信各局稼働状況問合せ
@@ -127,11 +145,10 @@ sequenceDiagram
   deactivate Agent
 ```
 
-- メールはGASのメール100通/日の制限を回避するため、複数のアカウントに送信専用API(配信局)を用意し、順次使用する。
-
-- 返信メールには以下の内容を記載する。
-  - 受付番号
-  - GitHub URL
+- 配信局は「配信可能な配信局の内、一番早く死にそうな局」を選択する。具体的には以下の論理積<br>
+  - 稼働中又は待機中(退役は除く)
+  - 24時間以内の配信通数が100通未満
+  - 処理時間の合計が最大
 
 ## 2. ログイン(認証)
 
