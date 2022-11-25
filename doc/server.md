@@ -150,7 +150,7 @@ sequenceDiagram
   - 24時間以内の配信通数が100通未満
   - 処理時間の合計が最大
 
-## 2. ログイン(認証)
+## 3. ログイン(認証)
 
 ```mermaid
 sequenceDiagram
@@ -224,52 +224,76 @@ sequenceDiagram
 - 参加者画面(html)は、クエリパラメータが存在しなければ受付番号入力(＋QRコードスキャン)画面を、存在すればそれを共通鍵で暗号化された受付番号と見做しパスコード入力画面を表示する
 -->
 
-## 3. お知らせ表示
+## 4. お知らせへの投稿
 
 ```mermaid
 sequenceDiagram
   autonumber
-  actor guest as 参加者
   actor staff as スタッフ
   participant broad as 放送局
+  participant agent as 配信局
   participant agency as 資源局
-  participant delivery as 配信局
 
   staff ->>+ broad : 投稿
   Note right of broad : postMessage()
   broad ->>+ agency : 稼働中の配信局リストを要求
   Note right of agency : activeList()
   agency ->>- broad : 稼働中の配信局リスト
-  broad ->>+ delivery : 投稿内容配信
-  Note right of delivery : appendMessage()
-  delivery ->>- broad : 登録報告
+  broad ->>+ agent : 投稿内容配信
+  Note right of agent : appendMessage()
+  agent ->>- broad : 登録報告
+  broad ->> agency : logElaps()
   broad ->>- staff : 投稿登録完了
+```
+
+## 5. クライアントへの定期配信
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor guest as 参加者
+  participant broad as 放送局
+  participant agent as 配信局
+  participant agency as 資源局
+  actor admin as システム管理者
 
   alt ErrorCounter = 0
     guest ->> guest : ErrorCounter = 1
-    guest ->>+ delivery : 配信要求
-    Note right of delivery : getMessages()
-    delivery ->>- guest : 投稿内容
+    guest ->>+ agent : 配信要求
+    Note right of agent : getMessages()
+    agent ->> agency : logElaps()
+    agent ->>- guest : 投稿内容
     guest ->> guest : ErrorCounter = 0
 
   else ErrorCounter > 0
-    guest ->> agency : 前回配信失敗報告
+    guest ->>+ agency : 前回配信失敗報告
+    Note right of agency : confirmAlive()
     agency ->> guest : 報告局以外から選択、連絡
-    guest ->> delivery : 配信要求
-    alt 配信あり
-      guest ->> guest : ErrorLevel = 0
-    end
+    guest ->> agent : 配信要求　※以降ErrorCounter = 0と同じ
 
-    agency ->> delivery : 報告局に死活報告要求
-    alt 10秒待っても返信なし
+    agency ->> agency : logElaps()
+    agency ->>- agent : 報告局に死活報告要求
+    activate agent
+    Note right of agent : reportAlive()
+    agent ->> agency : 死活報告＋logElaps()
+    deactivate agent
+    Note right of agency : ※10秒待機
+    activate agency
+    Note right of agency : disposal()
+    agency ->> agency : 死活報告存否確認
+    alt 死活報告なし
       agency ->> agency : 報告局の状態を「退役」に変更<br>待機局のひとつを「稼働中」に変更
       agency ->>+ broad : 新規稼働局にメッセージリスト配信要求
-      Note right of broad : setupDelivery()
-      broad ->>+ delivery : 新規稼働局に全メッセージを送信
-      Note right of delivery : setupMessages()
-      delivery ->>- broad : 全メッセージ登録終了報告
-      broad ->>- agency : 終了報告
+      Note right of broad : setupAgent()
+      broad ->>+ agent : 新規稼働局に全メッセージを送信
+      Note right of agent : setupMessages()
+      agent ->> agency : logElaps()
+      agent ->>- broad : 全メッセージ登録終了報告
+      broad ->>- agency : 終了報告＋logElaps()
     end
+    agency ->> admin : 報告メール送信
+    agency ->> agency : logElaps()
+    deactivate agency
   end
 ```
 
@@ -406,6 +430,23 @@ sequenceDiagram
 
 ## 配信局(Agent)
 
+### 配信局作成手順
+
+※ アカウントが異なる場合、バージョンに"HEAD"が指定できないので注意
+
+#### szLibの作業
+
+1. 閲覧者として賦課アカウントのアクセス権を付与
+1. スクリプトIDをコピー
+
+#### 賦課アカウント側の作業
+
+1. Google Driveを開き、スプレッドシート「配信局」を新規作成
+1. 「掲示板」シート作成
+1. szLibをライブラリに追加(スクリプトIDをペースト)
+1. Apps ScriptにGASソースをコピー
+1. authorize()を実行して権限付与
+
 ## 予約局(Reserve)
 
 予約状況はそれだけで専用のシートを用意。スプレッドシート列毎に参加者専用スペースを確保、htmlから見にいく列を制御する。
@@ -417,7 +458,7 @@ sequenceDiagram
 予約状況は総予約数の他に、利用回数別の予約人数を表示する。
 
 
-## 監督局(Agency)
+## 資源局(Agency)
 
 [JSDoc](Agency/index.html)
 
