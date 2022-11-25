@@ -49,8 +49,8 @@ const conf = szLib.getConf();
 
 /** postMails: 依頼された定型メールの配信
  * <br>
- * 指定されたテンプレートの仮引数を実引数に置換した上で配達員に渡すオブジェクトの配列を作成、
- * 最も配達数の少ない配達員に送信を指示する。
+ * 指定されたテンプレートの仮引数を実引数に置換した上で配信局に渡すオブジェクトの配列を作成、
+ * 最も配達数の少ない配信局に送信を指示する。
  * 
  * @param {object} arg - 
  * @param {string} arg.template - メールのテンプレートが定義された郵便局のシート名
@@ -121,12 +121,12 @@ const postMails = (arg) => {
       }
       //console.log('mail.body='+mail.body+'\nhtmlBody='+mail.htmlBody);
 
-      // (4) 配達員を選定
-      const deliObj = szLib.szSheet('配達員');
+      // (4) 配信局を選定
+      const deliObj = szLib.szSheet('配信局');
       delivery = deliObj.lookup('next',true);
       //console.log('delivery='+JSON.stringify(delivery));
 
-      // (5) 配達員に発送指示を送信
+      // (5) 配信局に発送指示を送信
       const res = szLib.fetchGAS({
         from    : 'Post',
         to      : 'Delivery',

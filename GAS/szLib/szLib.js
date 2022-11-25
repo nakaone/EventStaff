@@ -38,7 +38,7 @@ function getConf(){
       key: '',
       url: '',
     },
-    Delivery: { // 配送局(配達員) ※将来的に放送局も使用予定
+    Delivery: { // 配送局(配信局) ※将来的に放送局も使用予定
       key: '',
       url: '',
     },
@@ -82,7 +82,7 @@ function elaps(arg,result=''){
  * @param {string}   arg.from     - 送信側のコード名(Auth, Master等)
  * @param {string}   arg.to       - 受信側のコード名
  * @param {string}   arg.func     - GAS側で処理分岐の際のキー文字列
- * @param {string}   arg.endpoint - 受信側のコード名からURLが判断できない(配達員の)場合に指定
+ * @param {string}   arg.endpoint - 受信側のコード名からURLが判断できない(配信局の)場合に指定
  * @param {string}   arg.key      - endpoint指定の場合はその鍵も併せて指定
  * @param {any}      arg.data     - 処理対象データ
  * @returns {void} なし

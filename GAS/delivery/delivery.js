@@ -1,12 +1,12 @@
 /* ================================================================
-「配達員」の使用方法
+「配信局」の使用方法
   1. elapsの内容を更新
   2. authorization を実行してメール送信権限を付与(宛先は適宜修正)
-  3. 本シートのpassPhraseを郵便局の「配達員」シート"passPhrase"に登録
-  4. ウェブアプリとしてデプロイ。郵便局の「配達員」シート"endpointにIDを登録
+  3. 本シートのpassPhraseを郵便局の「配信局」シート"passPhrase"に登録
+  4. ウェブアプリとしてデプロイ。郵便局の「配信局」シート"endpointにIDを登録
 ================================================================== */
 
-const elaps = {account:'shimokitasho.oyaji@gmail.com',department:'配達員'};
+const elaps = {account:'shimokitasho.oyaji@gmail.com',department:'配信局'};
 //const conf = szLib.getConf();
 const passPhrase = 'psp2*ZRTS/GXr9C4';
 
@@ -26,7 +26,7 @@ const passPhrase = 'psp2*ZRTS/GXr9C4';
  */
  function doPost(e){
   elaps.startTime = Date.now();  // 開始時刻をセット
-  console.log('配達員.doPost start.',e);
+  console.log('配信局.doPost start.',e);
 
   const arg = JSON.parse(e.postData.getDataAsString()); // contentsでも可
   let rv = null;
@@ -42,7 +42,7 @@ const passPhrase = 'psp2*ZRTS/GXr9C4';
       // Errorオブジェクトをrvとするとmessageが欠落するので再作成
       rv = {isErr:true, message:e.name+': '+e.message};
     } finally {
-      console.log('配達員.doPost end. rv='+JSON.stringify(rv));
+      console.log('配信局.doPost end. rv='+JSON.stringify(rv));
       szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');  // 結果を渡して書き込み
       return ContentService
       .createTextOutput(JSON.stringify(rv,null,2))
@@ -50,7 +50,7 @@ const passPhrase = 'psp2*ZRTS/GXr9C4';
     }
   } else {
     rv = {isErr:true,message:'invalid passPhrase :'+e.parameter.passPhrase};
-    console.error('配達員.doPost end. '+rv.message);
+    console.error('配信局.doPost end. '+rv.message);
     console.log('end',elaps);
     szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');
   }
@@ -68,7 +68,7 @@ const passPhrase = 'psp2*ZRTS/GXr9C4';
  *    result {object} : 分岐先の処理が正常終了した場合の結果オブジェクト
  */
  const sendMail = (arg) => {
-  console.log('配達員.sendMail start. arg='+JSON.stringify(arg));
+  console.log('配信局.sendMail start. arg='+JSON.stringify(arg));
   let rv = null;
   try {
 
@@ -84,7 +84,7 @@ const passPhrase = 'psp2*ZRTS/GXr9C4';
     // Errorオブジェクトをrvとするとmessageが欠落するので再作成
     rv = {isErr:true, message:e.name+': '+e.message};
   } finally {
-    console.log('配達員.sendMail end. rv='+JSON.stringify(rv));
+    console.log('配信局.sendMail end. rv='+JSON.stringify(rv));
     return rv;
   }
 }

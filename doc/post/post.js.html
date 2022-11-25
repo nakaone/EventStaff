@@ -109,8 +109,8 @@ function doGet(e){
 
 /** postMails: 依頼された定型メールの配信
  * &lt;br>
- * 指定されたテンプレートの仮引数を実引数に置換した上で配達員に渡すオブジェクトの配列を作成、
- * 最も配達数の少ない配達員に送信を指示する。
+ * 指定されたテンプレートの仮引数を実引数に置換した上で配信局に渡すオブジェクトの配列を作成、
+ * 最も配達数の少ない配信局に送信を指示する。
  * 
  * @param {object} arg - 
  * @param {string} arg.template - メールのテンプレートが定義された郵便局のシート名
@@ -179,14 +179,14 @@ const postMails = (arg) => {
       }
       //console.log('mail.body='+mail.body+'\nhtmlBody='+mail.htmlBody);
 
-      // 配達員を選定
-      const delivery = szLib.getSheetData('配達員').data.filter(x => {
+      // 配信局を選定
+      const delivery = szLib.getSheetData('配信局').data.filter(x => {
         return x.next.toLowerCase() === 'true'})[0];
       //console.log('delivery='+JSON.stringify(delivery));
-      const endpoint = delivery.endpoint;  // 配達員のURL
+      const endpoint = delivery.endpoint;  // 配信局のURL
       mail.passPhrase = delivery.passPhrase;
 
-      // 配達員に発送指示を送信
+      // 配信局に発送指示を送信
       //  UrlFetchApp.fetch
       //  https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app#fetch(String,Object)
       //  返値はClass HTTPResponse
