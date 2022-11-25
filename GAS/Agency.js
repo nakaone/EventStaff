@@ -1,14 +1,15 @@
-/* ================================================================
-「配信局」の使用方法
-  1. elapsの内容を更新
-  2. authorization を実行してメール送信権限を付与(宛先は適宜修正)
-  3. 本シートのpassPhraseを郵便局の「配信局」シート"passPhrase"に登録
-  4. ウェブアプリとしてデプロイ。郵便局の「配信局」シート"endpointにIDを登録
-================================================================== */
+const elaps = {account:'nakaone.kunihiro@gmail.com',department:'資源局'};
+const conf = szLib.getConf();
 
-const elaps = {account:'shimokitasho.oyaji@gmail.com',department:'配信局'};
-//const conf = szLib.getConf();
-const passPhrase = 'psp2*ZRTS/GXr9C4';
+/** authorize: 初期化処理 */
+const authorize = () => {
+  const res = doPost({postData:{contents:JSON.stringify({
+    func: 'listAgents',
+    passPhrase: conf.Agency.key,
+    data:null
+  })}});
+  console.log('res:',res.getContent());
+}
 
 /** doPost: パラメータに応じて処理を分岐
  * @param {object} e - Class UrlFetchApp [fetch(url, params)]{@link https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app#fetchurl,-params}の"Make a POST request with a JSON payload"参照
@@ -26,23 +27,24 @@ const passPhrase = 'psp2*ZRTS/GXr9C4';
  */
  function doPost(e){
   elaps.startTime = Date.now();  // 開始時刻をセット
-  console.log('配信局.doPost start.',e);
+  console.log('資源局.doPost start.',e);
 
-  const arg = JSON.parse(e.postData.getDataAsString()); // contentsでも可
+  //const arg = JSON.parse(e.postData.getDataAsString()); // contentsでも可
+  const arg = JSON.parse(e.postData.contents);
   let rv = null;
-  if( arg.passPhrase === passPhrase ){
+  if( arg.passPhrase === conf.Agency.key ){
     try {
       elaps.func = arg.func; // 処理名をセット
       switch( arg.func ){
-        case 'sendMail':
-          rv = sendMail(arg.data);
+        case 'listAgents':
+          rv = listAgents();
           break;
       }
     } catch(e) {
       // Errorオブジェクトをrvとするとmessageが欠落するので再作成
       rv = {isErr:true, message:e.name+': '+e.message};
     } finally {
-      console.log('配信局.doPost end. rv='+JSON.stringify(rv));
+      console.log('資源局.doPost end. rv='+JSON.stringify(rv));
       szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');  // 結果を渡して書き込み
       return ContentService
       .createTextOutput(JSON.stringify(rv,null,2))
@@ -50,41 +52,29 @@ const passPhrase = 'psp2*ZRTS/GXr9C4';
     }
   } else {
     rv = {isErr:true,message:'invalid passPhrase :'+e.parameter.passPhrase};
-    console.error('配信局.doPost end. '+rv.message);
+    console.error('資源局.doPost end. '+rv.message);
     console.log('end',elaps);
     szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');
   }
 }
 
-/** sendMail: メールを送信
- * <br>
- * Class [GmailApp]{@link https://developers.google.com/apps-script/reference/gmail/gmail-app}
- * [sendEmail(recipient, subject, body, options)]{@link https://developers.google.com/apps-script/reference/gmail/gmail-app#sendEmail(String,String,String,Object)}
- * 
- * @param {object} arg - 送信するメールのオブジェクト
+/** listAgents: 配送局のリストを返す
+ * @param {void} - なし
  * @return {object} - 処理結果
  *    isErr {boolean} : エラーならtrue
  *    message {string} : エラーの場合はメッセージ。正常終了ならundefined
- *    result {object} : 分岐先の処理が正常終了した場合の結果オブジェクト
+ *    result {object} : szLib.szSheet().data
  */
- const sendMail = (arg) => {
-  console.log('配信局.sendMail start. arg='+JSON.stringify(arg));
+const listAgents = (arg) => {
+  console.log('資源局.listAgents start. arg='+JSON.stringify(arg));
   let rv = null;
   try {
-
-    GmailApp.sendEmail(
-      arg.recipient,  // recipient {String} 受信者のアドレス
-      arg.subject,    // subject {String} 件名（最大 250 文字）
-      arg.body,       // body {String} メールの本文
-      arg.options,    // options {Object} 高度なパラメータを指定するJavaScript オブジェクト
-    );
-    rv = {isErr:false};  // 正常終了
-  
+    rv = {isErr: false, result: szLib.szSheet('配送局').data};
   } catch(e) {
     // Errorオブジェクトをrvとするとmessageが欠落するので再作成
     rv = {isErr:true, message:e.name+': '+e.message};
   } finally {
-    console.log('配信局.sendMail end. rv='+JSON.stringify(rv));
+    console.log('資源局.listAgents end. rv='+JSON.stringify(rv));
     return rv;
   }
 }

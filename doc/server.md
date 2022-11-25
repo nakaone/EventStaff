@@ -76,8 +76,8 @@ graph LR
   staff[スタッフ] --> broad[放送局]
   broad --> Agent
 
-  staff --> reserv[予約局]
-  reserv --> Agent
+  staff --> reserve[予約局]
+  reserve --> Agent
   Agent --> user
 
   Agent --> Agency[資源局]
@@ -91,35 +91,40 @@ graph LR
 ## 1. 参加登録
 
 ```mermaid
-
 sequenceDiagram
   autonumber
   actor camera as カメラ
   actor browser as ブラウザ
   actor mail as メーラ
-  participant form as 申込受付<br>(フォーム)
-  participant master as 管理局
-  participant post as 郵便局
-  participant deli as 配信局
+  participant Form as 申込受付<br>(フォーム)
+  participant Master as 管理局
+  participant Post as 郵便局
+  participant Agent as 配信局
+  participant Agency as 資源局
 
-  camera ->> form : 参加申請フォームURL
-  form ->> browser : 参加申請フォーム表示
-  browser ->> form : 入力、送信
-  form ->> master : 送信内容、編集用URL
-  activate master
-  Note right of master : onFormSubmit()
-  master ->> master : 受付番号採番
-  master ->> post : 返信メール送信依頼
-  deactivate master
-  activate post
-  Note right of post : postMails()
-  post ->> deli : 返信メール送信指示
-  activate deli
-  deactivate post
-  Note right of deli : doPost()
-  deli ->> mail : 返信メール
-  deactivate deli
-
+  camera ->> Form : QRコードから参加申請フォームへ誘導
+  Form ->> browser : 参加申請フォーム表示
+  browser ->> Form : 入力、送信
+  Form ->> Master : 送信内容、編集用URL
+  activate Master
+  Note right of Master : onFormSubmit()
+  Master ->> Master : 受付番号採番、編集用URL保存
+  Master ->> Agency : logElaps()
+  Master ->> Post : 返信メール送信依頼
+  deactivate Master
+  activate Post
+  Note right of Post : PostMails()
+  Post ->>+ Agency : 配信各局稼働状況問合せ
+  Note right of Agency : listAgents()
+  Agency ->>- Post : 稼働状況一覧
+  Post ->> Agency : logElaps()
+  Post ->> Agent : 返信メール送信指示
+  activate Agent
+  deactivate Post
+  Note right of Agent : sendMail()
+  Agent ->> Agency : logElaps()
+  Agent ->> mail : 返信メール
+  deactivate Agent
 ```
 
 - メールはGASのメール100通/日の制限を回避するため、複数のアカウントに送信専用API(配信局)を用意し、順次使用する。
@@ -313,7 +318,7 @@ sequenceDiagram
 
 # 局別設計(GAS)
 
-## 申請窓口
+## 申請窓口(Form)
 
 ### 「質問」タグ
 
@@ -333,7 +338,7 @@ sequenceDiagram
 - 回答のコピーを回答者に送信：リクエストされた場合
 - 回答の編集を許可する：ON
 
-## 管理局
+## 管理局(Master)
 
 ### 「回答」シート
 
@@ -376,15 +381,15 @@ sequenceDiagram
 
 ※お知らせは全員に配信し、内容はサーバ側で属性に応じて編集するので AuthLevel による制御は行わない。
 
-## 認証局
+## 認証局(Auth)
 
-## 放送局
+## 放送局(Broad)
 
-## 郵便局
+## 郵便局(Post)
 
-## 配信局
+## 配信局(Agent)
 
-## 予約局
+## 予約局(Reserve)
 
 予約状況はそれだけで専用のシートを用意。スプレッドシート列毎に参加者専用スペースを確保、htmlから見にいく列を制御する。
 
@@ -395,4 +400,28 @@ sequenceDiagram
 予約状況は総予約数の他に、利用回数別の予約人数を表示する。
 
 
-## 監督局
+## 監督局(Agency)
+
+[JSDoc](Agency/index.html)
+
+### 「ログ」シート
+
+列 | 項目名 | 内容
+:--: | :-- | :--
+A | timestamp | ジョブ開始時刻。Date.now()で得られたUNIX時刻
+B | account | 処理したアカウント
+C | requester | 局名。「管理局」「郵便局」等。
+D | function/method | 処理関数名。doPostの分岐先
+E | elaps | 処理時間。ミリ秒
+F | result | 処理結果。OKまたはエラーメッセージ
+
+### 「配送局」シート
+
+列 | 項目名 | 内容
+:--: | :-- | :--
+A | type | 局種別。配送局、資源局、等
+B | status | 待機中/稼働中/退役
+C | account | 賦課アカウント
+D | elaps | 過去24時間の総実行時間。ミリ秒
+E | passPhrase | パスフレーズ
+F | endpoint | APIのURL

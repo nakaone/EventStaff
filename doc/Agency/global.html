@@ -104,7 +104,7 @@
     
 
     
-    <h4 class="name" id="authorization"><span class="type-signature"></span>authorization<span class="signature">()</span><span class="type-signature"> &rarr; {void}</span></h4>
+    <h4 class="name" id="authorize"><span class="type-signature"></span>authorize<span class="signature">()</span><span class="type-signature"></span></h4>
     
 
     
@@ -112,10 +112,7 @@
 
 
 <div class="description">
-    authorization: 配信局の初期化
-<br>
-doGetのテストも兼ね、sendEmail等の権限付与が必要な機能を一通り呼び出す。<br>
-結果はコンソールで確認する。
+    authorize: 初期化処理
 </div>
 
 
@@ -124,46 +121,6 @@ doGetのテストも兼ね、sendEmail等の権限付与が必要な機能を一
 
 
 
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-
-            <td class="type">
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">なし</td>
-        </tr>
-
-    
-    </tbody>
-</table>
 
 
 
@@ -199,7 +156,7 @@ doGetのテストも兼ね、sendEmail等の権限付与が必要な機能を一
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="delivery.js.html">delivery.js</a>, <a href="delivery.js.html#line17">line 17</a>
+        <a href="Agency.js.html">Agency.js</a>, <a href="Agency.js.html#line5">line 5</a>
     </li></ul></dd>
     
 
@@ -224,28 +181,6 @@ doGetのテストも兼ね、sendEmail等の権限付与が必要な機能を一
 
 
 
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    なし
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">void</span>
-
-
-    </dd>
-</dl>
-
-    
 
 
 
@@ -257,7 +192,7 @@ doGetのテストも兼ね、sendEmail等の権限付与が必要な機能を一
     
 
     
-    <h4 class="name" id="doPost"><span class="type-signature"></span>doPost<span class="signature">(e)</span><span class="type-signature"> &rarr; {object}</span></h4>
+    <h4 class="name" id="doPost"><span class="type-signature"></span>doPost<span class="signature">(e, arg)</span><span class="type-signature"> &rarr; {object}</span></h4>
     
 
     
@@ -265,7 +200,7 @@ doGetのテストも兼ね、sendEmail等の権限付与が必要な機能を一
 
 
 <div class="description">
-    doPost: 郵便局から渡されるパラメータに応じてメールを発送
+    doPost: パラメータに応じて処理を分岐
 </div>
 
 
@@ -317,7 +252,30 @@ doGetのテストも兼ね、sendEmail等の権限付与が必要な機能を一
 
             
 
-            <td class="description last">メールの中身。<a href="https://developers.google.com/apps-script/reference/gmail/gmail-app#sendEmail(String,String,String,Object)">GmailApp.sendEmail</a>の引数に'passPhrase'を追加したもの。
+            <td class="description last">Class UrlFetchApp <a href="https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app#fetchurl,-params">fetch(url, params)</a>の"Make a POST request with a JSON payload"参照</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>arg</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">データ部分。JSON.parse(e.postData.getDataAsString())の結果
                 <h6>Properties</h6>
                 
 
@@ -359,14 +317,14 @@ doGetのテストも兼ね、sendEmail等の権限付与が必要な機能を一
 
             
 
-            <td class="description last">本APIの秘密鍵</td>
+            <td class="description last">共通鍵。szLib.getUrl()で取得</td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>subject</code></td>
+                <td class="name"><code>from</code></td>
             
 
             <td class="type">
@@ -382,14 +340,14 @@ doGetのテストも兼ね、sendEmail等の権限付与が必要な機能を一
 
             
 
-            <td class="description last">メールのタイトル</td>
+            <td class="description last">送信先(自分)</td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>name</code></td>
+                <td class="name"><code>to</code></td>
             
 
             <td class="type">
@@ -405,14 +363,14 @@ doGetのテストも兼ね、sendEmail等の権限付与が必要な機能を一
 
             
 
-            <td class="description last">発信者名</td>
+            <td class="description last">送信元</td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>recipient</code></td>
+                <td class="name"><code>func</code></td>
             
 
             <td class="type">
@@ -428,14 +386,14 @@ doGetのテストも兼ね、sendEmail等の権限付与が必要な機能を一
 
             
 
-            <td class="description last">宛先</td>
+            <td class="description last">分岐する処理名</td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>body</code></td>
+                <td class="name"><code>data</code></td>
             
 
             <td class="type">
@@ -451,76 +409,7 @@ doGetのテストも兼ね、sendEmail等の権限付与が必要な機能を一
 
             
 
-            <td class="description last">本文</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>noReply</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">返信可否</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>htmlBody</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">HTML形式の本文</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>replyTo</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">返信先</td>
+            <td class="description last">処理対象データ</td>
         </tr>
 
     
@@ -568,7 +457,7 @@ doGetのテストも兼ね、sendEmail等の権限付与が必要な機能を一
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="delivery.js.html">delivery.js</a>, <a href="delivery.js.html#line76">line 76</a>
+        <a href="Agency.js.html">Agency.js</a>, <a href="Agency.js.html#line28">line 28</a>
     </li></ul></dd>
     
 
@@ -597,10 +486,10 @@ doGetのテストも兼ね、sendEmail等の権限付与が必要な機能を一
 
         
 <div class="param-desc">
-    - メール配送結果。以下のメンバを持つオブジェクト
+    正常終了の場合は分岐先処理の戻り値、エラーの場合は以下。
 <ul>
-<li>isErr {boolean} : エラーならtrue
-<li>message {string} : エラーの場合はメッセージ。正常終了ならundefined
+<li>isErr {boolean}  - true(固定)
+<li>message {string} - エラーメッセージ
 </ul>
 </div>
 
@@ -623,20 +512,162 @@ doGetのテストも兼ね、sendEmail等の権限付与が必要な機能を一
 
 
 
-    <h5>Example</h5>
+
+        
+            
+
     
-        <p class="code-caption">引数の例</p>
+
     
-    <pre class="prettyprint"><code>配信局.doPost start. e.parameter={
-  "passPhrase":"psp2*ZRTS/GXr9C4",
-  "subject":"【連絡】こどもまつり20xx参加者サイトパスコード",
-  "name":"下北沢小おやじの会",
-  "recipient":"nakaone.kunihiro@gmail.com",
-  "body":"\n\n下北沢小学校おやじの会です。〜\n\n",
-  "noReply":"false",
-  "htmlBody":"&lt;!DOCTYPE html>〜&lt;/html>",
-  "replyTo":"shimokitasho.oyaji@gmail.com"
-}</code></pre>
+    <h4 class="name" id="listAgents"><span class="type-signature"></span>listAgents<span class="signature">()</span><span class="type-signature"> &rarr; {object}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    listAgents: 配送局のリストを返す
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">void</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">なし</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Agency.js.html">Agency.js</a>, <a href="Agency.js.html#line68">line 68</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    - 処理結果
+   isErr {boolean} : エラーならtrue
+   message {string} : エラーの場合はメッセージ。正常終了ならundefined
+   result {object} : szLib.szSheet().data
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
 
 
 
@@ -656,13 +687,13 @@ doGetのテストも兼ね、sendEmail等の権限付与が必要な機能を一
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#authorization">authorization</a></li><li><a href="global.html#doPost">doPost</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#authorize">authorize</a></li><li><a href="global.html#doPost">doPost</a></li><li><a href="global.html#listAgents">listAgents</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Sat Nov 12 2022 12:47:02 GMT+0900 (日本標準時)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Fri Nov 25 2022 15:43:50 GMT+0900 (日本標準時)
 </footer>
 
 <script> prettyPrint(); </script>
