@@ -1,0 +1,38 @@
+<!DOCTYPE html><html lang="ja">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <meta http-equiv="Content-Script-Type" content="text/javascript">
+  <title>おまつり奉行</title>
+  <link rel="stylesheet" href="css/r110.css">
+</head>
+
+<body>
+  <header>
+    <div class="icon"><img src="img/stamp.png" /></div>
+    <div class="title"><div class="test"></div><p></p></div>
+    <div class="menu"></div>
+  </header>
+  <nav></nav>
+  <div id="main"></div>
+</body>
+<script src="js/jsQR.js" defer></script>
+<script src="js/qrcode.min.js" defer></script>
+<script type="text/javascript">
+const dom = {
+  title: document.querySelector('header .title'),
+  nav  : document.querySelector('nav'),
+  main : document.querySelector('#main'),
+};
+const test = () => {
+  console.log('test');
+  //dom.title.innerText = 'hoge';
+  dom.title.querySelector('p').innerText = 'fuga';
+}
+window.addEventListener('DOMContentLoaded', function(){
+  test();
+  // 受付番号入力画面表示
+  // getPassCode正常終了時、そこからinitializeを呼び出す
+});
+</script>
+</html>
