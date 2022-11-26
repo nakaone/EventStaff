@@ -108,7 +108,6 @@ sequenceDiagram
   activate Master
   Note right of Master : onFormSubmit()
   Master ->> Master : 受付番号採番、編集用URL保存
-  Master ->> Agency : logElaps()
   Master ->> Post : 返信メール送信依頼
   deactivate Master
 ```
@@ -135,12 +134,10 @@ sequenceDiagram
   Post ->>+ Agency : 配信各局稼働状況問合せ
   Note right of Agency : listAgents()
   Agency ->>- Post : 稼働状況一覧
-  Post ->> Agency : logElaps()
   Post ->> Agent : 返信メール送信指示
   activate Agent
   deactivate Post
   Note right of Agent : sendMail()
-  Agent ->> Agency : logElaps()
   Agent ->> mail : 返信メール
   deactivate Agent
 ```
@@ -197,13 +194,13 @@ sequenceDiagram
   activate master
   Note right of master : auth2B()
   master ->> master : 受付番号・パスコード・有効期限確認
-  alt トークンの内容が正当
+  alt 受付番号・パスコード・有効期限が適正
     master ->>+ agency : 配信局問合せ
     Note right of agency : nextPIC()
     agency ->>- master : 配信局回答
     master ->> auth : config
     auth ->> browser : config
-  else トークンの内容が不当
+  else 受付番号・パスコード・有効期限が不適正
     master ->> auth : エラー通知
     deactivate master
     auth ->> browser : エラー通知
@@ -242,7 +239,6 @@ sequenceDiagram
   broad ->>+ agent : 投稿内容配信
   Note right of agent : appendMessage()
   agent ->>- broad : 登録報告
-  broad ->> agency : logElaps()
   broad ->>- staff : 投稿登録完了
 ```
 
@@ -261,7 +257,6 @@ sequenceDiagram
     guest ->> guest : ErrorCounter = 1
     guest ->>+ agent : 配信要求
     Note right of agent : getMessages()
-    agent ->> agency : logElaps()
     agent ->>- guest : 投稿内容
     guest ->> guest : ErrorCounter = 0
 
@@ -271,29 +266,29 @@ sequenceDiagram
     agency ->> guest : 報告局以外から選択、連絡
     guest ->> agent : 配信要求　※以降ErrorCounter = 0と同じ
 
-    agency ->> agency : logElaps()
-    agency ->>- agent : 報告局に死活報告要求
-    activate agent
-    Note right of agent : reportAlive()
-    agent ->> agency : 死活報告＋logElaps()
-    deactivate agent
-    Note right of agency : ※10秒待機
-    activate agency
-    Note right of agency : disposal()
-    agency ->> agency : 死活報告存否確認
-    alt 死活報告なし
-      agency ->> agency : 報告局の状態を「退役」に変更<br>待機局のひとつを「稼働中」に変更
-      agency ->>+ broad : 新規稼働局にメッセージリスト配信要求
-      Note right of broad : setupAgent()
-      broad ->>+ agent : 新規稼働局に全メッセージを送信
-      Note right of agent : setupMessages()
-      agent ->> agency : logElaps()
-      agent ->>- broad : 全メッセージ登録終了報告
-      broad ->>- agency : 終了報告＋logElaps()
+    agency ->> agency : 報告局の状態を参照
+    alt 報告局の状態が「稼働中」
+      agency ->>- agent : 報告局に死活報告要求
+      activate agent
+      Note right of agent : reportAlive()
+      agent ->> agency : 死活報告
+      deactivate agent
+      Note right of agency : ※10秒待機
+      activate agency
+      Note right of agency : disposal()
+      agency ->> agency : 死活報告存否確認
+      alt 死活報告なし
+        agency ->> agency : 報告局の状態を「退役」に変更<br>待機局のひとつを「稼働中」に変更
+        agency ->>+ broad : 新規稼働局にメッセージリスト配信要求
+        Note right of broad : setupAgent()
+        broad ->>+ agent : 新規稼働局に全メッセージを送信
+        Note right of agent : setupMessages()
+        agent ->>- broad : 全メッセージ登録終了報告
+        broad ->>- agency : 終了報告
+      end
+      agency ->> admin : 報告メール送信
+      deactivate agency
     end
-    agency ->> admin : 報告メール送信
-    agency ->> agency : logElaps()
-    deactivate agency
   end
 ```
 
@@ -306,26 +301,31 @@ sequenceDiagram
 ## 4.(1) 受付(フォーム)
 
 ```mermaid
-
 sequenceDiagram
   autonumber
   actor guest as 参加者
-  actor staff as 受付担当
+  actor staff as スタッフ
   participant html as スタッフ用画面
   participant master as マスタ
 
   guest->>staff    : QR/受付番号/名前
-  Note right of staff : inputSearchKey()<br>selectParticipant()<br>editParticipant()<br>doGet()
-  staff->>html     : QR/受付番号/名前
+  staff->>+html     : QR/受付番号/名前
+  Note right of html : inputSearchKey()<br>selectParticipant()
   html->>+master    : 受付番号/名前
-  Note right of master: doGet()
+  Note right of master: candidates()
   master->>-html    : 該当者情報
-  html->>staff     : 該当者情報
+  html->>-staff     : 該当者情報
   staff->>guest    : 該当か確認
   guest->>staff    : 参加者名、参加費
   staff->>html     : 登録
+  activate html
+  Note right of html : editParticipant()
   html->>master    : 登録情報
-
+  activate master
+  Note right of master : updateParticipant()
+  master ->> html : 更新結果
+  deactivate master
+  deactivate html
 ```
 
 参加者の変更は極力受付前に終了してもらう。無理なら受付後でも可。
@@ -351,6 +351,160 @@ sequenceDiagram
 - JSDocの書き方：[param](https://jsdoc.app/tags-param.html), [return](https://jsdoc.app/tags-returns.html)
 - アクセス権は利用するアカウントに限定する
   ![](img/szLibRejectShareImage.png)
+
+<dl>
+<dt><a href="#getConf">getConf()</a> ⇒ <code>object</code></dt>
+<dd><p>getConf: おまつり奉行用の各種パラメータを取得</p>
+</dd>
+<dt><a href="#elaps">elaps(arg, result)</a> ⇒ <code>void</code></dt>
+<dd><p>elaps: 資源局ログシートへの書き込み</p>
+</dd>
+<dt><a href="#fetchGAS">fetchGAS(arg)</a> ⇒ <code>void</code></dt>
+<dd><p>fetchGAS: GASのdoPostを呼び出し、後続処理を行う
+<br>
+処理内部で使用する公開鍵・秘密鍵はszLib.getUrlKey()で取得。<br>
+なおhtml版のarg.callbackはGAS版では存在しない。</p>
+</dd>
+<dt><a href="#getJPDateTime">getJPDateTime(dt, locale)</a> ⇒ <code>string</code></dt>
+<dd><p>getJPDateTime: 指定日時文字列を作成</p>
+</dd>
+<dt><a href="#szSheet">szSheet(arg)</a> ⇒ <code>object</code></dt>
+<dd><p>szSheet: シートのデータ取得等、CRUDするメソッドを持つオブジェクトを返す</p>
+</dd>
+<dt><a href="#convertCharacters">convertCharacters(str, kana)</a> ⇒ <code>string</code></dt>
+<dd><p>convertCharacters: 文字種を変換
+<br><br>
+全角英数字は半角に、半角片仮名は全角に強制的に変換。<br>
+全角ひらがな&lt;-&gt;全角カタカナは引数(kana)で指定。既定値はひらがなに変換。<br>
+<br>参考：</p>
+<ul>
+<li>[全角ひらがな⇔全角カタカナの文字列変換](https://neko-note.org/javascript-hiragana-katakana/1024)
+<li>[全角⇔半角の変換を行う(英数字、カタカナ)](https://www.yoheim.net/blog.php?q=20191101)
+</ul></dd>
+<dt><a href="#whichType">whichType(arg)</a> ⇒ <code>string</code></dt>
+<dd><p>whichType: 変数の型を判定</p>
+</dd>
+</dl>
+
+<a name="getConf"></a>
+
+## getConf() ⇒ <code>object</code>
+getConf: おまつり奉行用の各種パラメータを取得
+
+**Kind**: global function  
+**Returns**: <code>object</code> - おまつり奉行用の各種パラメータ  
+
+| Param | Type | Description |
+| --- | --- | --- |
+|  | <code>void</code> | なし |
+
+<a name="elaps"></a>
+
+## elaps(arg, result) ⇒ <code>void</code>
+elaps: 資源局ログシートへの書き込み
+
+**Kind**: global function  
+**Returns**: <code>void</code> - - なし  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| arg | <code>object</code> |  |
+| arg.startTime | <code>number</code> | 開始時刻 |
+| arg.account | <code>string</code> | 実行アカウント名 |
+| arg.department | <code>string</code> | 局名 |
+| arg.func | <code>string</code> | function/method名 |
+| result | <code>string</code> | 結果 |
+
+<a name="fetchGAS"></a>
+
+## fetchGAS(arg) ⇒ <code>void</code>
+fetchGAS: GASのdoPostを呼び出し、後続処理を行う
+<br>
+処理内部で使用する公開鍵・秘密鍵はszLib.getUrlKey()で取得。<br>
+なおhtml版のarg.callbackはGAS版では存在しない。
+
+**Kind**: global function  
+**Returns**: <code>void</code> - なし  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| arg | <code>object</code> | 引数 |
+| arg.from | <code>string</code> | 送信側のコード名(Auth, Master等) |
+| arg.to | <code>string</code> | 受信側のコード名 |
+| arg.func | <code>string</code> | GAS側で処理分岐の際のキー文字列 |
+| arg.endpoint | <code>string</code> | 受信側のコード名からURLが判断できない(配達員の)場合に指定 |
+| arg.key | <code>string</code> | endpoint指定の場合はその鍵も併せて指定 |
+| arg.data | <code>any</code> | 処理対象データ |
+
+<a name="getJPDateTime"></a>
+
+## getJPDateTime(dt, locale) ⇒ <code>string</code>
+getJPDateTime: 指定日時文字列を作成
+
+**Kind**: global function  
+**Returns**: <code>string</code> - 指定形式＋ミリ秒の日時文字列  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| dt | <code>any</code> | <code></code> | 作成する日時の指定。省略時は現在時刻 |
+| locale | <code>string</code> | <code>&quot;ja-JP&quot;</code> | 作成する形式 |
+
+<a name="szSheet"></a>
+
+## szSheet(arg) ⇒ <code>object</code>
+szSheet: シートのデータ取得等、CRUDするメソッドを持つオブジェクトを返す
+
+**Kind**: global function  
+**Returns**: <code>object</code> - 取得したシートのデータ
+<ul>
+<li>sheet  {object}   - getSheetで取得したシートのオブジェクト
+<li>raw    {any[][]}  - 取得した生データ(二次元配列)
+<li>headerRow {number} - ヘッダ行番号
+<li>keys   {string[]} - ヘッダ行の一次元配列
+<li>data   {object[]} - データ行を[{ラベル1:値, ラベル2:値, ..},{..},..]形式にした配列
+<li>lastRow {number} - データが存在する最下行の行番号(>0)
+<li>lookup {function} - メソッド。(key,value)を引数に、項目名'key'の値がvalueである行Objを返す
+<ul>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| arg | <code>object</code> \| <code>string</code> | 文字列の場合、コンテナのシートでヘッダ行は1行目と看做す |
+| arg.spreadId | <code>string</code> | 外部スプレッドシートのID |
+| arg.sheetName | <code>string</code> | シート名 |
+| arg.headerRow | <code>number</code> | ヘッダ行の行番号(>0)。既定値1。項目名は重複不可 |
+
+<a name="convertCharacters"></a>
+
+## convertCharacters(str, kana) ⇒ <code>string</code>
+convertCharacters: 文字種を変換
+<br><br>
+全角英数字は半角に、半角片仮名は全角に強制的に変換。<br>
+全角ひらがな<->全角カタカナは引数(kana)で指定。既定値はひらがなに変換。<br>
+<br>参考：
+<ul>
+<li>[全角ひらがな⇔全角カタカナの文字列変換](https://neko-note.org/javascript-hiragana-katakana/1024)
+<li>[全角⇔半角の変換を行う(英数字、カタカナ)](https://www.yoheim.net/blog.php?q=20191101)
+</ul>
+
+**Kind**: global function  
+**Returns**: <code>string</code> - 変換結果  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| str | <code>string</code> |  | 変換対象文字列 |
+| kana | <code>boolean</code> | <code>true</code> | true:ひらがな、false:カタカナ |
+
+<a name="whichType"></a>
+
+## whichType(arg) ⇒ <code>string</code>
+whichType: 変数の型を判定
+
+**Kind**: global function  
+**Returns**: <code>string</code> - - 型の名前  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| arg | <code>any</code> | 判定対象の変数 |
 
 
 ## バックアップライブラリ(nklib)
