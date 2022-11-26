@@ -460,8 +460,6 @@ sequenceDiagram
 
 ## 資源局(Agency)
 
-[JSDoc](Agency/index.html)
-
 ### 「ログ」シート
 
 列 | 項目名 | 内容
@@ -483,3 +481,68 @@ C | account | 賦課アカウント
 D | elaps | 過去24時間の総実行時間。ミリ秒
 E | passPhrase | パスフレーズ
 F | endpoint | APIのURL
+
+### コンテナGAS
+
+<dl>
+<dt><a href="#authorize">authorize()</a></dt>
+<dd><p>authorize: 初期化処理</p>
+</dd>
+<dt><a href="#doPost">doPost(e)</a> ⇒ <code>object</code></dt>
+<dd><p>doPost: パラメータに応じて処理を分岐
+<br>
+Class UrlFetchApp <a href="https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app#fetchurl,-params">fetch(url, params)</a> &quot;Make a POST request with a JSON payload&quot;<br></p>
+</dd>
+<dt><a href="#listAgents">listAgents(arg)</a> ⇒ <code>object</code></dt>
+<dd><p>listAgents: 配送局のリストを返す</p>
+</dd>
+</dl>
+
+<a name="authorize"></a>
+
+#### authorize()
+authorize: 初期化処理
+
+**Kind**: global function  
+<a name="doPost"></a>
+
+#### doPost(e) ⇒ <code>object</code>
+doPost: パラメータに応じて処理を分岐
+<br>
+Class UrlFetchApp <a href="https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app#fetchurl,-params">fetch(url, params)</a> "Make a POST request with a JSON payload"<br>
+
+**Kind**: global function  
+**Returns**: <code>object</code> - 正常終了の場合は分岐先処理の戻り値、エラーの場合は以下。
+<ul>
+<li>isErr {boolean}  - true(固定)
+<li>message {string} - エラーメッセージ
+</ul>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| e | <code>object</code> |  |
+| e.postData | <code>object</code> |  |
+| e.postData.contents | <code>object</code> |  |
+| e.postData.contents.arg | <code>object</code> | データ部分。JSON.parse(e.postData.getDataAsString())の結果 |
+| e.postData.contents.arg.passPhrase | <code>string</code> | 共通鍵。szLib.getUrl()で取得 |
+| e.postData.contents.arg.from | <code>string</code> | 送信先(自分) |
+| e.postData.contents.arg.to | <code>string</code> | 送信元 |
+| e.postData.contents.arg.func | <code>string</code> | 分岐する処理名 |
+| e.postData.contents.arg.data | <code>string</code> | 処理対象データ |
+
+<a name="listAgents"></a>
+
+#### listAgents(arg) ⇒ <code>object</code>
+listAgents: 配送局のリストを返す
+
+**Kind**: global function  
+**Returns**: <code>object</code> - rv 処理結果
+<ul>
+<li>isErr {boolean} : エラーならtrue
+<li>message {string} : エラーの場合はメッセージ。正常終了ならundefined
+<li>result {object} : szLib.szSheet().data
+</ul>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| arg | <code>void</code> | なし |
