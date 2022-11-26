@@ -359,7 +359,7 @@ sequenceDiagram
 
 # [04] 申請窓口(Form)
 
-## 「質問」タグ
+## 01.「質問」タグ
 
 適切な内容が入力されるよう「回答の検証」に以下の正規表現を設定
 
@@ -371,7 +371,7 @@ sequenceDiagram
 [片仮名](https://ja.wikipedia.org/wiki/%E7%89%87%E4%BB%AE%E5%90%8D_(Unicode%E3%81%AE%E3%83%96%E3%83%AD%E3%83%83%E3%82%AF)),
 [平仮名](https://ja.wikipedia.org/wiki/%E5%B9%B3%E4%BB%AE%E5%90%8D_(Unicode%E3%81%AE%E3%83%96%E3%83%AD%E3%83%83%E3%82%AF)))
 
-## 「設定」タグ
+## 02.「設定」タグ
 
 - メールアドレスを収集する：ON
 - 回答のコピーを回答者に送信：リクエストされた場合
@@ -379,26 +379,9 @@ sequenceDiagram
 
 # [05] 管理局(Master)
 
-## 「回答」シート
+## 01.「マスタ」シート
 
-## 「当日」シート
-
-## 「マスタ」シート
-
-## 「config」シート
-
-- 「変更」は、プログラム実行中に値が変化するかどうか。
-- 「設定元」は、その値がどこで設定されるか。
-  - ソース：プログラムソース(config.js)
-  - シート：GoogleスプレッドからQRで読み込み
-  - 手動：ユーザが手動設定
-  - 自動：プログラムで自動的に設定
-- 「保存」はlocalStorageへの保存要否
-
-- 2022/11/01追記：participant.htmlに"entryNo"追加
-- 2022/11/02追記：分類AにAuthURL追加
-
-## 「AuthLevel」シート
+## 02.「AuthLevel」シート
 
 各機能の活性化/不活性化を司る。
 
@@ -422,9 +405,45 @@ sequenceDiagram
 
 # [06] 認証局(Auth)
 
+## 01.「log」シート：認証成否のログ
+
+列 | 項目名 | 内容
+:--: | :-- | :--
+A | timestamp | 認証日時
+B | entryNo | 受付番号
+C | result | 結果。OK or NG
+D | message | エラーの場合、メッセージ
+
 # [07] 放送局(Broad)
 
+## 01.「掲示板」シート：投稿内容のログ
+
+列 | 項目名 | 内容
+:--: | :-- | :--
+A | timestamp | 投稿日時
+B | from | 投稿者
+C | to | 宛先
+D | message | メッセージ
+E | axis01 | 予約(セグメント別配信時のフラグ)
+F | axis02 | 同上
+G | axis03 | 同上
+
 # [08] 郵便局(Post)
+
+## 01.「配達記録」シート：過去の配達担当(配信局)と配達結果
+
+列 | 項目名 | 内容
+:--: | :-- | :--
+A | timestamp | 送信日時
+B | arg | 送信内容(sendMailの引数)
+C | account | 配信局アカウント
+D | result | 配信結果
+
+## 02.メールテンプレートシート
+
+1. 申込への返信
+1. パスコード通知
+1. 郵便局初期化
 
 # [09] 配信局(Agent)
 
@@ -445,6 +464,10 @@ sequenceDiagram
 1. Apps ScriptにGASソースをコピー
 1. authorize()を実行して権限付与
 
+## 01.「掲示板」シート
+
+放送局「掲示板」シートと同じ(現状の放送局「ログ」シート名を「掲示板」に変更予定)。
+
 # [10] 予約局(Reserve)
 
 予約状況はそれだけで専用のシートを用意。スプレッドシート列毎に参加者専用スペースを確保、htmlから見にいく列を制御する。
@@ -458,7 +481,7 @@ sequenceDiagram
 
 # [11] 資源局(Agency)
 
-## 「ログ」シート
+## 01.「ログ」シート：アカウント・JOB別実行時間ログ(elaps)
 
 列 | 項目名 | 内容
 :--: | :-- | :--
@@ -469,24 +492,24 @@ D | function/method | 処理関数名。doPostの分岐先
 E | elaps | 処理時間。ミリ秒
 F | result | 処理結果。OKまたはエラーメッセージ
 
-## 「配送局」シート
+## 02.「配信局」シート
 
 列 | 項目名 | 内容
 :--: | :-- | :--
-A | type | 局種別。配送局、資源局、等
+A | type | 局種別。配信局、資源局、等
 B | status | 待機中/稼働中/退役
 C | account | 賦課アカウント
 D | elaps | 過去24時間の総実行時間。ミリ秒
 E | passPhrase | パスフレーズ
 F | endpoint | APIのURL
 
-## authorize()
+## 11.authorize()
 authorize: 初期化処理
 
 **Kind**: global function  
 <a name="doPost"></a>
 
-## doPost(e) ⇒ <code>object</code>
+## 12.doPost(e) ⇒ <code>object</code>
 doPost: パラメータに応じて処理を分岐
 <br>
 Class UrlFetchApp <a href="https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app#fetchurl,-params">fetch(url, params)</a> "Make a POST request with a JSON payload"<br>
@@ -512,8 +535,8 @@ Class UrlFetchApp <a href="https://developers.google.com/apps-script/reference/u
 
 <a name="listAgents"></a>
 
-## listAgents(arg) ⇒ <code>object</code>
-listAgents: 配送局のリストを返す
+## 13.listAgents(arg) ⇒ <code>object</code>
+listAgents: 配信局のリストを返す
 
 **Kind**: global function  
 **Returns**: <code>object</code> - rv 処理結果

@@ -86,7 +86,7 @@ const authorize = () => {
   }
 }
 
-/** listAgents: 配送局のリストを返す
+/** listAgents: 配信局のリストを返す
  * @param {void} - なし
  * @return {object} - 処理結果
  *    isErr {boolean} : エラーならtrue
@@ -97,7 +97,7 @@ const listAgents = (arg) => {
   console.log('資源局.listAgents start. arg='+JSON.stringify(arg));
   let rv = null;
   try {
-    rv = {isErr: false, result: szLib.szSheet('配送局').data};
+    rv = {isErr: false, result: szLib.szSheet('配信局').data};
   } catch(e) {
     // Errorオブジェクトをrvとするとmessageが欠落するので再作成
     rv = {isErr:true, message:e.name+': '+e.message};
