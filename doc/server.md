@@ -1,6 +1,6 @@
 [概要](../README.md) | サーバ側仕様 | [クライアント側仕様](client.md)
 
-# システム間連携
+# [01] システム間連携
 
 ## 性能要件とGASの制約
 
@@ -86,7 +86,7 @@ graph LR
 - 資源局は配信局以外の局も監視するが、上の図からは割愛
 - ソースにAPIのURLを埋め込むと被参照局で再デプロイの都度、参照局もデプロイが必要になるため、管理局の「config」シートに一覧を作成し、実行時にszLib.setConfig()で最新情報を参照する。
 
-# シーケンス
+# [02] シーケンス
 
 ## 1. 参加登録
 
@@ -332,7 +332,7 @@ sequenceDiagram
 
 ## 5. お知らせへの投稿
 
-# GASライブラリ(szLib)
+# [03] GASライブラリ(szLib)
 
 参考：[自作のライブラリを公開する方法【Google Apps Script / GAS】](https://belltree.life/google-apps-script-library-publish/)
 
@@ -357,11 +357,9 @@ sequenceDiagram
 
 開発途中で使用中止となった機能のバックアップ。
 
-# 局別設計(GAS)
+# [04] 申請窓口(Form)
 
-## 申請窓口(Form)
-
-### 「質問」タグ
+## 「質問」タグ
 
 適切な内容が入力されるよう「回答の検証」に以下の正規表現を設定
 
@@ -373,21 +371,21 @@ sequenceDiagram
 [片仮名](https://ja.wikipedia.org/wiki/%E7%89%87%E4%BB%AE%E5%90%8D_(Unicode%E3%81%AE%E3%83%96%E3%83%AD%E3%83%83%E3%82%AF)),
 [平仮名](https://ja.wikipedia.org/wiki/%E5%B9%B3%E4%BB%AE%E5%90%8D_(Unicode%E3%81%AE%E3%83%96%E3%83%AD%E3%83%83%E3%82%AF)))
 
-### 「設定」タグ
+## 「設定」タグ
 
 - メールアドレスを収集する：ON
 - 回答のコピーを回答者に送信：リクエストされた場合
 - 回答の編集を許可する：ON
 
-## 管理局(Master)
+# [05] 管理局(Master)
 
-### 「回答」シート
+## 「回答」シート
 
-### 「当日」シート
+## 「当日」シート
 
-### 「マスタ」シート
+## 「マスタ」シート
 
-### 「config」シート
+## 「config」シート
 
 - 「変更」は、プログラム実行中に値が変化するかどうか。
 - 「設定元」は、その値がどこで設定されるか。
@@ -400,7 +398,7 @@ sequenceDiagram
 - 2022/11/01追記：participant.htmlに"entryNo"追加
 - 2022/11/02追記：分類AにAuthURL追加
 
-### 「AuthLevel」シート
+## 「AuthLevel」シート
 
 各機能の活性化/不活性化を司る。
 
@@ -422,24 +420,24 @@ sequenceDiagram
 
 ※お知らせは全員に配信し、内容はサーバ側で属性に応じて編集するので AuthLevel による制御は行わない。
 
-## 認証局(Auth)
+# [06] 認証局(Auth)
 
-## 放送局(Broad)
+# [07] 放送局(Broad)
 
-## 郵便局(Post)
+# [08] 郵便局(Post)
 
-## 配信局(Agent)
+# [09] 配信局(Agent)
 
-### 配信局作成手順
+## 配信局作成手順
 
 ※ アカウントが異なる場合、バージョンに"HEAD"が指定できないので注意
 
-#### szLibの作業
+### szLibの作業
 
 1. 閲覧者として賦課アカウントのアクセス権を付与
 1. スクリプトIDをコピー
 
-#### 賦課アカウント側の作業
+### 賦課アカウント側の作業
 
 1. Google Driveを開き、スプレッドシート「配信局」を新規作成
 1. 「掲示板」シート作成
@@ -447,7 +445,7 @@ sequenceDiagram
 1. Apps ScriptにGASソースをコピー
 1. authorize()を実行して権限付与
 
-## 予約局(Reserve)
+# [10] 予約局(Reserve)
 
 予約状況はそれだけで専用のシートを用意。スプレッドシート列毎に参加者専用スペースを確保、htmlから見にいく列を制御する。
 
@@ -458,9 +456,9 @@ sequenceDiagram
 予約状況は総予約数の他に、利用回数別の予約人数を表示する。
 
 
-## 資源局(Agency)
+# [11] 資源局(Agency)
 
-### 「ログ」シート
+## 「ログ」シート
 
 列 | 項目名 | 内容
 :--: | :-- | :--
@@ -471,7 +469,7 @@ D | function/method | 処理関数名。doPostの分岐先
 E | elaps | 処理時間。ミリ秒
 F | result | 処理結果。OKまたはエラーメッセージ
 
-### 「配送局」シート
+## 「配送局」シート
 
 列 | 項目名 | 内容
 :--: | :-- | :--
@@ -482,31 +480,13 @@ D | elaps | 過去24時間の総実行時間。ミリ秒
 E | passPhrase | パスフレーズ
 F | endpoint | APIのURL
 
-### コンテナGAS
-
-<dl>
-<dt><a href="#authorize">authorize()</a></dt>
-<dd><p>authorize: 初期化処理</p>
-</dd>
-<dt><a href="#doPost">doPost(e)</a> ⇒ <code>object</code></dt>
-<dd><p>doPost: パラメータに応じて処理を分岐
-<br>
-Class UrlFetchApp <a href="https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app#fetchurl,-params">fetch(url, params)</a> &quot;Make a POST request with a JSON payload&quot;<br></p>
-</dd>
-<dt><a href="#listAgents">listAgents(arg)</a> ⇒ <code>object</code></dt>
-<dd><p>listAgents: 配送局のリストを返す</p>
-</dd>
-</dl>
-
-<a name="authorize"></a>
-
-#### authorize()
+## authorize()
 authorize: 初期化処理
 
 **Kind**: global function  
 <a name="doPost"></a>
 
-#### doPost(e) ⇒ <code>object</code>
+## doPost(e) ⇒ <code>object</code>
 doPost: パラメータに応じて処理を分岐
 <br>
 Class UrlFetchApp <a href="https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app#fetchurl,-params">fetch(url, params)</a> "Make a POST request with a JSON payload"<br>
@@ -532,7 +512,7 @@ Class UrlFetchApp <a href="https://developers.google.com/apps-script/reference/u
 
 <a name="listAgents"></a>
 
-#### listAgents(arg) ⇒ <code>object</code>
+## listAgents(arg) ⇒ <code>object</code>
 listAgents: 配送局のリストを返す
 
 **Kind**: global function  
