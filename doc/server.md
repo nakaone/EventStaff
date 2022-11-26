@@ -53,7 +53,7 @@ No | 名称 | prefix | 個数 | 概要
 4 | 郵便局 | Post | 1 | 参加申請への返信、パスコード配信等、メール作成・配信手配
 5 | 配信局 | Agent | n | 郵便局からの指示に基づきメールを配信<br>放送局の内容をミラーリング、配信負荷を分散
 6 | 放送局 | Broad | 1 | 投稿された内容を保存、「お知らせ」として配信
-7 | 資源局 | Agency | n | 配信局のリソース使用状況を監視、適宜待機中→稼働中→退役に変更
+7 | 資源局 | Agency | 1 | 配信局のリソース使用状況を監視、適宜待機中→稼働中→退役に変更
 8 | 予約局 | Book | 1 | スタッフ端末からの予約・取消情報に基づき待機者一覧を作成、配信
 
 ここでサブシステムとはGoogleドライブ上のフォームまたはシート等のコンテナを指す。
@@ -349,8 +349,8 @@ sequenceDiagram
 - ライブラリ更新の都度デプロイは不要。開発版を選択していれば最新のソースが適用される。
 - アロー関数は`TypeError: xxx is not a function.`となる(原因不明)ので、関数は`function xxx(){〜}`で定義する。
 - JSDocの書き方：[param](https://jsdoc.app/tags-param.html), [return](https://jsdoc.app/tags-returns.html)
-- アクセス権は利用するアカウントに限定する
-  ![](img/szLibRejectShareImage.png)
+- アクセス権は利用するアカウントに限定する(下は対象外アカウントで追加しようとした場合の検証結果)
+  <img src="img/szLibRejectShareImage.png" width="400px" />
 
 <dl>
 <dt><a href="#getConf">getConf()</a> ⇒ <code>object</code></dt>
