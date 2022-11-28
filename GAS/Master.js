@@ -2,7 +2,7 @@ const elaps = {account:'shimokitasho.oyaji@gmail.com',department:'管理局'};
 const conf = szLib.getConf();
 
 /** doPost: パラメータに応じて処理を分岐
- * @param {object} e - Class UrlFetchApp [fetch(url, params)]{@link https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app#fetchurl,-params}の"Make a POST request with a JSON payload"参照
+ * @param {object} e - Class UrlFetchApp <a href="https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app#fetchurl,-params">fetch(url, params)</a>の"Make a POST request with a JSON payload"参照
  * @param {object} arg - データ部分。JSON.parse(e.postData.getDataAsString())の結果
  * @param {string} arg.passPhrase - 共通鍵。szLib.getUrl()で取得
  * @param {string} arg.from       - 送信元
@@ -19,7 +19,7 @@ const conf = szLib.getConf();
   elaps.startTime = Date.now();  // 開始時刻をセット
   console.log('管理局.doPost start.',e);
 
-  const arg = JSON.parse(e.postData.getDataAsString()); // contentsでも可
+  const arg = JSON.parse(e.postData.contents);
   let rv = null;
   if( arg.passPhrase === conf.Master.key ){
     try {
@@ -64,36 +64,36 @@ const conf = szLib.getConf();
  * ※ namedValuesでも取得できるが、valuesがFormApp.getResponses()と同じ一次元配列なのでベターと判断。<br>
  * <br>
  * <ul>
- * <li>[メールの自動返信]{@link https://blog.hubspot.jp/google-forms-automatic-reply#f}
- * <li>[メールへのファイル添付]{@link https://my-funs.com/gas-mailapp/}
- * <li>[GASでHTMLメールを送る方法とインライン画像を埋め込む(画像挿入)方法]{@link https://auto-worker.com/blog/?p=2827}
+ * <li><a href="https://blog.hubspot.jp/google-forms-automatic-reply#f">メールの自動返信</a>
+ * <li><a href="https://my-funs.com/gas-mailapp/">メールへのファイル添付</a>
+ * <li><a href="https://auto-worker.com/blog/?p=2827">GASでHTMLメールを送る方法とインライン画像を埋め込む(画像挿入)方法</a>
  * </ul>
  * 
  * <p style="font-size:1.2rem">■スプレッドシート上のonFormSubmitに渡される引数</p>
  * 
  * <ul>
- * <li>[スプレッドシートのコンテナバインドのフォーム送信時イベントオブジェクト]{@link https://tgg.jugani-japan.com/tsujike/2021/05/gas-form4/#toc2}
- * <li>GAS公式 Google スプレッドシートのイベント[フォーム送信]{@link https://developers.google.com/apps-script/guides/triggers/events#form-submit}
+ * <li><a href="https://tgg.jugani-japan.com/tsujike/2021/05/gas-form4/#toc2">スプレッドシートのコンテナバインドのフォーム送信時イベントオブジェクト</a>
+ * <li>GAS公式 Google スプレッドシートのイベント<a href="https://developers.google.com/apps-script/guides/triggers/events#form-submit">フォーム送信</a>
  * </ul>
  * <img src="https://i0.wp.com/tgg.jugani-japan.com/tsujike/wp-content/uploads/210426-001.png?w=1256&ssl=1" width="80%" />
  * <ul>
- * <li>range : [Range]{@link https://developers.google.com/apps-script/reference/spreadsheet/range} Object
+ * <li>range : <a href="https://developers.google.com/apps-script/reference/spreadsheet/range">Range</a> Object
  * </ul>
  * 
  * <p style="font-size:1.2rem">■参考：フォーム上のonFormSubmitに渡される引数</p>
  * 
  * <ul>
- * <li>GAS公式 [Google フォームのイベント]{@link https://developers.google.com/apps-script/guides/triggers/events#google_forms_events}
- * <li>[フォームのコンテナバインドのフォーム送信時イベントオブジェクト]{@link https://tgg.jugani-japan.com/tsujike/2021/05/gas-form5/#toc2}
+ * <li>GAS公式 <a href="https://developers.google.com/apps-script/guides/triggers/events#google_forms_events">Google フォームのイベント</a>
+ * <li><a href="https://tgg.jugani-japan.com/tsujike/2021/05/gas-form5/#toc2">フォームのコンテナバインドのフォーム送信時イベントオブジェクト</a>
  * </ul>
  * <img src="https://i0.wp.com/tgg.jugani-japan.com/tsujike/wp-content/uploads/210427-001.png?w=1256&ssl=1" width="80%" />
  * <ul>
- * <li>response : [Form Response]{@link https://developers.google.com/apps-script/reference/forms/form-response} Object
+ * <li>response : <a href="https://developers.google.com/apps-script/reference/forms/form-response">Form Response</a> Object
  * <ul>
- * <li>[getEditResponseUrl()]{@link https://developers.google.com/apps-script/reference/forms/form-response#geteditresponseurl}
- * <li>[getTimestamp()]{@link https://developers.google.com/apps-script/reference/forms/form-response#gettimestamp}
+ * <li><a href="https://developers.google.com/apps-script/reference/forms/form-response#geteditresponseurl">getEditResponseUrl()</a>
+ * <li><a href="https://developers.google.com/apps-script/reference/forms/form-response#gettimestamp">getTimestamp()</a>
  * </ul>
- * <li>source : [Form]{@link https://developers.google.com/apps-script/reference/forms/form}
+ * <li>source : <a href="https://developers.google.com/apps-script/reference/forms/form">Form</a>
  * </ul>
  * 
  * <p style="font-size:1.2rem">■フォーム編集用URLの取得</p>
@@ -106,6 +106,28 @@ const conf = szLib.getConf();
  * @returns {object} 郵便局.doPostで処理された結果
  */
 function onFormSubmit(e){
+  elaps.startTime = Date.now();  // 開始時刻をセット
+  console.log('管理局.onFormSubmit start.',e);
+  let rv = null;
+  try {
+    // 1.引数からシート上の行番号を取得、それを基に登録日時を特定
+    const rowNum = e.range.rowStart;
+    const sObj = szLib.szSheet('マスタ');
+    console.log(sObj.raw);
+
+    // 3.フォームデータを解析、登録日時を基に編集用URLを取得
+    // 3.受付番号を採番、編集用URLと併せてシートに書き込み
+    // 4.返信メールを送信
+  } catch(e) {
+    // Errorオブジェクトをrvとするとmessageが欠落するので再作成
+    rv = {isErr:true, message:e.name+': '+e.message};
+  } finally {
+    console.log('管理局.onFormSubmit end. rv='+JSON.stringify(rv));
+    szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');  // 結果を渡して書き込み
+  }
+
+
+  /*
   console.log('管理局.onFormSubmit start. e='+JSON.stringify(e));
 
   // 1.受付番号の採番
@@ -121,9 +143,9 @@ function onFormSubmit(e){
   // 2.1.シート側のキーを生成
   const sKey = sheet.getRange("A"+e.range.rowStart).getValue().getTime()
     + e.namedValues['メールアドレス'][0];
-  /* 以下だと秒単位でミリ秒が無いためフォームと一致しない
-  const sKey = new Date(e.namedValues['タイムスタンプ'][0]).getTime()
-    + e.namedValues['メールアドレス'][0]; */
+  // 以下だと秒単位でミリ秒が無いためフォームと一致しない
+  //const sKey = new Date(e.namedValues['タイムスタンプ'][0]).getTime()
+  //  + e.namedValues['メールアドレス'][0];
   console.log('管理局.sKey = '+sKey);
 
   // 2.2.フォームデータを全件読み込み
@@ -160,6 +182,7 @@ function onFormSubmit(e){
     }],
   }});
   console.log('管理局.onFormSubmit end. response='+response);
+  */
 }
 
 /** auth1B: 認証第一段階。パスコードを生成してメールで送付
