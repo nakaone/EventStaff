@@ -3,12 +3,10 @@ const conf = szLib.getConf();
 
 /** authorize: 初期化処理 */
 const authorize = () => {
-  const res = doPost({postData:{contents:JSON.stringify({
-    func: 'listAgents',
-    passPhrase: conf.Agency.key,
-    data:null
-  })}});
-  console.log('res:',res.getContent());
+  let rv = listAgents();
+  console.log(rv);
+  rv = logElaps({timestamp:Date.now(), account:'fuga@gmail.com', requester:'テスト局', function:'testFunc()', elaps:1000, result:'OK'});
+  console.log(rv);
 }
 
 /** doPost: パラメータに応じて処理を分岐
@@ -39,13 +37,16 @@ const authorize = () => {
         case 'listAgents':
           rv = listAgents();
           break;
+        case 'logElaps':
+          rv = logElaps(arg.data);
+          break;
       }
     } catch(e) {
       // Errorオブジェクトをrvとするとmessageが欠落するので再作成
       rv = {isErr:true, message:e.name+': '+e.message};
     } finally {
       console.log('資源局.doPost end. rv='+JSON.stringify(rv));
-      szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');  // 結果を渡して書き込み
+      localElaps(elaps, rv.isErr ? rv.message : 'OK');  // 結果を渡して書き込み
       return ContentService
       .createTextOutput(JSON.stringify(rv,null,2))
       .setMimeType(ContentService.MimeType.JSON);
@@ -54,7 +55,7 @@ const authorize = () => {
     rv = {isErr:true,message:'invalid passPhrase :'+e.parameter.passPhrase};
     console.error('資源局.doPost end. '+rv.message);
     console.log('end',elaps);
-    szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');
+    localElaps(elaps, rv.isErr ? rv.message : 'OK');
   }
 }
 
@@ -65,11 +66,11 @@ const authorize = () => {
  *    message {string} : エラーの場合はメッセージ。正常終了ならundefined
  *    result {object} : szLib.szSheet().data
  */
-const listAgents = (arg) => {
-  console.log('資源局.listAgents start. arg='+JSON.stringify(arg));
+const listAgents = () => {
+  console.log('資源局.listAgents start.');
   let rv = null;
   try {
-    rv = {isErr: false, result: szLib.szSheet('配送局').data};
+    rv = {isErr: false, result: szLib.szSheet('配信局').data};
   } catch(e) {
     // Errorオブジェクトをrvとするとmessageが欠落するので再作成
     rv = {isErr:true, message:e.name+': '+e.message};
@@ -77,4 +78,65 @@ const listAgents = (arg) => {
     console.log('資源局.listAgents end. rv='+JSON.stringify(rv));
     return rv;
   }
+}
+
+/** logElaps: 実行時間(elaps)をログシートに出力
+ * @param {object} arg
+ * @param {number} arg.timestamp - 実行日時
+ * @param {string} arg.account - 賦課アカウント
+ * @param {string} arg.requester - 局名。「管理局」等
+ * @param {string} arg.function - function/method名
+ * @param {number} arg.elaps - 実行時間。ミリ秒
+ * @param {string} arg.result - 結果。'OK' or エラーメッセージ
+ * @returns {object} - 処理結果
+ * <ul>
+ * <li>isErr {boolean} : エラーならtrue
+ * <li>message {string} : エラーの場合はメッセージ。正常終了ならundefined
+ * <li>result {object} : 分岐先の処理が正常終了した場合の結果オブジェクト
+ * </ul>
+ */
+const logElaps = (arg) => {
+  console.log('資源局.logElaps start. arg='+JSON.stringify(arg));
+  let rv = null;
+  try {
+    const line = [
+      new Date(arg.timestamp),
+      arg.account,
+      arg.requester,
+      arg.function,
+      arg.elaps,
+      arg.result,
+    ];
+    SpreadsheetApp.getActiveSpreadsheet().getSheetByName('ログ').appendRow(line);
+    rv = {isErr:false,result:line};
+
+  } catch(e) {
+    // Errorオブジェクトをrvとするとmessageが欠落するので再作成
+    rv = {isErr:true, message:e.name+': '+e.message};
+  } finally {
+    console.log('資源局.logElaps end. rv='+JSON.stringify(rv));
+    return rv;
+  }
+}
+
+/** localElaps: 【資源局内部用】ログシートへの書き込み
+ * <br>
+ * 通常szLib.elapsだが、資源局は自シートなのでコンテナ関数を使用
+ * @param {object} arg 
+ * @param {number} arg.startTime - 開始時刻
+ * @param {string} arg.account - 実行アカウント名
+ * @param {string} arg.department - 局名
+ * @param {string} arg.func - function/method名
+ * @param {string} result - 結果
+ * @returns {void} - なし
+ */
+function localElaps(arg,result=''){
+  SpreadsheetApp.getActiveSpreadsheet().getSheetByName('ログ').appendRow([
+    szLib.getJPDateTime(arg.startTime),   // timestamp
+    arg.account,     // account
+    arg.department,  // department
+    arg.func,        // function/method
+    Date.now() - arg.startTime + conf.Agency.overhead, // elaps
+    result          // result
+  ]);
 }
