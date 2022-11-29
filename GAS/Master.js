@@ -4,7 +4,7 @@ const conf = szLib.getConf();
 /** doPost: パラメータに応じて処理を分岐
  * @param {object} e - Class UrlFetchApp <a href="https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app#fetchurl,-params">fetch(url, params)</a>の"Make a POST request with a JSON payload"参照
  * @param {object} arg - データ部分。JSON.parse(e.postData.getDataAsString())の結果
- * @param {string} arg.passPhrase - 共通鍵。szLib.getUrl()で取得
+ * @param {string} arg.key - 共通鍵。szLib.getUrl()で取得
  * @param {string} arg.from       - 送信元
  * @param {string} arg.to         - 送信先(自分)
  * @param {string} arg.func       - 分岐する処理名
@@ -21,7 +21,7 @@ const conf = szLib.getConf();
 
   const arg = JSON.parse(e.postData.contents);
   let rv = null;
-  if( arg.passPhrase === conf.Master.key ){
+  if( arg.key === conf.Master.key ){
     try {
       elaps.func = arg.func; // 処理名をセット
       switch( arg.func ){
@@ -49,11 +49,17 @@ const conf = szLib.getConf();
       .setMimeType(ContentService.MimeType.JSON);
     }
   } else {
-    rv = {isErr:true,message:'invalid passPhrase :'+e.parameter.passPhrase};
+    rv = {isErr:true,message:'invalid key :'+arg.key};
     console.error('管理局.doPost end. '+rv.message);
     console.log('end',elaps);
     szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');
   }
+}
+
+const ofsTest = () => {
+  onFormSubmit({
+    range:{rowStart:3},
+  });
 }
 
 /** onFormSubmit: フォーム申込み時のメールの自動返信
@@ -107,17 +113,60 @@ const conf = szLib.getConf();
  */
 function onFormSubmit(e){
   elaps.startTime = Date.now();  // 開始時刻をセット
+  elaps.func = 'onFormSubmit';
   console.log('管理局.onFormSubmit start.',e);
   let rv = null;
   try {
     // 1.引数からシート上の行番号を取得、それを基に登録日時を特定
     const rowNum = e.range.rowStart;
     const sObj = szLib.szSheet('マスタ');
-    console.log(sObj.raw);
+    const timestamp = sObj.raw[rowNum-1][0];
+    const tObj = sObj.lookup('タイムスタンプ',timestamp);
+    console.log('rowNum='+rowNum+', timestamp='+szLib.getJPDateTime(timestamp)+', tObj='+JSON.stringify(tObj));
 
-    // 3.フォームデータを解析、登録日時を基に編集用URLを取得
-    // 3.受付番号を採番、編集用URLと併せてシートに書き込み
+    let entryNo;
+    let editURL = '';
+    if( tObj.entryNo.length === 0 ){  // 新規登録の場合
+      // 2.全フォームデータを読み込み、登録日時を基に編集用URLを取得
+      const formData = FormApp.openById(conf.Form.id).getResponses();
+      for( let i=formData.length-1 ; i>=0 ; i-- ){
+        if( formData[i].getTimestamp().getTime() === timestamp.getTime() ){
+          editURL = formData[i].getEditResponseUrl();
+          break;
+        }
+      }
+      console.log('管理局.editURL='+editURL);
+
+      // 3.受付番号を採番、編集用URLと併せてシートに書き込み
+      const entryNoList = sObj.data.map(x => x.entryNo);
+      entryNo = Math.max(...entryNoList) + 1;
+      console.log('entryNo='+entryNo);
+      const updateResult = sObj.update('タイムスタンプ',new Date(timestamp),[
+        {column:'entryNo', value:entryNo},
+        {column:'editURL', value:editURL},
+      ],false);
+      console.log('updateResult = '+JSON.stringify(updateResult));
+    } else {  // 既存申込の編集の場合
+      entryNo = Number(tObj.entryNo);
+      editURL = tObj.editURL;
+    }
+
     // 4.返信メールを送信
+    rv = szLib.fetchGAS({
+      from: 'Master',
+      to: 'Post',
+      func: 'postMails',
+      endpoion: conf.Post.url,
+      key: conf.Post.key,
+      data: {
+        template: '申込への返信',
+        data: [{
+          recipient: tObj['メールアドレス'],
+          variables: {name:tObj['申請者氏名'],entryNo:entryNo},
+        }],
+      }
+    });
+
   } catch(e) {
     // Errorオブジェクトをrvとするとmessageが欠落するので再作成
     rv = {isErr:true, message:e.name+': '+e.message};
@@ -125,71 +174,13 @@ function onFormSubmit(e){
     console.log('管理局.onFormSubmit end. rv='+JSON.stringify(rv));
     szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');  // 結果を渡して書き込み
   }
-
-
-  /*
-  console.log('管理局.onFormSubmit start. e='+JSON.stringify(e));
-
-  // 1.受付番号の採番
-  // 「回答」シート上で書き込まれた行番号＋「当日」上のデータ件数−ヘッダ1行×2シート
-  let entryNo = e.range.rowStart - 2
-    + SpreadsheetApp.getActiveSpreadsheet().getSheetByName('当日').getLastRow();
-  // シートに受付番号を記入
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('回答');
-  sheet.getRange("S"+e.range.rowStart).setValue(entryNo); // 受付番号はS列
-  entryNo = ('0000'+entryNo).slice(-4);
-
-  // 2.編集用URLの取得
-  // 2.1.シート側のキーを生成
-  const sKey = sheet.getRange("A"+e.range.rowStart).getValue().getTime()
-    + e.namedValues['メールアドレス'][0];
-  // 以下だと秒単位でミリ秒が無いためフォームと一致しない
-  //const sKey = new Date(e.namedValues['タイムスタンプ'][0]).getTime()
-  //  + e.namedValues['メールアドレス'][0];
-  console.log('管理局.sKey = '+sKey);
-
-  // 2.2.フォームデータを全件読み込み
-  // FormIdはフォームの編集画面。入力画面、回答後の「回答を記録しました」画面とは異なる。
-  const FormId = "1hnQLsY3lRh0gQMGfXoJJqAL_yBpKR6T0h2RFRc8tUEA";
-  const formData = FormApp.openById(FormId).getResponses();
-
-  // 2.3.フォームデータを順次検索
-  let editURL = '';
-  for( let i=formData.length-1 ; i>=0 ; i++ ){
-    const fKey = formData[i].getTimestamp().getTime()
-      + formData[i].getRespondentEmail();
-    console.log(i,fKey);
-    if( sKey === fKey ){
-      console.log('管理局.formData',formData[i]);
-      editURL = formData[i].getEditResponseUrl();
-      break;
-    }
-  }
-  console.log('管理局.editURL = '+editURL);
-
-  // 2.4.シートに編集用URLを保存
-  sheet.getRange("T"+e.range.rowStart).setValue(editURL); // 編集用URLはT列
-
-  // 3. 返信メールの送付
-  const response = szLib.fetchGAS({from:'Master',to:'Post',func:'postMails',data:{
-    template: '申込への返信',
-    data: [{
-      recipient: e.namedValues['メールアドレス'][0],
-      variables  : {
-        name     : e.namedValues['申請者氏名'][0],
-        entryNo  : entryNo,
-      }
-    }],
-  }});
-  console.log('管理局.onFormSubmit end. response='+response);
-  */
 }
 
 /** auth1B: 認証第一段階。パスコードを生成してメールで送付
  * @param {object} arg            - POSTで渡されたデータ
  * @param {string} arg.func       - 利用しない('auth1B'固定)
  * @param {string} arg.entryNo    - 利用者が入力した受付番号
- * @param {string} arg.passPhrase - 利用しない(config.Master.Key)
+ * @param {string} arg.key - 利用しない(config.Master.Key)
  * @return {object} - 処理結果
  * <ul>
  * <li>isErr {boolean} : エラーならtrue
@@ -198,7 +189,7 @@ function onFormSubmit(e){
  * </ul>
  * 
  * @example <caption>引数の例</caption>
- * 管理局.auth1B start. arg={"entryNo":"1.0","func":"auth1B","passPhrase":"GQD*4〜aQ8r"}
+ * 管理局.auth1B start. arg={"entryNo":"1.0","func":"auth1B","key":"GQD*4〜aQ8r"}
  */
 const auth1B = (arg) => {
   console.log('管理局.auth1B start. arg='+JSON.stringify(arg));
@@ -242,7 +233,7 @@ const auth1B = (arg) => {
  * @param {string} arg.func       - 利用しない('auth1B'固定)
  * @param {string} arg.entryNo    - 利用者が入力した受付番号
  * @param {string} arg.passCode   - 利用者が入力したパスコード
- * @param {string} arg.passPhrase - 利用しない(config.Master.Key)
+ * @param {string} arg.key - 利用しない(config.Master.Key)
  * @return {object} - 処理結果
  * <ul>
  * <li>isErr {boolean} - エラーならtrue
@@ -252,7 +243,7 @@ const auth1B = (arg) => {
  * </ul>
  * 
  * @example <caption>引数の例</caption>
- * 管理局.auth2B start. arg={"func":"auth2B","entryNo":"1.0","passCode":"478608","passPhrase":"GQD*4〜aQ8r"}
+ * 管理局.auth2B start. arg={"func":"auth2B","entryNo":"1.0","passCode":"478608","key":"GQD*4〜aQ8r"}
  */
 const auth2B = (arg) => {
   console.log('管理局.auth2B start. arg='+JSON.stringify(arg));
