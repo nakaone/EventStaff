@@ -8,12 +8,16 @@
  * シートの参照(シート毎)
  * メールの発信
  */
+ const authorize = () => {
+  const rv = elaps({startTime:Date.now()-1000,account:'test@gmail.com',department:'テスト局',func:'elaps'},'result=hoge');
+  console.log(rv);
+}
 
 /** getConf: おまつり奉行用の各種パラメータを取得
  * @param {void} - なし
  * @returns {object} おまつり奉行用の各種パラメータ
  */
- function getConf(){
+function getConf(){
   return {
     Auth: {   // 認証局
       // 認証局は誰でもアクセス可なので、key は設定しない
@@ -29,6 +33,7 @@
     },
     Form: {   // 申請フォーム
       url: '',
+      id: '1hnQLsY3lRh0gQMGfXoJJqAL_yBpKR6T0h2RFRc8tUEA',
     },
     Broad: {  // 放送局
       key: 'xGq8kdob7NQXvCG3Jbcil9K-q9HIgJgUO727BfptbUIZXvFX05uJB0CSZHVMb',
@@ -36,11 +41,11 @@
     },
     Post: {   // 郵便局
       key: 'hZ8QEXviiBdU_PfGlZrnIuHODkb6-vY8wx4_azvBd2vbOEEAS3xxI',
-      url: 'https://script.google.com/macros/s/AKfycbzdVIptLc8AbphZ8QEXviiBdU_PfGlZrnIuHODkb6-vY8wx4_azvBd2vbOEEAS3xxInDA/exec',
+      url: 'https://script.google.com/macros/s/AKfycbwHI0MfAdRnVV1laWjPvadDgHAITp5ZzzssmsVTRGohAX9Rs4FDFeZSBdS1tKrGqFIU7w/exec',
     },
     Agency: {  // 資源局
       key: 'IptLc8AbphZ8QEXviiBdU_PfGvCG3Jbcil9lZrnIuHO',
-      url: 'https://script.google.com/macros/s/AKfycbzb60fg36vRL0CHOIcjzeY05lWRs2j_KaNBvARAZTQz-m9xXKok-PdoiCHOPOkKILL5/exec',
+      url: 'https://script.google.com/macros/s/AKfycbyfWhFBi20ptK49d7lqFzHhO_xaQ4MZwj8iwNxviCHSDalBMTdvMXzuNvzJ1SW-XiSX/exec',
       spreadId: '1V-9LgZlRDhuHUgKdDdUvJHu34FAi6hEwe2cAcPbz2TA',
       sheetName: 'ログ', // ↑ログを記入するスプレッドのID　←シート名
       overhead: 140, // ログを書き込む際に発生するオーバーヘッドタイム。ミリ秒
@@ -60,20 +65,26 @@
  * @returns {void} - なし
  */
 function elaps(arg,result=''){
-  const szConf = getConf();
-  SpreadsheetApp.openById(szConf.Agency.spreadId).getSheetByName(szConf.Agency.sheetName).appendRow([
-    getJPDateTime(arg.startTime),   // timestamp
-    arg.account,     // account
-    arg.department,  // department
-    arg.func,        // function/method
-    Date.now() - arg.startTime + szConf.Agency.overhead, // elaps
-    result          // result
-  ]);
+  const conf = getConf();
+  const res = fetchGAS({
+    from: arg.department,
+    to: 'Agency',
+    func: 'logElaps',
+    data: {
+      timestamp: getJPDateTime(arg.startTime),
+      account: arg.account,
+      requester: arg.department,
+      function: arg.func,
+      elaps: Date.now() - arg.startTime + conf.Agency.overhead,
+      result: result,
+    }
+  });
+  console.log('elaps end.',res);
 }
 
-/** fetchGAS: GASのdoPostを呼び出し、後続処理を行う
+/** fetchGAS: GASのdoPostを呼び出す
  * <br>
- * 処理内部で使用する公開鍵・秘密鍵はszLib.getUrlKey()で取得。<br>
+ * 処理内部で使用する公開鍵・秘密鍵はszLib.getConf()で取得。<br>
  * なおhtml版のarg.callbackはGAS版では存在しない。
  * 
  * @param {object}   arg          - 引数
@@ -83,7 +94,7 @@ function elaps(arg,result=''){
  * @param {string}   arg.endpoint - 受信側のコード名からURLが判断できない(配達員の)場合に指定
  * @param {string}   arg.key      - endpoint指定の場合はその鍵も併せて指定
  * @param {any}      arg.data     - 処理対象データ
- * @returns {void} なし
+ * @returns {object} 処理先からの返信
  */
  function fetchGAS(arg){
   console.log('fetchGAS start. arg='+JSON.stringify(arg));
@@ -91,17 +102,20 @@ function elaps(arg,result=''){
   const endpoint = arg.endpoint || conf[arg.to].url;
   const key = arg.key || conf[arg.to].key;
 
-  const rObj = JSON.parse(UrlFetchApp.fetch(endpoint,{
+  const res = UrlFetchApp.fetch(endpoint,{
     'method': 'post',
     'contentType': 'application/json',
+    'muteHttpExceptions': true, // https://teratail.com/questions/64619
     'payload' : JSON.stringify({
-      passPhrase  : key,
+      key  : key,
       from: arg.from,
       to: arg.to,
       func: arg.func,
       data: arg.data,
     }),  
-  }).getContentText());
+  }).getContentText();
+  console.log('res',res)
+  const rObj = JSON.parse(res);
   return rObj;
 }
 
@@ -163,8 +177,12 @@ function szSheet(arg){
    * @param {any}    value - キー値
    * @returns {object} 行オブジェクト({項目名1:値1,項目名2:値2,..}形式)
    */
-  rv.lookup = (key,value) => { // 
-    return rv.data.filter(x => {return x[key] === value})[0];
+  rv.lookup = (key,value) => {
+    if( whichType(value) !== 'Date' ){
+      return rv.data.filter(x => {return x[key] === value})[0];
+    } else {
+      return rv.data.filter(x => {return new Date(x[key]).getTime() === value.getTime()})[0];
+    }
   };
 
   /** update: 該当する行の値を変更する
@@ -189,7 +207,14 @@ function szSheet(arg){
     try {
       // 1.何行目のデータを更新するか特定するし、更新対象行のデータをuArrに保存する
       // keyColumn == null ならappendから回されたと判断
-      let i = (keyColumn === null) ? -1 : rv.data.map(x => x[keyColumn]).indexOf(String(keyValue));
+      let i = -1;
+      if( keyColumn !== null ){
+        if( whichType(keyValue) === 'Date' ){
+          i = rv.data.map(x => new Date(x[keyColumn]).getTime()).indexOf(keyValue.getTime());
+        } else {
+          i = rv.data.map(x => x[keyColumn]).indexOf(String(keyValue));
+        }
+      }
       let rowNum = null;
       let uArr = [];
       if( i < 0 ){  // 未登録の場合
