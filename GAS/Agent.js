@@ -1,19 +1,19 @@
 /* ================================================================
-「配送局」の使用方法
-  1. elaps, passPhraseの内容を更新
+「配信局」の使用方法
+  1. elaps, keyの内容を更新
   2. authorize を実行して権限を付与
   3. ウェブアプリとしてデプロイ
-  4. 人事局の「配送局」シート"endpoint","passPhrase"に登録
+  4. 人事局の「配信局」シート"endpoint","key"に登録
 ================================================================== */
 
-const elaps = {account:'ena.kaon@gmail.com',department:'配送局'};
-const passPhrase = 'pSp2*ZR_S/GXr9C5';
+const elaps = {account:'ena.kaon@gmail.com',department:'配信局'};
+const key = 'pSp2*ZR_S/GXr9C5';
 
 const authorize = () => {
   // メールのプロトタイプを作成
   const mail = JSON.stringify({
     recipient: szLib.getConf().Administrator,  // システム管理者宛
-    subject: '配達局:'+Session.getActiveUser().getUserLoginId()+' authorize',
+    subject: '配信局:'+Session.getActiveUser().getUserLoginId()+' authorize',
     body: '',
     options: {
       attachments: undefined,
@@ -22,7 +22,7 @@ const authorize = () => {
       from: undefined,
       htmlBody: '',
       inlineImages: undefined,
-      name: '配達局',
+      name: '配信局',
       noReply: undefined,
       replyTo: undefined,
     }
@@ -36,7 +36,7 @@ const authorize = () => {
     console.log('testData: '+JSON.stringify(testData[i]));
     const res = doPost({postData:{contents:JSON.stringify({
       func: testData[i].func,
-      passPhrase: passPhrase,
+      key: key,
       data:testData[i].data
     })}});
     console.log('res:',res.getContent());
@@ -46,7 +46,7 @@ const authorize = () => {
 /** doPost: パラメータに応じて処理を分岐
  * @param {object} e - Class UrlFetchApp [fetch(url, params)]{@link https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app#fetchurl,-params}の"Make a POST request with a JSON payload"参照
  * @param {object} arg - データ部分。JSON.parse(e.postData.getDataAsString())の結果
- * @param {string} arg.passPhrase - 共通鍵。szLib.getUrl()で取得
+ * @param {string} arg.key - 共通鍵。szLib.getUrl()で取得
  * @param {string} arg.from       - 送信先(自分)
  * @param {string} arg.to         - 送信元
  * @param {string} arg.func       - 分岐する処理名
@@ -59,13 +59,13 @@ const authorize = () => {
  */
  function doPost(e){
   elaps.startTime = Date.now();  // 開始時刻をセット
-  console.log('配送局.doPost start.',e);
+  console.log('配信局.doPost start.',e);
 
   //const arg = JSON.parse(e.postData.getDataAsString()); // contentsでも可
   const arg = JSON.parse(e.postData.contents);
   console.log('arg:'+JSON.stringify(arg));
   let rv = null;
-  if( arg.passPhrase === passPhrase ){
+  if( arg.key === key ){
     try {
       elaps.func = arg.func; // 処理名をセット
       switch( arg.func ){
@@ -80,15 +80,15 @@ const authorize = () => {
       // Errorオブジェクトをrvとするとmessageが欠落するので再作成
       rv = {isErr:true, message:e.name+': '+e.message};
     } finally {
-      console.log('配送局.doPost end. rv='+JSON.stringify(rv));
+      console.log('配信局.doPost end. rv='+JSON.stringify(rv));
       szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');  // 結果を渡して書き込み
       return ContentService
       .createTextOutput(JSON.stringify(rv,null,2))
       .setMimeType(ContentService.MimeType.JSON);
     }
   } else {
-    rv = {isErr:true,message:'invalid passPhrase :'+e.parameter.passPhrase};
-    console.error('配送局.doPost end. '+rv.message);
+    rv = {isErr:true,message:'invalid key :'+arg.key};
+    console.error('配信局.doPost end. '+rv.message);
     console.log('end',elaps);
     szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');
   }
@@ -106,7 +106,7 @@ const authorize = () => {
  *    result {object} : 分岐先の処理が正常終了した場合の結果オブジェクト
  */
  const sendMail = (arg) => {
-  console.log('配送局.sendMail start. arg='+JSON.stringify(arg));
+  console.log('配信局.sendMail start. arg='+JSON.stringify(arg));
   let rv = null;
   try {
 
@@ -122,7 +122,7 @@ const authorize = () => {
     // Errorオブジェクトをrvとするとmessageが欠落するので再作成
     rv = {isErr:true, message:e.name+': '+e.message};
   } finally {
-    console.log('配送局.sendMail end. rv='+JSON.stringify(rv));
+    console.log('配信局.sendMail end. rv='+JSON.stringify(rv));
     return rv;
   }
 }
