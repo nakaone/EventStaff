@@ -2,7 +2,6 @@ const elaps = {account:'shimokitasho.oyaji@gmail.com',department:'郵便局'};
 const conf = szLib.getConf();
 
 const authorize = () => {
-
   const testData = [{
     template:'郵便局初期化',
     data:[{
@@ -14,20 +13,22 @@ const authorize = () => {
   for( let i=0 ; i<testData.length ; i++ ){
     console.log('testData: '+JSON.stringify(testData[i]));
     const res = doPost({postData:{contents:JSON.stringify({
+      from: 'authorize',
+      to: 'Post',
       func: 'postMails',
-      passPhrase: conf.Post.key,
-      data:testData[i].data
+      key: conf.Post.key,
+      data:testData[i]
     })}});
     console.log('res:',res.getContent());
   }
 }
 
 /** doPost: パラメータに応じて処理を分岐
- * @param {object} e - Class UrlFetchApp [fetch(url, params)]{@link https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app#fetchurl,-params}の"Make a POST request with a JSON payload"参照
+ * @param {object} e - Class UrlFetchApp <a href="https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app#fetchurl,-params">fetch(url, params)</a>の"Make a POST request with a JSON payload"参照
  * @param {object} arg - データ部分。JSON.parse(e.postData.getDataAsString())の結果
- * @param {string} arg.passPhrase - 共通鍵。szLib.getUrl()で取得
- * @param {string} arg.from       - 送信先(自分)
- * @param {string} arg.to         - 送信元
+ * @param {string} arg.key        - 共通鍵。szLib.getUrl()で取得
+ * @param {string} arg.from       - 送信元
+ * @param {string} arg.to         - 送信先(自分)
  * @param {string} arg.func       - 分岐する処理名
  * @param {string} arg.data       - 処理対象データ
  * @return {object} 正常終了の場合は分岐先処理の戻り値、エラーの場合は以下。
@@ -36,16 +37,16 @@ const authorize = () => {
  * <li>message {string} - エラーメッセージ
  * </ul>
  */
- function doPost(e){
+function doPost(e){
   elaps.startTime = Date.now();  // 開始時刻をセット
   console.log('郵便局.doPost start.',e);
 
-  //const arg = JSON.parse(e.postData.getDataAsString()); // contentsでも可
   const arg = JSON.parse(e.postData.contents);
   let rv = null;
-  if( arg.passPhrase === conf.Post.key ){
+  if( arg.key === conf.Post.key ){
     try {
       elaps.func = arg.func; // 処理名をセット
+	  
       switch( arg.func ){
         case 'postMails':
           rv = postMails(arg.data);
@@ -62,7 +63,7 @@ const authorize = () => {
       .setMimeType(ContentService.MimeType.JSON);
     }
   } else {
-    rv = {isErr:true,message:'invalid passPhrase :'+e.parameter.passPhrase};
+    rv = {isErr:true,message:'invalid passPhrase :'+arg.key};
     console.error('郵便局.doPost end. '+rv.message);
     console.log('end',elaps);
     szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');
@@ -87,15 +88,18 @@ const authorize = () => {
  */
 const postMails = (arg) => {
   console.log('郵便局.postMails start. arg='+JSON.stringify(arg));
-  let rv = [];   // 失敗の配列。[{recipient:(string),message:(string)}, {..}, ..]
+  let rv = {isErr:false,faild:[]};   // 失敗の配列。[{recipient:(string),message:(string)}, {..}, ..]
 
-  /* 01. 事前準備：メールのプロトタイプを作成
-    Class [GmailApp](https://developers.google.com/apps-script/reference/gmail/gmail-app)
-      sendEmail(recipient, subject, body, options)   */
+  // 01. 事前準備：メールのプロトタイプを作成
+  //   Class GmailApp
+  //   https://developers.google.com/apps-script/reference/gmail/gmail-app
+  //   sendEmail(recipient, subject, body, options)
+
   // (1) テンプレートとして指定されたシートからtObj[パラメータ名]で値を参照可能に
   const templateObj = szLib.szSheet(arg.template);
   const tObj = {};
   templateObj.data.forEach(x => { tObj[x.parameters] = x.value});
+  console.log('postMails 1.1');
 
   // (2) メールのプロトタイプを作成
   const prototype = JSON.stringify({
@@ -114,6 +118,7 @@ const postMails = (arg) => {
       replyTo: tObj.replyTo || undefined,
     }
   });
+  console.log('postMails 1.2 prototype='+prototype);
 
   // 02.一通ずつ文面を作成、配信
   const logObj = szLib.szSheet('配達記録');
@@ -122,15 +127,16 @@ const postMails = (arg) => {
     //console.log('m='+JSON.stringify(m));
     const mail = JSON.parse(prototype);
     try {
+
       // (1) 宛先の設定
       mail.recipient = m.recipient;
-      //console.log('mail.recipient='+mail.recipient);
+      console.log('mail.recipient='+mail.recipient);
 
       // (2) 文面の作成(テンプレートの仮引数を実引数で置換)
-      for( let x of m.variables ){
+      for( let x in m.variables ){
         const rex = new RegExp('::' + x + '::','g');
         mail.body = mail.body.replace(rex,m.variables[x]);
-        //console.log('rex='+rex+'\nm.variables[x]='+m.variables[x]+'\nmail.body='+mail.body);
+        console.log('rex='+rex+'\nm.variables[x]='+m.variables[x]+'\nmail.body='+mail.body);
       }
 
       // (3) HTMLメールの場合、options.htmlBodyをセット
@@ -143,20 +149,39 @@ const postMails = (arg) => {
       }
       console.log('mail.body='+mail.body+'\nhtmlBody='+mail.htmlBody);
 
-      // (4) 配達員を選定
-      const deliObj = szLib.szSheet('配達員');
-      delivery = deliObj.lookup('next',true);
-      //console.log('delivery='+JSON.stringify(delivery));
-
-      // (5) 配達員に発送指示を送信
-      const res = szLib.fetchGAS({
+      // (4) 配信局を選定
+      // a. 過去24時間のメール送信数が100未満
+      const ngList = szLib.szSheet('メール不能').data.map(x => x[0]);
+      console.log('ngList='+JSON.stringify(ngList));
+      
+      // b. 過去24時間の合計実行時間が最も多い
+      let res = szLib.fetchGAS({
         from    : 'Post',
-        to      : 'Delivery',
-        func    : 'sendMail',
-        endpoint: delivery.endpoint,
-        key     : delivery.passPhrase,
-        data    : mail,
+        to      : 'Agency',
+        func    : 'listAgents',
       });
+      const activeList = res.result
+        .filter(x => x.type === '配信局')
+        .sort((a,b) => {return Number(a.elaps) < Number(b.elaps) ? -1 : 1});
+      console.log('activeList='+JSON.stringify(activeList));
+      let agent = {};
+      for( let i=0 ; i<activeList.length ; i++ ){
+        if( ngList.findIndex(x => x === activeList[i].account) < 0 ){
+          agent = activeList[i];
+          break; 
+        }
+      }
+      console.log('agent='+JSON.stringify(agent));
+
+      // (5) 配信局に発送指示を送信
+      res = szLib.fetchGAS({
+        from      : 'Post',
+        to        : 'Agent',
+        func      : 'sendMail',
+        endpoint  : agent.endpoint,
+        passPhrase: agent.key,
+        data      : mail,
+      });		
       console.log('郵便局.res='+JSON.stringify(res));
       if( res.isErr ){
         rv.push({recipient:mail.recipient,message:res.message});
@@ -169,10 +194,14 @@ const postMails = (arg) => {
         delivery: delivery.account,
         result: (res.isErr ? 'NG' : 'OK'),
       });
+
     } catch(e) {
-      rv.push({recipient:mail.recipient,message:e.message});
+      rv.isErr = true;
+      rv.faild.push({recipient:mail.recipient,message:e.message});
     }
-  };
+  }
+
+
   console.log('郵便局.postMails end. rv='+JSON.stringify(rv));
   return rv;
 }
