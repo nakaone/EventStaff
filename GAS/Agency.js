@@ -12,7 +12,7 @@ const authorize = () => {
 /** doPost: パラメータに応じて処理を分岐
  * @param {object} e - Class UrlFetchApp [fetch(url, params)]{@link https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app#fetchurl,-params}の"Make a POST request with a JSON payload"参照
  * @param {object} arg - データ部分。JSON.parse(e.postData.getDataAsString())の結果
- * @param {string} arg.passPhrase - 共通鍵。szLib.getUrl()で取得
+ * @param {string} arg.key - 共通鍵。szLib.getUrl()で取得
  * @param {string} arg.from       - 送信先(自分)
  * @param {string} arg.to         - 送信元
  * @param {string} arg.func       - 分岐する処理名
@@ -30,7 +30,7 @@ const authorize = () => {
   //const arg = JSON.parse(e.postData.getDataAsString()); // contentsでも可
   const arg = JSON.parse(e.postData.contents);
   let rv = null;
-  if( arg.passPhrase === conf.Agency.key ){
+  if( arg.key === conf.Agency.key ){
     try {
       elaps.func = arg.func; // 処理名をセット
       switch( arg.func ){
@@ -52,7 +52,7 @@ const authorize = () => {
       .setMimeType(ContentService.MimeType.JSON);
     }
   } else {
-    rv = {isErr:true,message:'invalid passPhrase :'+e.parameter.passPhrase};
+    rv = {isErr:true,message:'invalid key :'+e.parameter.key};
     console.error('資源局.doPost end. '+rv.message);
     console.log('end',elaps);
     localElaps(elaps, rv.isErr ? rv.message : 'OK');
@@ -119,6 +119,10 @@ const logElaps = (arg) => {
   }
 }
 
+const test = () => {
+  localElaps({startTime:Date.now()-1000,account:'fuga@gmail.com',department:'test',func:'testfunc'});
+}
+
 /** localElaps: 【資源局内部用】ログシートへの書き込み
  * <br>
  * 通常szLib.elapsだが、資源局は自シートなのでコンテナ関数を使用
@@ -130,7 +134,8 @@ const logElaps = (arg) => {
  * @param {string} result - 結果
  * @returns {void} - なし
  */
-function localElaps(arg,result=''){
+const localElaps = (arg,result='') => {
+  console.log('localElaps start arg='+JSON.stringify(arg));
   SpreadsheetApp.getActiveSpreadsheet().getSheetByName('ログ').appendRow([
     szLib.getJPDateTime(arg.startTime),   // timestamp
     arg.account,     // account
