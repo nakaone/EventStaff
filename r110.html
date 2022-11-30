@@ -18,6 +18,8 @@
 </body>
 <script src="js/jsQR.js" defer></script>
 <script src="js/qrcode.min.js" defer></script>
+<script src="js/Auth.js" defer></script>
+<script src="js/library.js" defer></script>
 <script type="text/javascript">
 const dom = {
   title: document.querySelector('header .title'),
@@ -26,11 +28,12 @@ const dom = {
 };
 const test = () => {
   console.log('test');
-  //dom.title.innerText = 'hoge';
-  dom.title.querySelector('p').innerText = 'fuga';
+  dom.title.innerText = 'hoge';
+  //dom.title.querySelector('p').innerText = 'fuga';
 }
 window.addEventListener('DOMContentLoaded', function(){
-  test();
+  const auth = new Auth(dom);
+  //test();
   // 受付番号入力画面表示
   // getPassCode正常終了時、そこからinitializeを呼び出す
 });

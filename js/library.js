@@ -366,9 +366,9 @@ const fetchGAS = (arg) => {
   fetch(endpoint.url,{
     "method": "POST",
     "body": JSON.stringify({
-      passPhrase: endpoint.key,
+      key : endpoint.key,
       from: arg.from,
-      to:   arg.to,
+      to  : arg.to,
       func: arg.func,
       data: arg.data,
     }),
