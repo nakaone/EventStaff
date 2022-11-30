@@ -8,7 +8,7 @@
  * シートの参照(シート毎)
  * メールの発信
  */
- const authorize = () => {
+const authorize = () => {
   const rv = elaps({startTime:Date.now()-1000,account:'test@gmail.com',department:'テスト局',func:'elaps'},'result=hoge');
   console.log(rv);
 }
@@ -41,13 +41,13 @@ function getConf(){
     },
     Post: {   // 郵便局
       key: 'hZ8QEXviiBdU_PfGlZrnIuHODkb6-vY8wx4_azvBd2vbOEEAS3xxI',
-      url: 'https://script.google.com/macros/s/AKfycbwHI0MfAdRnVV1laWjPvadDgHAITp5ZzzssmsVTRGohAX9Rs4FDFeZSBdS1tKrGqFIU7w/exec',
+      url: 'https://script.google.com/macros/s/AKfycbwx7uzCHrjJN32L5LqU79HdU4YOHL6UPnottv74IXE3-WFu5KrNKXY6C7z-0_IOqshYgQ/exec',
     },
     Agency: {  // 資源局
       key: 'IptLc8AbphZ8QEXviiBdU_PfGvCG3Jbcil9lZrnIuHO',
-      url: 'https://script.google.com/macros/s/AKfycbyfWhFBi20ptK49d7lqFzHhO_xaQ4MZwj8iwNxviCHSDalBMTdvMXzuNvzJ1SW-XiSX/exec',
-      spreadId: '1V-9LgZlRDhuHUgKdDdUvJHu34FAi6hEwe2cAcPbz2TA',
-      sheetName: 'ログ', // ↑ログを記入するスプレッドのID　←シート名
+      url: 'https://script.google.com/macros/s/AKfycbwByLkRrw_zk1DSoTchFAE5f3f18DGFeq6xdVgDq5lx11iczxK6VBs55PLwJ4lCkNlg/exec',
+      //spreadId: '1V-9LgZlRDhuHUgKdDdUvJHu34FAi6hEwe2cAcPbz2TA',
+      //sheetName: 'ログ', // ↑ログを記入するスプレッドのID　←シート名
       overhead: 140, // ログを書き込む際に発生するオーバーヘッドタイム。ミリ秒
     },
     Administrator: 'shimokitasho.oyaji@gmail.com',  // システム管理者

@@ -156,13 +156,11 @@ function onFormSubmit(e){
       from: 'Master',
       to: 'Post',
       func: 'postMails',
-      endpoion: conf.Post.url,
-      key: conf.Post.key,
       data: {
         template: '申込への返信',
         data: [{
           recipient: tObj['メールアドレス'],
-          variables: {name:tObj['申請者氏名'],entryNo:entryNo},
+          variables: {name:tObj['申請者氏名'],entryNo:('000'+entryNo).slice(-4)},
         }],
       }
     });

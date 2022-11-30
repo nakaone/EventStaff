@@ -70,7 +70,7 @@ const listAgents = () => {
   console.log('資源局.listAgents start.');
   let rv = null;
   try {
-    rv = {isErr: false, result: szLib.szSheet('配信局').data};
+    rv = {isErr: false, result: szLib.szSheet('局一覧').data};
   } catch(e) {
     // Errorオブジェクトをrvとするとmessageが欠落するので再作成
     rv = {isErr:true, message:e.name+': '+e.message};

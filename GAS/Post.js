@@ -39,9 +39,9 @@ const authorize = () => {
  */
 function doPost(e){
   elaps.startTime = Date.now();  // 開始時刻をセット
-  console.log('郵便局.doPost start.',e);
-
   const arg = JSON.parse(e.postData.contents);
+  console.log('郵便局.doPost start.',arg);
+  console.log('conf='+JSON.stringify(conf));
   let rv = null;
   if( arg.key === conf.Post.key ){
     try {
@@ -63,7 +63,7 @@ function doPost(e){
       .setMimeType(ContentService.MimeType.JSON);
     }
   } else {
-    rv = {isErr:true,message:'invalid passPhrase :'+arg.key};
+    rv = {isErr:true,message:'invalid key :'+arg.key};
     console.error('郵便局.doPost end. '+rv.message);
     console.log('end',elaps);
     szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');
@@ -99,13 +99,13 @@ const postMails = (arg) => {
   const templateObj = szLib.szSheet(arg.template);
   const tObj = {};
   templateObj.data.forEach(x => { tObj[x.parameters] = x.value});
-  console.log('postMails 1.1');
+  console.log('postMails 1.1 tObj='+JSON.stringify(tObj));
 
   // (2) メールのプロトタイプを作成
   const prototype = JSON.stringify({
     recipient: null,
     subject: tObj.subject,
-    body: templateObj.template,
+    body: tObj.template,
     options: {
       attachments: undefined,
       bcc: tObj.bcc || undefined,
@@ -124,7 +124,7 @@ const postMails = (arg) => {
   const logObj = szLib.szSheet('配達記録');
   for( let i=0 ; i<arg.data.length ; i++ ){
     const m = arg.data[i];
-    //console.log('m='+JSON.stringify(m));
+    console.log('m='+JSON.stringify(m));
     const mail = JSON.parse(prototype);
     try {
 
@@ -161,7 +161,7 @@ const postMails = (arg) => {
         func    : 'listAgents',
       });
       const activeList = res.result
-        .filter(x => x.type === '配信局')
+        .filter(x => x.type === 'Agent')
         .sort((a,b) => {return Number(a.elaps) < Number(b.elaps) ? -1 : 1});
       console.log('activeList='+JSON.stringify(activeList));
       let agent = {};
@@ -179,7 +179,7 @@ const postMails = (arg) => {
         to        : 'Agent',
         func      : 'sendMail',
         endpoint  : agent.endpoint,
-        passPhrase: agent.key,
+        key       : agent.key,
         data      : mail,
       });		
       console.log('郵便局.res='+JSON.stringify(res));
