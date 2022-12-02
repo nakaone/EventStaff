@@ -341,7 +341,6 @@ const whichType = (arg = undefined) => {
  * 処理内部で使用する公開鍵・秘密鍵はszLib.getUrlKey()で取得。
  * 
  * @param {object}   arg          - 引数
- * @param {string}   arg.from     - 送信側のコード名(平文)
  * @param {string}   arg.to       - 受信側のコード名(平文)
  * @param {string}   arg.func     - GAS側で処理分岐の際のキー文字列
  * @param {any}      arg.data     - 処理対象データ
@@ -360,14 +359,12 @@ const whichType = (arg = undefined) => {
 const fetchGAS = (arg) => {
   console.log("fetchGAS start.",arg);
 
-  const endpoint = config[arg.to];
-
   // GASからの返信を受けたらcallbackを呼び出し
-  fetch(endpoint.url,{
+  fetch(config[arg.to].url,{
     "method": "POST",
     "body": JSON.stringify({
-      key : endpoint.key,
-      from: arg.from,
+      key : config[arg.to].key,
+      from: config.entryStr,
       to  : arg.to,
       func: arg.func,
       data: arg.data,

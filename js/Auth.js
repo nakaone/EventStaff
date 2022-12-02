@@ -41,12 +41,12 @@ class Auth {
       this.dom.entryNo.querySelector('input[type="button"]').disabled = null;
       return;
     }
-    this.entryNo = Number(inputValue);
+    config.entryNo = Number(inputValue);
+    config.entryStr = ('000'+this.entryNo).slice(-4);
     const res = fetchGAS({
-      from     : 'getEntryNo',
       to       : 'Auth',
       func     : 'auth1A',
-      data     : this.entryNo,
+      data     : config.entryNo,
       callback : (response) => {
         console.log('getEntryNo response = '+JSON.stringify(response));
         if( response.isErr ){

@@ -26,14 +26,13 @@ const dom = {
   nav  : document.querySelector('nav'),
   main : document.querySelector('#main'),
 };
-const test = () => {
-  console.log('test');
-  dom.title.innerText = 'hoge';
-  //dom.title.querySelector('p').innerText = 'fuga';
-}
+const config = {
+  Auth:{
+    url: 'https://script.google.com/macros/s/AKfycbxqsqYHJ_Xtuc70-YEbd__sAN0_Cnmz8-K6xEOVuJQkdm3eYt9y6uWicVQXdOcjHesqpg/exec',
+  }
+};
 window.addEventListener('DOMContentLoaded', function(){
   const auth = new Auth(dom);
-  //test();
   // 受付番号入力画面表示
   // getPassCode正常終了時、そこからinitializeを呼び出す
 });
