@@ -33,6 +33,7 @@ class Auth {
     this.dom.entryNo.querySelector('.message').innerHTML = '<p>暫くお待ちください...</p>';
 
     const inputValue = this.dom.entryNo.querySelector('input[type="text"]').value;
+    // 受付番号が適切かチェック、不適切なら処理中断
     if( !inputValue.match(/^[0-9]{1,4}$/) ){
       alert("不適切な受付番号です");
       // 入力欄をクリア
@@ -41,6 +42,7 @@ class Auth {
       this.dom.entryNo.querySelector('input[type="button"]').disabled = null;
       return;
     }
+
     config.entryNo = Number(inputValue);
     config.entryStr = ('000'+this.entryNo).slice(-4);
     const res = fetchGAS({
@@ -50,8 +52,13 @@ class Auth {
       callback : (response) => {
         console.log('getEntryNo response = '+JSON.stringify(response));
         if( response.isErr ){
-          this.dom.entryNo.querySelector('.message').innerHTML
-            = '<p class="error">' + response.message + '</p>';
+          const d = this.dom.entryNo.querySelector('.message');
+          d.innerHTML = '';
+          for( let i=0 ; i<response.faild.length ; i++ ){
+            d.innerHTML = d.innerHTML + '<p class="error">'
+              + response.faild[i].recipient + ' : '
+              + response.faild[i].message + '</p>';
+          }
         } else {
           // 受付番号入力欄を隠蔽
           this.dom.entryNo.style.display = 'none';
