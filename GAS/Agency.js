@@ -1,8 +1,17 @@
 const elaps = {account:'nakaone.kunihiro@gmail.com',department:'資源局'};
 const conf = szLib.getConf();
 
-/** authorize: 初期化処理 */
+/** authorize: 初期化処理
+ * 
+ * szLib.getConf()実行時に、
+ * Exception: We're sorry, a server error occurred. Please wait a bit and try again.
+ * getConf	@ szLib.gs:32
+ * が出たら、「GCP > APIとサービス > ライブラリ > Google Drive APIを検索 > 「有効にする」をクリック」を実行する。
+ * 参考：GASでDriveAppクラスを使うと`Exception: We're sorry, a server error occurred. Please wait a bit and try again.`エラーが出る
+ * https://qiita.com/sa9ra4ma/items/8b25695b0f23435cdf64
+ */
 const authorize = () => {
+  console.log('conf='+JSON.stringify(conf));
   let rv = listAgents();
   console.log(rv);
   rv = logElaps({timestamp:Date.now(), account:'fuga@gmail.com', requester:'テスト局', function:'testFunc()', elaps:1000, result:'OK'});

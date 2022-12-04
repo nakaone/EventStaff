@@ -175,10 +175,7 @@ function onFormSubmit(e){
 }
 
 /** auth1B: 認証第一段階。パスコードを生成してメールで送付
- * @param {object} arg            - POSTで渡されたデータ
- * @param {string} arg.func       - 利用しない('auth1B'固定)
- * @param {string} arg.entryNo    - 利用者が入力した受付番号
- * @param {string} arg.key - 利用しない(config.Master.Key)
+ * @param {object} arg            - 利用者が入力した受付番号
  * @return {object} - 処理結果
  * <ul>
  * <li>isErr {boolean} : エラーならtrue
@@ -195,9 +192,9 @@ const auth1B = (arg) => {
   try {
 
     // 01.申込者情報の取得とパスコードの生成
-    const entryNo = Number(arg.entryNo);
-    const dObj = szLib.szSheet({sheetName:'マスタ'});
-    const participant = dObj.lookup('受付番号',Number(x['受付番号']));
+    const entryNo = Number(arg);
+    const dObj = szLib.szSheet('マスタ');
+    const participant = dObj.lookup('受付番号',entryNo);
     //console.log('管理局.participant='+JSON.stringify(participant));
     const passCode = ('00000' + Math.floor(Math.random() * 1000000)).slice(-6);
     //console.log('管理局.passCode='+passCode);
