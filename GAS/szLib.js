@@ -8,50 +8,31 @@
  * シートの参照(シート毎)
  * メールの発信
  */
-const authorize = () => {
+ const authorize = () => {
   const rv = elaps({startTime:Date.now()-1000,account:'test@gmail.com',department:'テスト局',func:'elaps'},'result=hoge');
   console.log(rv);
+}
+
+const readJson = () => {
+  const res = DriveApp.getFileById('1-Q38GWnJo3YbR1xKF_On9lpc_LOxyfxD').getBlob().getDataAsString('utf8');
+  const str = res.replace(/ *\/\/ .+?\n/g,'');
+  console.log(str);
+  console.log(JSON.stringify(JSON.parse(str)));
 }
 
 /** getConf: おまつり奉行用の各種パラメータを取得
  * @param {void} - なし
  * @returns {object} おまつり奉行用の各種パラメータ
+ * 
+ * 当初ソースに直接埋込したが、URL変更の都度szLibの再デプロイが必要になるため、
+ * 参照の都度別ファイルを見に行く形式に変更した。
  */
 function getConf(){
-  return {
-    Auth: {   // 認証局
-      // 認証局は誰でもアクセス可なので、key は設定しない
-      key: '',  // undefinedにならないよう設定するダミー
-      url: 'https://script.google.com/macros/s/AKfycbyDrQRT5MWLl_eyNtg6vYRR-uX1nxq5mqEtfDv5vqYWNi_zbtDkBylHmHo0EHxrBDw-5w/exec',
-    },
-    Master: { // 管理局
-      key: '_WGbHipKdOeuFydHpbz2yzjBmnFNqHYuhAvyMy1QcX5BQgyLl',
-      url: 'https://script.google.com/macros/s/AKfycbxbRmhD_h9rYuZx_WGbHipKdOeuFydHpbz2yzjBmnFNqHYuhAvyMy1QcX5BQgyLlvuCzg/exec',
-      validTime: 3600000, // パスコードの有効時間。ミリ秒
-      defaultAuthLevel: 6,  // AuthLevelの既定値。参加者相当
-      defaultMenuFlags: 8431, // menuFlagsの既定値。参加者相当
-    },
-    Form: {   // 申請フォーム
-      url: '',
-      id: '1hnQLsY3lRh0gQMGfXoJJqAL_yBpKR6T0h2RFRc8tUEA',
-    },
-    Broad: {  // 放送局
-      key: 'xGq8kdob7NQXvCG3Jbcil9K-q9HIgJgUO727BfptbUIZXvFX05uJB0CSZHVMb',
-      url: 'https://script.google.com/macros/s/AKfycbxGq8kdob7NQXvCG3Jbcil9K-q9HIgJgUO727BfptbUIZXvFX05uJB0CSZHVMbOuIptKw/exec',
-    },
-    Post: {   // 郵便局
-      key: 'hZ8QEXviiBdU_PfGlZrnIuHODkb6-vY8wx4_azvBd2vbOEEAS3xxI',
-      url: 'https://script.google.com/macros/s/AKfycbwx7uzCHrjJN32L5LqU79HdU4YOHL6UPnottv74IXE3-WFu5KrNKXY6C7z-0_IOqshYgQ/exec',
-    },
-    Agency: {  // 資源局
-      key: 'IptLc8AbphZ8QEXviiBdU_PfGvCG3Jbcil9lZrnIuHO',
-      url: 'https://script.google.com/macros/s/AKfycbwByLkRrw_zk1DSoTchFAE5f3f18DGFeq6xdVgDq5lx11iczxK6VBs55PLwJ4lCkNlg/exec',
-      //spreadId: '1V-9LgZlRDhuHUgKdDdUvJHu34FAi6hEwe2cAcPbz2TA',
-      //sheetName: 'ログ', // ↑ログを記入するスプレッドのID　←シート名
-      overhead: 140, // ログを書き込む際に発生するオーバーヘッドタイム。ミリ秒
-    },
-    Administrator: 'shimokitasho.oyaji@gmail.com',  // システム管理者
-  };
+  // IdはGoogle Drive上の"config.json"のファイルId
+  const res = DriveApp.getFileById('1-Q38GWnJo3YbR1xKF_On9lpc_LOxyfxD').getBlob().getDataAsString('utf8');
+  const str = res.replace(/ *\/\/ .+?\n/g,'');  // '// '以降行末まで削除
+  console.log('getConf end. str='+str);
+  return JSON.parse(str);
 }
 
 /** elaps: 資源局ログシートへの書き込み
@@ -114,7 +95,7 @@ function elaps(arg,result=''){
       data: arg.data,
     }),  
   }).getContentText();
-  console.log('res',res)
+  console.log('fetchGAS end. res='+res)
   const rObj = JSON.parse(res);
   return rObj;
 }
@@ -178,11 +159,20 @@ function szSheet(arg){
    * @returns {object} 行オブジェクト({項目名1:値1,項目名2:値2,..}形式)
    */
   rv.lookup = (key,value) => {
-    if( whichType(value) !== 'Date' ){
-      return rv.data.filter(x => {return x[key] === value})[0];
-    } else {
-      return rv.data.filter(x => {return new Date(x[key]).getTime() === value.getTime()})[0];
+    console.log('szSheet.lookup start. key='+key+', value='+value+', type='+whichType(value));
+    let r = null;
+    switch( whichType(value) ){
+      case 'Date':
+        r = rv.data.filter(x => {return new Date(x[key]).getTime() === value.getTime()})[0];
+        break;
+      case 'Number':
+        r = rv.data.filter(x => {return Number(x[key]) === value})[0];
+        break;
+      default:
+        r = rv.data.filter(x => {return x[key] === value})[0];
     }
+    console.log('szSheet.lookup end. r='+JSON.stringify(r));
+    return r;
   };
 
   /** update: 該当する行の値を変更する

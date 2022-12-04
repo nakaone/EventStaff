@@ -194,22 +194,23 @@ const auth1B = (arg) => {
     // 01.申込者情報の取得とパスコードの生成
     const entryNo = Number(arg);
     const dObj = szLib.szSheet('マスタ');
-    const participant = dObj.lookup('受付番号',entryNo);
-    //console.log('管理局.participant='+JSON.stringify(participant));
+    const participant = dObj.lookup('entryNo',entryNo);
+    console.log('管理局.participant='+JSON.stringify(participant));
     const passCode = ('00000' + Math.floor(Math.random() * 1000000)).slice(-6);
-    //console.log('管理局.passCode='+passCode);
+    console.log('管理局.passCode='+passCode);
 
     // 02.マスタにパスコードを記録
-    dObj.update('受付番号',entryNo,[
-      {column:'パスコード',value:passCode},
-      {column:'発行日時',value:new Date()},
+    let r = dObj.update('entryNo',entryNo,[
+      {column:'passCode',value:passCode},
+      {column:'passTime',value:new Date()},
     ])
+    console.log('管理局.update='+JSON.stringify(r));
 
     // 03.メール送信要求
     rv = szLib.fetchGAS({from:'Master',to:'Post',func:'postMails',data:{
       template: 'パスコード通知',
       data: [{
-        recipient: participant['メール'],
+        recipient: participant['メールアドレス'],
         variables: {passCode : passCode},
       }],
     }});
@@ -249,14 +250,14 @@ const auth2B = (arg) => {
 
     // 受付番号を基にパスコード・生成日時を取得、検証
     const passCode = Number(arg.passCode);
-    const participant = dObj.data.filter(x => {return Number(x['受付番号']) === entryNo})[0];
+    const participant = dObj.data.filter(x => {return Number(x.entryNo) === entryNo})[0];
     console.log('管理局.participant='+JSON.stringify(participant));
     const revice = [];
 
     // パスコードが一致したかの判定
-    const validCode = passCode === Number(participant['パスコード']);
+    const validCode = passCode === Number(participant.passCode);
     // 発行日時は一時間以内かの判定
-    const validTime = new Date().getTime() - new Date(participant['発行日時']).getTime() < conf.Master.validTime;
+    const validTime = new Date().getTime() - new Date(participant.passTime).getTime() < conf.Master.validTime;
     if(  validCode && validTime ){
       // 検証OK：表示に必要なURLとメニューフラグをconfigとして作成
       // (1) AuthLevelに応じたconfigを作成。管理局「AuthLevel」シートが原本
@@ -273,7 +274,7 @@ const auth2B = (arg) => {
       // editParticipantはオブジェクト用の記述なので、正確なJSON形式に整形が必要
       rv.config.editParticipant = JSON.stringify(rv.config.editParticipant);
       // (2) 参加申請フォームの編集用URL
-      rv.config.entryURL = participant['編集用URL'];
+      rv.config.entryURL = participant.editURL;
       // (3) 表示するメニューのフラグ(menuFlags)
       rv.menuFlags = participant.menuFlags || conf.Master.defaultMenuFlags;
     } else {
@@ -292,10 +293,10 @@ const auth2B = (arg) => {
     rv = {isErr:true, message:e.name+': '+e.message};
   } finally {
     // 「認証成否」に検証結果を記録
-    szLib.updateSheetData(dObj,{
-      target:  {key:'受付番号',value: entryNo},
+    /*szLib.updateSheetData(dObj,{
+      target:  {key:'entryNo',value: entryNo},
       revice: [{key:'認証成否',value: rv.isErr ? 'NG' : 'OK'}],
-    });    
+    });*/    
     console.log('管理局.auth2B end. rv='+JSON.stringify(rv));
     return rv;
   }

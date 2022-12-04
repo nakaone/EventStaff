@@ -61,7 +61,7 @@ const auth1A = (arg) => {
   try {
 
     // 受付番号の取得
-    const entryNo = Number(arg.entryNo)
+    const entryNo = Number(arg)
   
     // ログから受付番号が一致するデータをtimestampの降順に取得
     const dObj = szLib.szSheet('log');

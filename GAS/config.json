@@ -1,0 +1,34 @@
+{
+  "Auth": {   // 認証局
+    // 認証局は誰でもアクセス可なので、key は設定しない
+    "key": "",  // undefinedにならないよう設定するダミー
+    "url": "https://script.google.com/macros/s/AKfycbz_dxbC3W0nbSOldTjxvy8jOoFbnbAG9IoMWNnm_MbO01ui0YZg0tdghQmmyW2yaeXW5w/exec"
+  },
+  "Master": { // 管理局
+    "key": "_WGbHipKdOeuFydHpbz2yzjBmnFNqHYuhAvyMy1QcX5BQgyLl",
+    "url": "https://script.google.com/macros/s/AKfycbwYAleCRitbcd8sAfc10iKjMcdqIbEcgIeAdRuFYkMTYvSoFFusz1W04v0C-bmBdHscfw/exec",
+    "validTime": 3600000, // パスコードの有効時間。ミリ秒
+    "defaultAuthLevel": 6,  // AuthLevelの既定値。参加者相当
+    "defaultMenuFlags": 8431 // menuFlagsの既定値。参加者相当
+  },
+  "Form": {   // 申請フォーム
+    "url": "",
+    "id": "1hnQLsY3lRh0gQMGfXoJJqAL_yBpKR6T0h2RFRc8tUEA"
+  },
+  "Broad": {  // 放送局
+    "key": "xGq8kdob7NQXvCG3Jbcil9K-q9HIgJgUO727BfptbUIZXvFX05uJB0CSZHVMb",
+    "url": "https://script.google.com/macros/s/AKfycbxGq8kdob7NQXvCG3Jbcil9K-q9HIgJgUO727BfptbUIZXvFX05uJB0CSZHVMbOuIptKw/exec"
+  },
+  "Post": {   // 郵便局
+    "key": "hZ8QEXviiBdU_PfGlZrnIuHODkb6-vY8wx4_azvBd2vbOEEAS3xxI",
+    "url": "https://script.google.com/macros/s/AKfycbwx7uzCHrjJN32L5LqU79HdU4YOHL6UPnottv74IXE3-WFu5KrNKXY6C7z-0_IOqshYgQ/exec"
+  },
+  "Agency": {  // 資源局
+    "key": "IptLc8AbphZ8QEXviiBdU_PfGvCG3Jbcil9lZrnIuHO",
+    "url": "https://script.google.com/macros/s/AKfycbzzshXXwH7H8Ylh8amEdgCQ2k4fJGE783OcRiMxWeilVI4EuwrXc0G04aACaDkhMJnq/exec",
+    // spreadId: "1V-9LgZlRDhuHUgKdDdUvJHu34FAi6hEwe2cAcPbz2TA",
+    // sheetName: "ログ", // ↑ログを記入するスプレッドのID　←シート名
+    "overhead": 140 // ログを書き込む際に発生するオーバーヘッドタイム。ミリ秒
+  },
+  "Administrator": "shimokitasho.oyaji@gmail.com"  // システム管理者
+}
