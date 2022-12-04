@@ -114,11 +114,15 @@ class Auth {
         } else {
           // configの内容を更新
           for( let x in response.config ){
-            if( config[x] === undefined ){
-              config[x] = {};
-            }
-            for( let y in response.config[x] ){
-              config[x][y] = response.config[x][y];
+            if( whichType(response.config[x]) === 'Object' ){
+              if( config[x] === undefined ){
+                config[x] = {};
+              }
+              for( let y in response.config[x] ){
+                config[x][y] = response.config[x][y];
+              }
+            } else {
+              config[x] = response.config[x];
             }
           }
           this.dom.main.innerHTML = ''; // 主表示域をクリア
