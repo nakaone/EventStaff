@@ -121,6 +121,7 @@ class Auth {
               config[x][y] = response.config[x][y];
             }
           }
+          this.dom.main.innerHTML = ''; // 主表示域をクリア
           console.log('config='+JSON.stringify(config));
           // 初期設定を呼び出す
           initialize(response);
