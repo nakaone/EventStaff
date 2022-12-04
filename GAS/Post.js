@@ -191,7 +191,7 @@ const postMails = (arg) => {
       logObj.append({
         timestamp: szLib.getJPDateTime(),
         arg: m,
-        delivery: delivery.account,
+        delivery: agent.account,
         result: (res.isErr ? 'NG' : 'OK'),
       });
 
