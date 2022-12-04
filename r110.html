@@ -31,6 +31,11 @@ const config = {
     url: 'https://script.google.com/macros/s/AKfycbz_dxbC3W0nbSOldTjxvy8jOoFbnbAG9IoMWNnm_MbO01ui0YZg0tdghQmmyW2yaeXW5w/exec',
   }
 };
+const initialize = () => {
+  console.log('initialize start.');
+  console.log('config='+JSON.stringify(config));
+  console.log('initialize end.');
+}
 window.addEventListener('DOMContentLoaded', function(){
   const auth = new Auth(dom);
   // 受付番号入力画面表示

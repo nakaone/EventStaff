@@ -261,22 +261,17 @@ const auth2B = (arg) => {
     if(  validCode && validTime ){
       // 検証OK：表示に必要なURLとメニューフラグをconfigとして作成
       // (1) AuthLevelに応じたconfigを作成。管理局「AuthLevel」シートが原本
-      //     認証局:1, 放送局:2, 予約局:4, 管理局:8, 郵便局:16
-      rv = {isErr:false, config:{}};
-      participant.AuthLevel = Number(participant.AuthLevel);
-      const AuthLevel = participant.AuthLevel > 0 ? participant.AuthLevel : conf.Master.defaultAuthLevel;
-      const cObj = szLib.szSheet({sheetName:'config'});
-      cObj.data.forEach(x => {
-        if( (x.AuthLevel & AuthLevel) > 0 ){
-          rv.config[x.key] = x.value;
+      //     認証局:1, 放送局:2, 予約局:4, 管理局:8, 郵便局:16, 資源局:32
+      rv = {isErr:false, config:{
+        AuthLevel: Number(participant.AuthLevel),
+        menuFlags: Number(participant.menuFlags), // 表示するメニューのフラグ(menuFlags)
+        editURL: participant.editURL, // 参加申請フォームの編集用URL
+      }};
+      for( let x in conf ){
+        if( conf[x].level & rv.config.AuthLevel > 0 ){
+          rv.config[x] = conf[x];
         }
-      });
-      // editParticipantはオブジェクト用の記述なので、正確なJSON形式に整形が必要
-      rv.config.editParticipant = JSON.stringify(rv.config.editParticipant);
-      // (2) 参加申請フォームの編集用URL
-      rv.config.entryURL = participant.editURL;
-      // (3) 表示するメニューのフラグ(menuFlags)
-      rv.menuFlags = participant.menuFlags || conf.Master.defaultMenuFlags;
+      }
     } else {
       // 検証NG：エラー通知
       rv = {

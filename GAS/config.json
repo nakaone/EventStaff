@@ -1,34 +1,44 @@
 {
   "Auth": {   // 認証局
+    "level": 1,
     // 認証局は誰でもアクセス可なので、key は設定しない
     "key": "",  // undefinedにならないよう設定するダミー
     "url": "https://script.google.com/macros/s/AKfycbz_dxbC3W0nbSOldTjxvy8jOoFbnbAG9IoMWNnm_MbO01ui0YZg0tdghQmmyW2yaeXW5w/exec"
   },
-  "Master": { // 管理局
-    "key": "_WGbHipKdOeuFydHpbz2yzjBmnFNqHYuhAvyMy1QcX5BQgyLl",
-    "url": "https://script.google.com/macros/s/AKfycbwYAleCRitbcd8sAfc10iKjMcdqIbEcgIeAdRuFYkMTYvSoFFusz1W04v0C-bmBdHscfw/exec",
-    "validTime": 3600000, // パスコードの有効時間。ミリ秒
-    "defaultAuthLevel": 6,  // AuthLevelの既定値。参加者相当
-    "defaultMenuFlags": 8431 // menuFlagsの既定値。参加者相当
-  },
-  "Form": {   // 申請フォーム
-    "url": "",
-    "id": "1hnQLsY3lRh0gQMGfXoJJqAL_yBpKR6T0h2RFRc8tUEA"
-  },
   "Broad": {  // 放送局
+    "level": 2,
     "key": "xGq8kdob7NQXvCG3Jbcil9K-q9HIgJgUO727BfptbUIZXvFX05uJB0CSZHVMb",
     "url": "https://script.google.com/macros/s/AKfycbxGq8kdob7NQXvCG3Jbcil9K-q9HIgJgUO727BfptbUIZXvFX05uJB0CSZHVMbOuIptKw/exec"
   },
+  "Reserve": { // 予約局
+    "level": 4
+  },
+  "Master": { // 管理局
+    "level": 8,
+    "key": "_WGbHipKdOeuFydHpbz2yzjBmnFNqHYuhAvyMy1QcX5BQgyLl",
+    "url": "https://script.google.com/macros/s/AKfycbzI59XzQCm-vKYam2oA_HzzcxI7UKRAblS3Qmjsh-5br5QeInXtL2vRbj-pjo_5JhiDkg/exec",
+    "validTime": 3600000  // パスコードの有効時間。ミリ秒
+  },
   "Post": {   // 郵便局
+    "level": 16,
     "key": "hZ8QEXviiBdU_PfGlZrnIuHODkb6-vY8wx4_azvBd2vbOEEAS3xxI",
-    "url": "https://script.google.com/macros/s/AKfycbwx7uzCHrjJN32L5LqU79HdU4YOHL6UPnottv74IXE3-WFu5KrNKXY6C7z-0_IOqshYgQ/exec"
+    "url": "https://script.google.com/macros/s/AKfycbylUFew8J9LEFaaCXmMDXQfEhCSoQopi9fW_AMv8K7H7C49RJA5VSWY7o47FNp1yFMJtA/exec"
   },
   "Agency": {  // 資源局
+    "level": 32,
     "key": "IptLc8AbphZ8QEXviiBdU_PfGvCG3Jbcil9lZrnIuHO",
     "url": "https://script.google.com/macros/s/AKfycbzzshXXwH7H8Ylh8amEdgCQ2k4fJGE783OcRiMxWeilVI4EuwrXc0G04aACaDkhMJnq/exec",
-    // spreadId: "1V-9LgZlRDhuHUgKdDdUvJHu34FAi6hEwe2cAcPbz2TA",
-    // sheetName: "ログ", // ↑ログを記入するスプレッドのID　←シート名
-    "overhead": 140 // ログを書き込む際に発生するオーバーヘッドタイム。ミリ秒
+    "overhead": 140, // ログを書き込む際に発生する想定オーバーヘッド。ミリ秒
+    "interval": 30000 // 定期配信の間隔。ミリ秒
   },
-  "Administrator": "shimokitasho.oyaji@gmail.com"  // システム管理者
+
+  "Administrator": "shimokitasho.oyaji@gmail.com",  // システム管理者
+  "public": {    //     公開情報
+    "level": 65535,
+    "FormId": "1hnQLsY3lRh0gQMGfXoJJqAL_yBpKR6T0h2RFRc8tUEA", //     "FormURL": "https://docs.google.com/forms/d/e/1FAIpQLSfIJ4IFsBI5pPXsLz2jlTBczzIn8QZQL4r6QHqxZmSeDOhwUA/viewform", // 参加申請受付フォーム。当日参加を誘導するのに使用
+    "SiteURL": "https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97", // イベント案内サイト。実施・募集要領他を掲載したサイト
+    "MapURL": "materials/map.html", // イベント会場マップ。GitHubのmaterialsディレクトリに保持
+    "TableURL": "materials/timetable/WBS.html", // タイムテーブル(進行予定表)。GitHubのmaterialsディレクトリに保持
+    "EnqueteURL": "https://docs.google.com/forms/d/16r3luYQRiLVmI9xqaD4FuaSlUqTRGvI8nAGrjGcg8lc/viewform"  // 参加者アンケート
+  }
 }

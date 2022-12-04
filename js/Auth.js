@@ -1,4 +1,11 @@
+/** class Auth: クライアント側の認証 */
 class Auth {
+  /** constructor: 認証画面の生成
+   * @param {object} dom - 生成先の要素
+   * @param {object} dom.title - タイトル
+   * @param {object} dom.main - 生成先の要素
+   * @returns {void} 戻り値は無し
+   */
   constructor(dom){
     this.dom = dom;
     this.dom.title.innerText = '参加者認証';
@@ -24,6 +31,10 @@ class Auth {
     this.dom.passCode.querySelector('input[type="button"]').onclick = this.getPassCode;
   }
 
+  /** getEntryNo: 受付番号を入力、認証局に問合せ
+   * @param {void} - なし
+   * @returns {void} - なし
+   */
   getEntryNo = () => {
     console.log('getEntryNo start.');
 
@@ -70,8 +81,53 @@ class Auth {
     console.log('getEntryNo end. res='+JSON.stringify(res));
   }
 
-  getPassCode(){
+  /** getPassCode: パスコード入力
+   * @param {void} - なし
+   * @returns {void} なし
+   */
+  getPassCode = () => {
     console.log('getPassCode start');
+
+    // パスコードのボタンを不活性化
+    this.dom.passCode.querySelector('input[type="button"]').disabled = 'disabled';
+
+    // パスコードの形式が適切かチェック、	不適切なら処理中断
+    const inputValue = this.dom.passCode.querySelector('input[type="text"]').value;
+    if( !inputValue.match(/^[0-9]{6}$/) ){
+      alert("不適切なパスコードです");
+      // 入力欄をクリア
+      this.dom.passCode.querySelector('input[type="text"]').value = '';
+      // パスコードのボタンを活性化
+      this.dom.passCode.querySelector('input[type="button"]').disabled = null;
+      return;
+    }
+
+    const rv = fetchGAS({
+      to: 'Auth',
+      func: 'auth2A',
+      data: {entryNo:config.entryNo, passCode:inputValue},
+      callback: (response) => {
+        console.log('getPassCode response = '+JSON.stringify(response));
+        if( response.isErr ){
+          this.dom.passCode.querySelector('.message').innerHTML
+            = '<p class="error">' + response.message + '</p>';
+        } else {
+          // configの内容を更新
+          for( let x in response.config ){
+            if( config[x] === undefined ){
+              config[x] = {};
+            }
+            for( let y in response.config[x] ){
+              config[x][y] = response.config[x][y];
+            }
+          }
+          console.log('config='+JSON.stringify(config));
+          // 初期設定を呼び出す
+          initialize(response);
+        }
+      }
+    });
+
     console.log('getPassCode end');
   }
 }
