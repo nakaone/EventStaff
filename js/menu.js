@@ -1,3 +1,4 @@
+/** class Menu: メニュー表示、制御 */
 class Menu {
   constructor(arg){
     this.dom = {};
@@ -8,28 +9,32 @@ class Menu {
     this.closeMenu();
 
     this.menuObj = [
-      {title:'お知らせ', func:'messageBoard', flag:3},
-      {title:'受付業務', func:'reception', flag:28},
-      {title:'コーナー運営', func:'cornerOperation', flag:32},
-      {title:'参加受付', func:'entry', flag:192},
-      {title:'予約状況参照', func:'referState', flag:768},
-      {title:'お役立ち情報', func:'information', flag:7168},
-      {title:'参加者アンケート', func:'enquete', flag:8192},
-      {title:'システム設定', func:'system', flag:49152}
+      {title:'お知らせ', func:messageBoard, flag:3},
+      {title:'受付業務', func:reception, flag:28},
+      {title:'コーナー運営', func:cornerOperation, flag:32},
+      {title:'参加受付', func:entry, flag:192},
+      {title:'予約状況参照', func:referState, flag:768},
+      {title:'お役立ち情報', func:information, flag:7168},
+      {title:'参加者アンケート', func:enquete, flag:8192},
+      {title:'システム設定', func:system, flag:49152}
     ];
     this.dom.ol = document.createElement('ol');
     this.menuObj.forEach(x => {
+      // config.menuFlagsで指定されたメニューのみ追加
       if( (x.flag & config.menuFlags) > 0 ){
         const li = document.createElement('li');
         li.appendChild(document.createTextNode(x.title));
-        li.addEventListener('click',() => this.dispatch(x.title));
+        li.addEventListener('click',() => {this.closeMenu();x.func();});
         this.dom.ol.appendChild(li);
       }
     });
     this.dom.nav.appendChild(this.dom.ol);
   }
 
-  /** closeMenu: 開いているメニューを閉じる */
+  /** closeMenu: 開いているメニューを閉じる
+   * @param {void} - なし
+   * @returns {void} なし
+   */
   closeMenu = () => {
     console.log('Menu.closeMenu start');
     if( this.status === false ){  // 既に閉じているなら何もしない
@@ -42,7 +47,10 @@ class Menu {
     console.log('Menu.closeMenu end');
   }
 
-  /** openMenu: 閉じているメニューを開く */
+  /** openMenu: 閉じているメニューを開く
+   * @param {void} - なし
+   * @returns {void} なし
+   */
   openMenu = () => {
     console.log('Menu.openMenu start');
     if( this.status === true ){   // 既に開いているなら何もしない
@@ -53,13 +61,5 @@ class Menu {
     this.dom.nav.style.display = 'block';
     this.status = true;
     console.log('Menu.openMenu end');
-  }
-
-  dispatch = (arg) => {
-    console.log('dispatch start. arg='+arg);
-    this.closeMenu();
-    switch(arg){
-
-    }
   }
 }

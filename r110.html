@@ -34,11 +34,110 @@ let config;
     url: 'https://script.google.com/macros/s/AKfycbz_dxbC3W0nbSOldTjxvy8jOoFbnbAG9IoMWNnm_MbO01ui0YZg0tdghQmmyW2yaeXW5w/exec',
   }
 };*/
+/** initialize: 初期設定
+ * @param {void} - なし
+ * @returns {void} なし
+ */
 const initialize = () => {
   console.log('initialize start.');
   console.log('config='+JSON.stringify(config));
   const menu = new Menu(dom);
   console.log('initialize end.');
+}
+/** messageBoard: お知らせ画面表示
+ * @param {void} - なし
+ * @returns {void} なし
+ */
+const messageBoard = () => {
+  console.log('messageBoard');
+}
+/** reception: 受付業務画面表示
+ * @param {void} - なし
+ * @returns {void} なし
+ */
+const reception = () => {
+  console.log('reception');
+}
+/** cornerOperation: コーナー運営画面表示
+ * @param {void} - なし
+ * @returns {void} なし
+ */
+const cornerOperation = () => {
+  console.log('cornerOperation');
+}
+/** entry: 参加受付画面表示
+ * @param {void} - なし
+ * @returns {void} なし
+ */
+const entry = () => {
+  console.log('entry');
+}
+/** referState: 予約状況参照画面表示
+ * @param {void} - なし
+ * @returns {void} なし
+ */
+const referState = () => {
+  console.log('referState');
+}
+/** information: お役立ち情報画面表示
+ * @param {void} - なし
+ * @returns {void} なし
+ */
+const information = () => {
+  console.log('information');
+}
+/** enquete: 参加者アンケート画面表示
+ * @param {void} - なし
+ * @returns {void} なし
+ */
+const enquete = () => {
+  console.log('enquete');
+}
+/** system: システム設定画面表示
+ * @param {void} - なし
+ * @returns {void} なし
+ */
+const system = () => {
+  console.log('system');
+  dom.title.innerText = 'システム設定';
+  dom.main.innerHTML = '';
+
+  // 掲示板他の定期的処理停止・再開
+  if( (config.menuFlags & 16384) > 0 ){
+    const o = genChild({tag:'div', children:[
+      {tag:'h1', text:'定期的処理の停止・再開'},
+      {tag:'input', type:'button', value:'再開', name:'start'},
+      {tag:'input', type:'button', value:'停止', name:'stop'},
+    ]},{},'root');
+    if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
+      throw o.result;
+    } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
+      dom.main.appendChild(o.result);
+    }
+  }
+
+  // ヘルプ
+  if( (config.menuFlags & 32768) > 0 ){
+    const o = document.createElement('div');
+    o.innerHTML = '<h1>ヘルプ</h1>'
+    + '<details><summary>[Android]カメラを使おうとすると「使用できません」と表示される</summary>'
+    +   '<p>ブラウザにカメラを使用する権限が付与されていない場合に表示されます。対応は以下の通りです(<a href="https://support.google.com/android/answer/9431959?hl=ja" target="_blank">出典</a>)。</p>'
+    +   '<ol>'
+    +     '<li>設定 > アプリ > 変更するアプリ(ブラウザ)を選択 > 権限 > カメラ</li>'
+    +     '<li>「許可しない」から「アプリの使用中のみ許可」または「毎回確認する」に変更</li>'
+    +   '</ol>'
+    + '</details>';
+    dom.main.appendChild(o);
+  }
+
+  // おまつり奉行について
+  const o = document.createElement('div');
+  o.innerHTML = '<h1>おまつり奉行について</h1>'
+  + '<p>about OMATSURI-Bugyo</p>'
+  + '<p>version: 1.1.0 (Dec.13,2022 released)</p>'
+  + '<p>author : <a mailto="nakaone.kunihiro@gmail.com"><ruby><rb>嶋津　邦浩</rb><rt>2-2ゆうなパパ</rt></ruby></a> (Shimazu Kunihiro)</p>'
+  + '<p>License: <a href="https://opensource.org/licenses/mit-license.php" target="_blank">MIT</a></p>';
+  dom.main.appendChild(o);
 }
 window.addEventListener('DOMContentLoaded', function(){
   //debugここから

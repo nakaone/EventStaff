@@ -92,3 +92,7 @@ nav li {
   width: calc(100% - 1rem);
   height: calc(100% - 3rem);
 }
+
+h1 {
+  font-size: 1.6rem;
+}
