@@ -84,8 +84,23 @@ const referState = () => {
  * @returns {void} なし
  */
 const information = () => {
-  console.log('information');
+  dom.title.innerText = 'お役立ち情報';
+  dom.main.innerHTML = `
+    <button name="schedule">進行予定</button>
+    <button name="venueMap">校内案内図</button>
+    <button name="noticeSite">募集要項</button>
+  `;
+  dom.main.querySelector('button[name="schedule"]').onclick = () => {
+    window.open(config.public.TableURL,'_blank');
+  };
+  dom.main.querySelector('button[name="venueMap"]').onclick = () => {
+    window.open(config.public.MapURL,'_blank');
+  };
+  dom.main.querySelector('button[name="noticeSite"]').onclick = () => {
+    window.open(config.public.SiteURL,'_blank');
+  };
 }
+
 /** enquete: 参加者アンケート画面表示
  * @param {void} - なし
  * @returns {void} なし
@@ -99,6 +114,7 @@ const enquete = () => {
     window.open(config.public.EnqueteURL,'_blank');
   };
 }
+
 /** system: システム設定画面表示
  * @param {void} - なし
  * @returns {void} なし
