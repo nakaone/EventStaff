@@ -91,6 +91,13 @@ const information = () => {
  * @returns {void} なし
  */
 const enquete = () => {
+  dom.title.innerText = '参加者アンケート';
+  dom.main.innerHTML = '<p>本日参加された感想を是非以下にお寄せください。</p>'
+  + '<button>参加者アンケート</button>';
+  /*
+  + '<a href="' + config.public.EnqueteURL + '" target="_blank">'
+  + '<div class="button">参加者アンケート</div></a>';*/
+  dom.main.querySelector('button').onclick = location.href;//いまここ
   console.log('enquete');
 }
 /** system: システム設定画面表示
@@ -98,7 +105,6 @@ const enquete = () => {
  * @returns {void} なし
  */
 const system = () => {
-  console.log('system');
   dom.title.innerText = 'システム設定';
   dom.main.innerHTML = '';
 
@@ -139,6 +145,7 @@ const system = () => {
   + '<p>License: <a href="https://opensource.org/licenses/mit-license.php" target="_blank">MIT</a></p>';
   dom.main.appendChild(o);
 }
+
 window.addEventListener('DOMContentLoaded', function(){
   //debugここから
   //const auth = new Auth(dom);

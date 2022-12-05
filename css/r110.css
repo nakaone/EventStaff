@@ -96,3 +96,11 @@ nav li {
 h1 {
   font-size: 1.6rem;
 }
+
+a div.button {
+  text-decoration: none;
+  margin-left: 10%;
+  width: 80%;
+  height: 2rem;
+  background-color: aquamarine;
+}
