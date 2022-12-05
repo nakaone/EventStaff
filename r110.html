@@ -92,13 +92,12 @@ const information = () => {
  */
 const enquete = () => {
   dom.title.innerText = '参加者アンケート';
-  dom.main.innerHTML = '<p>本日参加された感想を是非以下にお寄せください。</p>'
-  + '<button>参加者アンケート</button>';
-  /*
-  + '<a href="' + config.public.EnqueteURL + '" target="_blank">'
-  + '<div class="button">参加者アンケート</div></a>';*/
-  dom.main.querySelector('button').onclick = location.href;//いまここ
-  console.log('enquete');
+  dom.main.innerHTML = `
+    <p>本日参加された感想を是非以下にお寄せください。</p>
+    <button>参加者アンケート</button>`;
+  dom.main.querySelector('button').onclick = () => {
+    window.open(config.public.EnqueteURL,'_blank');
+  };
 }
 /** system: システム設定画面表示
  * @param {void} - なし
