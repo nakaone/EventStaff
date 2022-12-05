@@ -1,17 +1,20 @@
-html, body {
+html {
   margin: 0;
   padding: 0;
   width: 100vw;
   height: 100vh;
   font-size: 5vw;  /* 基本となる文字サイズ */
-  box-sizing: border-box; /* 枠線は要素サイズに含める */
+}
+
+body {
+  font-size: 1rem;
 }
 
 div {
   width: 100%;
   margin: 0px;
   padding: 0px;
-  /*border: solid 1px red;*/
+  box-sizing: border-box; /* 枠線は要素サイズに含める */
 }
 
 /* =========================================================
@@ -32,18 +35,51 @@ header {
   margin-bottom: 1rem;
   background-color: #a0c238;
 }
-header .icon, header .menu {
+header .icon, .menuIcon {
   margin: 0.2rem;
   width: 1.6rem;
   height: 1.6rem;
 }
-header .icon img {
+header img {
   width: 100%;
   height: 100%;
 }
 header .title {
   margin: auto;
+  width: calc(100% - 4rem);
   font-size: 1.2rem;
+}
+
+/* == メニュー =========================================== */
+header .menu img {
+  margin: 0.3rem;
+  max-width: 1.4rem;
+  max-height: 1.4rem;
+}
+
+nav {
+  z-index: 1;
+	background-color: rgba(0,0,0,.5);
+	position: absolute;
+	top: 2rem;
+  right: 0;
+	width: 15rem;
+	height: calc(100% - 2rem);
+  display: none;
+}
+nav ol {
+  padding: 0;
+  margin: 0;
+}
+nav li {
+  list-style-type: none;
+  margin: 0.75rem;
+  padding-right: 0.8rem;
+  border: solid 3px #888;
+  width: calc(15rem - 2.5rem - 6px);
+	color: white;
+	text-align: right;
+	transition: .5s;
 }
 
 /* =========================================================
@@ -55,19 +91,4 @@ header .title {
   left: 0.5rem;
   width: calc(100% - 1rem);
   height: calc(100% - 3rem);
-  /*
-  background-color: aqua;
-  margin-top: 2rem;
-  padding: 0.5rem;
-  overflow: scroll;
-  
-  display: -webkit-flex;
-  display: flex;
-  -webkit-flex-direction: column;
-  flex-direction: column;
-  -webkit-justify-content: flex-start;
-  justify-content: flex-start;
-  -webkit-align-items: flex-start;
-  align-items: flex-start;
-  flex-wrap: wrap;*/
 }
