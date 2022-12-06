@@ -11,7 +11,7 @@ class Broadcast {
   display = () => {
     this.dom.title.innerText = 'お知らせ';
     // 投稿権限がある場合は投稿エリアを表示
-    if( (config.menuFlags & 2) > 0 ){
+    if( (config.private.menuFlags & 2) > 0 ){
       this.dom.main.innerHTML = `
         <input type="button" name="postButton" value="投稿する" />
         <div class="postArea" style="display:none">
@@ -83,7 +83,7 @@ class Broadcast {
     const toEl = this.dom.main.querySelector('[name="to"]');
 
     fetchGAS({
-      to: 'Braod',
+      to: 'Broad',
       func: 'postMessage',
       data: {
         timestamp: getJPDateTime(),

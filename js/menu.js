@@ -20,8 +20,8 @@ class Menu {
     ];
     this.dom.ol = document.createElement('ol');
     this.menuObj.forEach(x => {
-      // config.menuFlagsで指定されたメニューのみ追加
-      if( (x.flag & config.menuFlags) > 0 ){
+      // config.private.menuFlagsで指定されたメニューのみ追加
+      if( (x.flag & config.private.menuFlags) > 0 ){
         const li = document.createElement('li');
         li.appendChild(document.createTextNode(x.title));
         li.addEventListener('click',() => {this.closeMenu();x.func();});

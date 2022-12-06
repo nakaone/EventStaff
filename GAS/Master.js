@@ -241,7 +241,7 @@ const auth1B = (arg) => {
  * @example <caption>引数の例</caption>
  * 管理局.auth2B start. arg={"func":"auth2B","entryNo":"1.0","passCode":"478608","key":"GQD*4〜aQ8r"}
  */
-//const auth2Btest = () => auth2B({entryNo:1,passCode:232027});
+const auth2Btest = () => auth2B({entryNo:1,passCode:883594});
 const auth2B = (arg) => {
   console.log('管理局.auth2B start. arg='+JSON.stringify(arg));
   let rv = null;
@@ -263,17 +263,11 @@ const auth2B = (arg) => {
       // 02.a.検証OK：表示に必要なURLとメニューフラグをconfigとして作成
       // (1) 受付番号に紐付く情報を追加
       rv = {isErr:false, config:{private: participant}};
-        /*
-        AuthLevel: Number(participant.AuthLevel),
-        menuFlags: Number(participant.menuFlags), // 表示するメニューのフラグ(menuFlags)
-        editURL: participant.editURL, // 参加申請フォームの編集用URL
-      }};
-        */
       // (2) config.jsonからAuthLevelに応じた局・公開情報を追加
       //     認証局:1, 放送局:2, 予約局:4, 管理局:8, 郵便局:16, 資源局:32
       //     ※管理局「AuthLevel」シートが原本
       for( let x in conf ){
-        if( conf[x].level & rv.config.AuthLevel > 0 ){
+        if( (conf[x].level & rv.config.private.AuthLevel) > 0 ){
           rv.config[x] = conf[x];
         }
       }
@@ -284,18 +278,21 @@ const auth2B = (arg) => {
         to: 'Agency',
         func: 'listAgents',
       });
+      console.log('l.281 res='+JSON.stringify(res));
       if( res.isErr ){
         throw new Error(res.message);
       }
       // 配信局を選択(type=='agent' & status=='稼働中' & elaps最小)
       rv.config.Agent = {key:null,url:null,elaps:9999999};
-      for( let i=0 ; i<res.result.data.length ; i++ ){
-        const d = res.result.data[i];
+      for( let i=0 ; i<res.result.length ; i++ ){
+        const d = res.result[i];
         if( d.type === 'Agent' && d.status === '稼働中' && d.elaps < rv.config.Agent.elaps ){
           rv.config.Agent.key = d.key;
           rv.config.Agent.url = d.endpoint;
+          rv.config.Agent.elaps = d.elaps;
         }
       }
+      delete rv.config.Agent.elaps;  // 不要なメンバを削除
     } else {
       // 02.b.検証NG：エラー通知
       rv = {

@@ -31,7 +31,7 @@ function getConf(){
   // IdはGoogle Drive上の"config.json"のファイルId
   const res = DriveApp.getFileById('1-Q38GWnJo3YbR1xKF_On9lpc_LOxyfxD').getBlob().getDataAsString('utf8');
   const str = res.replace(/ *\/\/ .+?\n/g,'');  // '// '以降行末まで削除
-  console.log('getConf end. str='+str);
+  //console.log('getConf end. str='+str);
   return JSON.parse(str);
 }
 
@@ -206,7 +206,7 @@ function szSheet(arg){
         }
       }
       let rowNum = null;
-      let uArr = [];
+      let uArr = new Array(rv.keys.length).fill(null);
       if( i < 0 ){  // 未登録の場合
         if( append ){  // 追加する場合
           rowNum = rv.lastRow + 1;
