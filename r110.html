@@ -20,6 +20,7 @@
 <script src="js/qrcode.min.js" defer></script>
 <script src="js/Auth.js" defer></script>
 <script src="js/menu.js" defer></script>
+<script src="js/Broad.js" defer></script>
 <script src="js/library.js" defer></script>
 <script type="text/javascript">
 const dom = {
@@ -42,6 +43,7 @@ const initialize = () => {
   console.log('initialize start.');
   console.log('config='+JSON.stringify(config));
   const menu = new Menu(dom);
+  const broadcast = new Broadcast(dom);
   console.log('initialize end.');
 }
 /** messageBoard: お知らせ画面表示
