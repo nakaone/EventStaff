@@ -241,10 +241,11 @@ const auth1B = (arg) => {
  * @example <caption>引数の例</caption>
  * 管理局.auth2B start. arg={"func":"auth2B","entryNo":"1.0","passCode":"478608","key":"GQD*4〜aQ8r"}
  */
+//const auth2Btest = () => auth2B({entryNo:1,passCode:232027});
 const auth2B = (arg) => {
   console.log('管理局.auth2B start. arg='+JSON.stringify(arg));
   let rv = null;
-  const dObj = szLib.szSheet({sheetName:'マスタ'});  // finallyで使用なのでtry外で宣言
+  const dObj = szLib.szSheet('マスタ');  // finallyで使用なのでtry外で宣言
   const entryNo = Number(arg.entryNo);  // finallyで使用なのでtry外で宣言
   try {
 
