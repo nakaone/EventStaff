@@ -68,17 +68,38 @@ const cornerOperation = () => {
 /** entry: 参加受付画面表示
  * @param {void} - なし
  * @returns {void} なし
+ * <a href="https://davidshimjs.github.io/qrcodejs/">QRCode.js</a>
  */
 const entry = () => {
   console.log('entry');
+  dom.title.innerText = '参加受付';
+  dom.main.innerHTML = `
+    <button>参加者の追加・変更・取消</button>
+    <h1>受付番号：`+ config.entryStr + `</h1>
+    <div></div>
+  `;
+  let qrcode = new QRCode(dom.main.querySelector('div'),{
+    text: config.entryStr,
+    width: 300,
+    height: 300,
+    colorDark : "#000000",
+    colorLight : "#ffffff",
+    correctLevel : QRCode.CorrectLevel.H
+  })
 }
+
 /** referState: 予約状況参照画面表示
  * @param {void} - なし
  * @returns {void} なし
  */
 const referState = () => {
   console.log('referState');
+  dom.title.innerText = '予約状況参照';
+  dom.main.innerHTML = `
+    <h1 style="text-align:center">(未実装)</h1>
+  `;
 }
+
 /** information: お役立ち情報画面表示
  * @param {void} - なし
  * @returns {void} なし
@@ -164,7 +185,7 @@ const system = () => {
 window.addEventListener('DOMContentLoaded', function(){
   //debugここから
   //const auth = new Auth(dom);
-  config = {"Auth":{"url":"https://script.google.com/macros/s/AKfycbz_dxbC3W0nbSOldTjxvy8jOoFbnbAG9IoMWNnm_MbO01ui0YZg0tdghQmmyW2yaeXW5w/exec","level":1,"key":""},"entryNo":1,"entryStr":"ined","AuthLevel":4,"menuFlags":32449,"editURL":"https://docs.google.com/forms/d/e/1FAIpQLSfIJ4IFsBI5pPXsLz2jlTBczzIn8QZQL4r6QHqxZmSeDOhwUA/viewform?edit2=2_ABaOnufCYALGfSCCaKbN4LDLlq9n6oTS8MfbMXvMVGeqH9hcsqj47n1z3eUW-muVZIhFFjg","public":{"level":65535,"Administrator":"shimokitasho.oyaji@gmail.com","FormId":"1hnQLsY3lRh0gQMGfXoJJqAL_yBpKR6T0h2RFRc8tUEA","SiteURL":"https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97","MapURL":"materials/map.html","TableURL":"materials/timetable/WBS.html","EnqueteURL":"https://docs.google.com/forms/d/16r3luYQRiLVmI9xqaD4FuaSlUqTRGvI8nAGrjGcg8lc/viewform"}};
+  config = {"Auth":{"url":"https://script.google.com/macros/s/AKfycbz_dxbC3W0nbSOldTjxvy8jOoFbnbAG9IoMWNnm_MbO01ui0YZg0tdghQmmyW2yaeXW5w/exec","level":1,"key":""},"entryNo":1,"entryStr":"0001","AuthLevel":4,"menuFlags":32449,"editURL":"https://docs.google.com/forms/d/e/1FAIpQLSfIJ4IFsBI5pPXsLz2jlTBczzIn8QZQL4r6QHqxZmSeDOhwUA/viewform?edit2=2_ABaOnufCYALGfSCCaKbN4LDLlq9n6oTS8MfbMXvMVGeqH9hcsqj47n1z3eUW-muVZIhFFjg","public":{"level":65535,"Administrator":"shimokitasho.oyaji@gmail.com","FormId":"1hnQLsY3lRh0gQMGfXoJJqAL_yBpKR6T0h2RFRc8tUEA","SiteURL":"https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97","MapURL":"materials/map.html","TableURL":"materials/timetable/WBS.html","EnqueteURL":"https://docs.google.com/forms/d/16r3luYQRiLVmI9xqaD4FuaSlUqTRGvI8nAGrjGcg8lc/viewform"}};
   initialize();
   //debug ここまで
   // 受付番号入力画面表示

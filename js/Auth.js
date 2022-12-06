@@ -55,7 +55,7 @@ class Auth {
     }
 
     config.entryNo = Number(inputValue);
-    config.entryStr = ('000'+this.entryNo).slice(-4);
+    config.entryStr = ('000'+config.entryNo).slice(-4);
     const res = fetchGAS({
       to       : 'Auth',
       func     : 'auth1A',
