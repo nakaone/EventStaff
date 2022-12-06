@@ -249,32 +249,55 @@ const auth2B = (arg) => {
   const entryNo = Number(arg.entryNo);  // finallyで使用なのでtry外で宣言
   try {
 
-    // 受付番号を基にパスコード・生成日時を取得、検証
+    // 01.受付番号を基にパスコード・生成日時を取得、検証
     const passCode = Number(arg.passCode);
     const participant = dObj.data.filter(x => {return Number(x.entryNo) === entryNo})[0];
     console.log('管理局.participant='+JSON.stringify(participant));
     const revice = [];
 
-    // パスコードが一致したかの判定
+    // 02.パスコードが一致したかの判定
     const validCode = passCode === Number(participant.passCode);
     // 発行日時は一時間以内かの判定
     const validTime = new Date().getTime() - new Date(participant.passTime).getTime() < conf.Master.validTime;
     if(  validCode && validTime ){
-      // 検証OK：表示に必要なURLとメニューフラグをconfigとして作成
-      // (1) AuthLevelに応じたconfigを作成。管理局「AuthLevel」シートが原本
-      //     認証局:1, 放送局:2, 予約局:4, 管理局:8, 郵便局:16, 資源局:32
-      rv = {isErr:false, config:{
+      // 02.a.検証OK：表示に必要なURLとメニューフラグをconfigとして作成
+      // (1) 受付番号に紐付く情報を追加
+      rv = {isErr:false, config:{private: participant}};
+        /*
         AuthLevel: Number(participant.AuthLevel),
         menuFlags: Number(participant.menuFlags), // 表示するメニューのフラグ(menuFlags)
         editURL: participant.editURL, // 参加申請フォームの編集用URL
       }};
+        */
+      // (2) config.jsonからAuthLevelに応じた局・公開情報を追加
+      //     認証局:1, 放送局:2, 予約局:4, 管理局:8, 郵便局:16, 資源局:32
+      //     ※管理局「AuthLevel」シートが原本
       for( let x in conf ){
         if( conf[x].level & rv.config.AuthLevel > 0 ){
           rv.config[x] = conf[x];
         }
       }
+      // (3) 配信局情報の追加
+      // 資源局から配信局のリストを取得
+      const res = szLib.fetchGAS({
+        from: 'Master',
+        to: 'Agency',
+        func: 'listAgents',
+      });
+      if( res.isErr ){
+        throw new Error(res.message);
+      }
+      // 配信局を選択(type=='agent' & status=='稼働中' & elaps最小)
+      rv.config.Agent = {key:null,url:null,elaps:9999999};
+      for( let i=0 ; i<res.result.data.length ; i++ ){
+        const d = res.result.data[i];
+        if( d.type === 'Agent' && d.status === '稼働中' && d.elaps < rv.config.Agent.elaps ){
+          rv.config.Agent.key = d.key;
+          rv.config.Agent.url = d.endpoint;
+        }
+      }
     } else {
-      // 検証NG：エラー通知
+      // 02.b.検証NG：エラー通知
       rv = {
         isErr: true,
         message: !validCode ? 'パスコードが一致しません' : 'パスコードの有効期限が切れています',
