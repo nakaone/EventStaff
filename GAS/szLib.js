@@ -14,7 +14,8 @@
  * <li>keys   {string[]} - ヘッダ行の一次元配列
  * <li>raw    {any[][]}  - 取得した生データ(二次元配列)
  * <li>data   {object[]} - データ行を[{ラベル1:値, ラベル2:値, ..},{..},..]形式にした配列
- * <li>lookup {function} - メソッド。行の検索。(key,value)を引数に、項目名'key'の値がvalueである行Objを返す
+ * <li>search {function} - メソッド。行の検索。主に内部利用を想定
+ * <li>lookup {function} - メソッド。search結果を基に項目名'key'の値がvalueである行Objを返す
  * <li>update {function} - メソッド。行の更新
  * <li>append {function} - メソッド。行の追加
  * <ul>
