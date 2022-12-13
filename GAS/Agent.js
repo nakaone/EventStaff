@@ -57,7 +57,7 @@ const authorize = () => {
  * <li>message {string} - エラーメッセージ
  * </ul>
  */
- function doPost(e){
+function doPost(e){
   elaps.startTime = Date.now();  // 開始時刻をセット
   console.log('配信局.doPost start.',e);
 
@@ -71,6 +71,9 @@ const authorize = () => {
       switch( arg.func ){
         case 'sendMail':
           rv = sendMail(arg.data);
+          break;
+        case 'appendMessages':
+          rv = appendMessages(arg.data);
           break;
         case 'ping':
           rv = {isErr:false,message:'ping OK.'};
@@ -100,12 +103,12 @@ const authorize = () => {
  * [sendEmail(recipient, subject, body, options)]{@link https://developers.google.com/apps-script/reference/gmail/gmail-app#sendEmail(String,String,String,Object)}
  * 
  * @param {object} arg - 送信するメールのオブジェクト
- * @return {object} - 処理結果
+ * @returns {object} - 処理結果
  *    isErr {boolean} : エラーならtrue
  *    message {string} : エラーの場合はメッセージ。正常終了ならundefined
  *    result {object} : 分岐先の処理が正常終了した場合の結果オブジェクト
  */
- const sendMail = (arg) => {
+const sendMail = (arg) => {
   console.log('配信局.sendMail start. arg='+JSON.stringify(arg));
   let rv = null;
   try {
@@ -123,6 +126,56 @@ const authorize = () => {
     rv = {isErr:true, message:e.name+': '+e.message};
   } finally {
     console.log('配信局.sendMail end. rv='+JSON.stringify(rv));
+    return rv;
+  }
+}
+
+/** appendMessages: 配信された投稿内容の記録
+ * <br>
+ * 投稿の削除は対応しない。∵一度投稿された内容がいつの間にか消えると閲覧者が混乱
+ * @param {object[]} arg - 現在登録されている投稿(全件)
+ * @param {object} arg.timestamp - 投稿日時(Date型)
+ * @param {string} arg.from - 投稿者名
+ * @param {string} arg.to - 宛先名
+ * @param {string} arg.message - 投稿内容
+ * @returns {object} - 処理結果
+ *    isErr {boolean} : エラーならtrue
+ *    message {string} : エラーの場合はメッセージ。正常終了ならundefined
+ */
+const appendMessagesTest = () => {
+  const testData = [
+    {timestamp:new Date(),from:'嶋津テスト',to:'みんな',message:'テストです'},
+  ];
+  for( let i=0 ; i<testData.length ; i++ ){
+    console.log(appendMessages(testData));
+  }
+}
+const appendMessages = (arg) => {
+  console.log('配信局.appendMessages start. arg='+JSON.stringify(arg));
+  let rv = null;
+  try {
+
+    // 1. 既存登録内容を「掲示板」シートから取得
+    const sheet = szLib.szSheet('掲示板','timestamp');
+
+    // 2.「掲示板」シート上の最終投稿より後の投稿は追加
+    const lastUpdate = sheet.data.length > 0
+    ? new Date(sheet.data[board.data.length-1].timestamp).getTime()
+    : new Date('1901-01-01').getTime();
+
+    for( let i=0 ; i<arg.length ; i++ ){
+      if( new Date(arg[i].timestamp).getTime() > lastUpdate ){
+        sheet.append(arg[i]);
+      }
+    }
+
+    rv = {isErr:false};  // 正常終了
+  
+  } catch(e) {
+    // Errorオブジェクトをrvとするとmessageが欠落するので再作成
+    rv = {isErr:true, message:e.name+': '+e.message};
+  } finally {
+    console.log('配信局.appendMessages end. rv='+JSON.stringify(rv));
     return rv;
   }
 }

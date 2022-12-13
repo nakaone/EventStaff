@@ -64,21 +64,75 @@ function doPost(e){
 }
 
 /** postMessage: お知らせの投稿
- * 
+ * <br>
+ * 配信局への配信は追加登録された分だけでなく、都度全投稿を配信する。<br>
+ * ∵一部配信済/一部未配信のタイミングで投稿された場合や、待機中->稼働中となった配信局は全件登録が必要等、局によって必要となる範囲が変わるため
  * @param {object} data           - 投稿されたメッセージ
  * @param {string} data.timestamp - 投稿時刻
  * @param {string} data.from      - 発信者名
  * @param {string} data.to        - 宛先
  * @param {string} data.message   - メッセージ
- * @returns {any[]} 追加された行イメージ(一次元配列)
+ * @returns {object} 以下のメンバを持つオブジェクト(szSheet.appendの戻り値)
+ * <ul>
+ * <li>isErr {boolean} - szSheet.appendまたはAgent.appendMessagesのいずれかがエラーならtrue
+ * <li>arr {any[]} - 追加した行の一次元配列(szSheet.appendの戻り値)
+ * <li>obj {object} - 追加した行オブジェクト({項目名1:値1,項目名2:値2,..}形式)
+ * <li>dataNum {number} - 追加行のrv.data上の添字
+ * <li>rawNum {number} - 追加行のrv.raw上の添字
+ * <li>rowNum {number} - 追加行のスプレッドシート上の行番号
+ * <li>message {string} - エラーメッセージ。szSheet.appendまたはAgent.appendMessagesでの最初のエラー
+ * <li>result {object} - 配信局への配信結果(Agent.appendMessagesの戻り値)
+ * </ul>
  */
 function postMessage(data){
   console.log('放送局.postMessage start. data='+JSON.stringify(data));
-  const sheet = SpreadsheetApp.getActive().getSheetByName('掲示板');
-  const rv = [data.timestamp,data.from,data.to,data.message,null,null,null];
-  sheet.appendRow(rv);
-  console.log('放送局.postMessage end.',JSON.stringify(rv));
-  return rv;
+  let rv = null;
+  try {
+    // 放送局「掲示板」シートに投稿内容を追加
+    const sheet = szLib.szSheet('掲示板','timestamp');
+    rv = sheet.append(data);
+    /*
+    const sheet = SpreadsheetApp.getActive().getSheetByName('掲示板');
+    const rv = [data.timestamp,data.from,data.to,data.message,null,null,null];
+    sheet.appendRow(rv);
+    */
+
+    /* 稼働中の配信局リストを取得
+    * @param {string}   arg.from     - 送信側のコード名(Auth, Master等)
+    * @param {string}   arg.to       - 受信側のコード名
+    * @param {string}   arg.func     - GAS側で処理分岐の際のキー文字列
+    * @param {string}   arg.endpoint - 受信側のコード名からURLが判断できない(配達員の)場合に指定
+    * @param {string}   arg.key      - endpoint指定の場合はその鍵も併せて指定
+    * @param {any}      arg.data     - 処理対象データ    */
+    const list = szLib.fetchGAS({from:'Broad',to:'Agency',func:'listAgents'});
+    if( list.isErr ){
+      throw new Error(list.message);
+    }
+
+    // 稼働中の配信局に投稿内容を配信
+    rv.result = [];
+    for( let i=0 ; i<list.result.length ; i++ ){
+      if( list.result[i].type === 'Agent' && list.result[i].status === '稼働中' ){
+        const res = szLib.fetchGAS({
+          from     : 'Broad',
+          to       : list.result[i].account,
+          func     : 'appendMessages',
+          endpoint : list.result[i].endpoint,
+          key      : list.result[i].key,
+          data     : sheet.data
+        });
+        rv.isErr = res.isErr ? true : rv.isErr;
+        rv.message = rv.message || res.message;
+        rv.result.push(res);
+      }
+    }
+
+  } catch(e) {
+    rv.message = e.message;
+  } finally {
+    console.log('放送局.postMessage end.',JSON.stringify(rv));
+    return rv;  
+  }
 }
 
 /** getMessages: お知らせの取得

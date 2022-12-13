@@ -1,3 +1,206 @@
+/** szLib 使用上の注意
+ * <ul>
+ * <li>「共有」の設定(アクセス権)は各局を配置したアカウントのみに限定する
+ * </ul>
+ */
+
+/** authorize: 各種権限の取得
+ * シートの参照(シート毎)
+ * メールの発信
+ */
+ const authorize = () => {
+  const rv = elaps({startTime:Date.now()-1000,account:'test@gmail.com',department:'テスト局',func:'elaps'},'result=hoge');
+  console.log(rv);
+}
+
+/** convertCharacters: 文字種を変換
+ * <br><br>
+ * 全角英数字は半角に、半角片仮名は全角に強制的に変換。<br>
+ * 全角ひらがな<->全角カタカナは引数(kana)で指定。既定値はひらがなに変換。<br>
+ * <br>参考：
+ * <ul>
+ * <li>[全角ひらがな⇔全角カタカナの文字列変換]{@link https://neko-note.org/javascript-hiragana-katakana/1024}
+ * <li>[全角⇔半角の変換を行う(英数字、カタカナ)]{@link https://www.yoheim.net/blog.php?q=20191101}
+ * </ul>
+ * @param {string} str - 変換対象文字列
+ * @param {boolean} kana - true:ひらがな、false:カタカナ
+ * @returns {string} 変換結果
+ */
+ function convertCharacters(str,kana=true){ 
+  let rv = str;
+  // 全角英数字 -> 半角英数字
+  rv = rv.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => {
+    return String.fromCharCode(s.charCodeAt(0) - 65248);
+  });
+
+  // 半角カタカナ -> 全角カタカナ
+  const hankaku = (arg) => {
+    const kanaMap = {
+      'ｶﾞ': 'ガ', 'ｷﾞ': 'ギ', 'ｸﾞ': 'グ', 'ｹﾞ': 'ゲ', 'ｺﾞ': 'ゴ',
+      'ｻﾞ': 'ザ', 'ｼﾞ': 'ジ', 'ｽﾞ': 'ズ', 'ｾﾞ': 'ゼ', 'ｿﾞ': 'ゾ',
+      'ﾀﾞ': 'ダ', 'ﾁﾞ': 'ヂ', 'ﾂﾞ': 'ヅ', 'ﾃﾞ': 'デ', 'ﾄﾞ': 'ド',
+      'ﾊﾞ': 'バ', 'ﾋﾞ': 'ビ', 'ﾌﾞ': 'ブ', 'ﾍﾞ': 'ベ', 'ﾎﾞ': 'ボ',
+      'ﾊﾟ': 'パ', 'ﾋﾟ': 'ピ', 'ﾌﾟ': 'プ', 'ﾍﾟ': 'ペ', 'ﾎﾟ': 'ポ',
+      'ｳﾞ': 'ヴ', 'ﾜﾞ': 'ヷ', 'ｦﾞ': 'ヺ',
+      'ｱ': 'ア', 'ｲ': 'イ', 'ｳ': 'ウ', 'ｴ': 'エ', 'ｵ': 'オ',
+      'ｶ': 'カ', 'ｷ': 'キ', 'ｸ': 'ク', 'ｹ': 'ケ', 'ｺ': 'コ',
+      'ｻ': 'サ', 'ｼ': 'シ', 'ｽ': 'ス', 'ｾ': 'セ', 'ｿ': 'ソ',
+      'ﾀ': 'タ', 'ﾁ': 'チ', 'ﾂ': 'ツ', 'ﾃ': 'テ', 'ﾄ': 'ト',
+      'ﾅ': 'ナ', 'ﾆ': 'ニ', 'ﾇ': 'ヌ', 'ﾈ': 'ネ', 'ﾉ': 'ノ',
+      'ﾊ': 'ハ', 'ﾋ': 'ヒ', 'ﾌ': 'フ', 'ﾍ': 'ヘ', 'ﾎ': 'ホ',
+      'ﾏ': 'マ', 'ﾐ': 'ミ', 'ﾑ': 'ム', 'ﾒ': 'メ', 'ﾓ': 'モ',
+      'ﾔ': 'ヤ', 'ﾕ': 'ユ', 'ﾖ': 'ヨ',
+      'ﾗ': 'ラ', 'ﾘ': 'リ', 'ﾙ': 'ル', 'ﾚ': 'レ', 'ﾛ': 'ロ',
+      'ﾜ': 'ワ', 'ｦ': 'ヲ', 'ﾝ': 'ン',
+      'ｧ': 'ァ', 'ｨ': 'ィ', 'ｩ': 'ゥ', 'ｪ': 'ェ', 'ｫ': 'ォ',
+      'ｯ': 'ッ', 'ｬ': 'ャ', 'ｭ': 'ュ', 'ｮ': 'ョ',
+      '｡': '。', '､': '、', 'ｰ': 'ー', '｢': '「', '｣': '」', '･': '・'
+    };
+
+    const reg = new RegExp('(' + Object.keys(kanaMap).join('|') + ')', 'g');
+    return arg
+      .replace(reg, function (match) {
+          return kanaMap[match];
+      })
+      .replace(/ﾞ/g, '゛')
+      .replace(/ﾟ/g, '゜');
+  };
+  rv = hankaku(rv);
+
+  // 全角カタカナ <-> 全角ひらがな
+  const hRep = (x,offset,string) => { // offset:マッチした位置 string:文字列全部
+    //console.log('szLib.hRep start.',x,offset,string);
+    let rv = String.fromCharCode(x.charCodeAt(0) - 0x60);
+    //console.log('szLib.hRep end.',rv);
+    return rv;
+  }
+  const toHiragana = (t) => {
+    //console.log('szLib.toHiragana start.',typeof t, t);
+    let rv = t.replace(/[\u30A1-\u30FA]/g,hRep);
+    //console.log('szLib.toHiragana end.',typeof(rv),rv);
+    return rv;
+  };
+  
+  const kRep = (x,offset,string) => {
+    //console.log('szLib.kRep start.',x,offset,string);
+    let rv = String.fromCharCode(x.charCodeAt(0) + 0x60);
+    //console.log('szLib.kRep end.',rv);
+    return rv;
+  }
+  const toKatakana = (t) => {
+    //console.log('szLib.toKatakana start.',typeof t, t);
+    let rv = t.replace(/[\u3041-\u3096]/g,kRep);
+    //console.log('szLib.toKatakana end.',typeof(rv),rv);
+    return rv;
+  };
+  
+  rv = kana ? toHiragana(rv) : toKatakana(rv);
+  //console.log('szLib.convertCharacters end. rv=',rv);
+  return rv;
+}
+
+/** elaps: 資源局ログシートへの書き込み
+ * 
+ * @param {object} arg 
+ * @param {number} arg.startTime - 開始時刻
+ * @param {string} arg.account - 実行アカウント名
+ * @param {string} arg.department - 局名
+ * @param {string} arg.func - function/method名
+ * @param {string} result - 結果
+ * @returns {void} - なし
+ */
+ function elaps(arg,result=''){
+  const conf = getConf();
+  const res = fetchGAS({
+    from: arg.department,
+    to: 'Agency',
+    func: 'logElaps',
+    data: {
+      timestamp: getJPDateTime(arg.startTime),
+      account: arg.account,
+      requester: arg.department,
+      function: arg.func,
+      elaps: Date.now() - arg.startTime + conf.Agency.overhead,
+      result: result,
+    }
+  });
+  console.log('elaps end.',res);
+}
+
+/** fetchGAS: GASのdoPostを呼び出す
+ * <br>
+ * 処理内部で使用する公開鍵・秘密鍵はszLib.getConf()で取得。<br>
+ * なおhtml版のarg.callbackはGAS版では存在しない。
+ * 
+ * @param {object}   arg          - 引数
+ * @param {string}   arg.from     - 送信側のコード名(Auth, Master等)
+ * @param {string}   arg.to       - 受信側のコード名
+ * @param {string}   arg.func     - GAS側で処理分岐の際のキー文字列
+ * @param {string}   arg.endpoint - 受信側のコード名からURLが判断できない(配達員の)場合に指定
+ * @param {string}   arg.key      - endpoint指定の場合はその鍵も併せて指定
+ * @param {any}      arg.data     - 処理対象データ
+ * @returns {object} 処理先からの返信
+ */
+ function fetchGAS(arg){
+  console.log('fetchGAS start. arg='+JSON.stringify(arg));
+  const conf = getConf();
+  const endpoint = arg.endpoint || conf[arg.to].url;
+  const key = arg.key || conf[arg.to].key;
+
+  const res = UrlFetchApp.fetch(endpoint,{
+    'method': 'post',
+    'contentType': 'application/json',
+    'muteHttpExceptions': true, // https://teratail.com/questions/64619
+    'payload' : JSON.stringify({
+      key  : key,
+      from: arg.from,
+      to: arg.to,
+      func: arg.func,
+      data: arg.data,
+    }),  
+  }).getContentText();
+  console.log('fetchGAS end. res='+res)
+  const rObj = JSON.parse(res);
+  return rObj;
+}
+
+/** getConf: おまつり奉行用の各種パラメータを取得
+ * @param {void} - なし
+ * @returns {object} おまつり奉行用の各種パラメータ
+ * 
+ * 当初ソースに直接埋込したが、URL変更の都度szLibの再デプロイが必要になるため、
+ * 参照の都度別ファイルを見に行く形式に変更した。
+ */
+ function getConf(){
+  // IdはGoogle Drive上の"config.json"のファイルId
+  const res = DriveApp.getFileById('1-Q38GWnJo3YbR1xKF_On9lpc_LOxyfxD').getBlob().getDataAsString('utf8');
+  const str = res.replace(/ *\/\/ .+?\n/g,'');  // '// '以降行末まで削除
+  console.log('getConf end. str='+str);
+  return JSON.parse(str);
+}
+
+/** getJPDateTime: 指定日時文字列を作成
+ * @param {any} dt - 作成する日時の指定。省略時は現在時刻
+ * @param {string} locale - 作成する形式
+ * @returns {string} 指定形式＋ミリ秒の日時文字列
+ */
+function getJPDateTime(dt=null,locale='ja-JP'){
+  const tObj = dt === null ? new Date() : new Date(dt);
+  return tObj.toLocaleString(locale) + '.' + tObj.getMilliseconds();
+}
+
+/** readJson: おまつり奉行設定ファイル(config.json)の内容取得
+ * @param {void} - なし
+ * @returns {object} オブジェクト化したconfig.json
+ */
+const readJson = () => {
+  const res = DriveApp.getFileById('1-Q38GWnJo3YbR1xKF_On9lpc_LOxyfxD').getBlob().getDataAsString('utf8');
+  const str = res.replace(/ *\/\/ .+?\n/g,'');
+  const obj = JSON.parse(str);
+  console.log('readJson -> '+JSON.stringify(obj));
+  return obj;
+}
+
 /** szSheet: データ取得等、シートのCRUDを行う
  * <br>
  * GAS用擬似クラス。CRUD用メソッドを持つオブジェクトを生成する。
@@ -20,7 +223,7 @@
  * <li>append {function} - メソッド。行の追加
  * <ul>
  */
- function szSheet(arg,key=null){
+function szSheet(arg,key=null){
   const rv = {};
   if( typeof arg === 'string' ){  // 文字列のみ ⇒ シート名の指定
     rv.sheet = SpreadsheetApp.getActive().getSheetByName(arg);
@@ -230,4 +433,14 @@
 
   console.log('szSheet(arg='+JSON.stringify(arg)+',key='+key+') -> '+JSON.stringify(rv));
   return rv;
+}
+
+/** whichType: 変数の型を判定
+ * @param {any} arg - 判定対象の変数
+ * @returns {string} - 型の名前
+ */
+function whichType(arg){
+  return arg === undefined ? 'undefined'
+   : Object.prototype.toString.call(arg)
+    .match(/^\[object\s(.*)\]$/)[1];
 }

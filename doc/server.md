@@ -234,10 +234,10 @@ sequenceDiagram
   staff ->>+ broad : 投稿
   Note right of broad : postMessage()
   broad ->>+ agency : 稼働中の配信局リストを要求
-  Note right of agency : activeList()
+  Note right of agency : listAgents()
   agency ->>- broad : 稼働中の配信局リスト
   broad ->>+ agent : 投稿内容配信
-  Note right of agent : appendMessage()
+  Note right of agent : appendMessages()
   agent ->>- broad : 登録報告
   broad ->>- staff : 投稿登録完了
 ```
