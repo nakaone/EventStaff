@@ -4,7 +4,9 @@ class Broadcast {
   /** constructor: お知らせ画面の設定 */
   constructor(dom){
     this.dom = dom;
-    this.messages = '';
+    this.posts = [];
+    this.lastUpdate = getJPDateTime('1901/01/01');
+    this.getMessages();
     this.display();
   }
 
@@ -62,20 +64,127 @@ class Broadcast {
             this.postMessage();
             break;
         }
-      })
+      });
+      // 二回目以降の投稿ではハンドルネームをセット
+      if( config.handleName ){
+        this.dom.main.querySelector('input[name="from"]').value = config.handleName;
+      }
     }
-    this.dom.main.innerHTML = this.dom.main.innerHTML + '<div class="BroadArea"></div>';
+
+    // 表示用CSSの定義　いまここ
+    const style = document.createElement('style');
+    document.head.appendChild(style);
+    style.sheet.insertRule(`
+    .postArea {
+      display: none;
+      width: calc(100% - 1rem);
+      padding: 0.5rem;
+      background-color: #deecc6;
+    }
+    .postArea .fromto label {
+      display: block;
+      float: left;
+      width: 4rem;
+    }
+    .postArea .fromto input, select {
+      width: 8rem;
+    }
+    .postArea textarea {
+      width: 90%;
+      height: 4rem;
+    }
+    .broadArea {
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+    }
+    .broadArea p {
+      width: 100%;
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+    }
+    .broadArea p.date {
+      padding-left: 1rem;
+      background-color: forestgreen;
+      color: white;  
+    }
+    .broadArea p.title {
+      margin-bottom: 0.2rem;
+      background-color: #a0c238;
+      font-size: 0.8rem;
+    }
+    `);
+
+
+
+    // 投稿内容の表示
+    this.dom.main.innerHTML = this.dom.main.innerHTML + '<div class="broadArea"></div>';
+    // 時系列にメッセージを並べ替え
+    this.posts.sort((a,b) => a.timestamp < b.timestamp);
+    // 掲示板領域に書き込むHTMLを msg として作成
+    let msg = '';
+    let lastMesDate = '1900/01/01';  // 投稿日が変わったら日付を表示するよう制御
+    const t = '<p class="title">[_time] From:_from　To:_to</p><p>_message</p>';
+    for( let i=0 ; i<this.posts.length ; i++ ){
+      const dt = new Date(this.posts[i].timestamp);
+      if( dt.toLocaleDateString('ja-JP') !== lastMesDate ){
+        lastMesDate = dt.toLocaleDateString('ja-JP');
+        msg += '<p class="date">' + lastMesDate + '</p>';
+      }
+      const hms = ('0'+dt.getHours()).slice(-2)
+        + ':' + ('0'+dt.getMinutes()).slice(-2)
+        + ':' + ('0'+dt.getSeconds()).slice(-2);
+      const m = t.replace('_time',hms)
+        .replace('_from',this.posts[i].from)
+        .replace('_to',this.posts[i].to)
+        .replace('_message',this.posts[i].message)
+        .replace(/\n/g,'<br>');
+      console.log('m='+m);
+      msg += m;
+    }
+    // 掲示板領域に書き込み
+    const msgEl = this.dom.main.querySelector('div.broadArea');
+    msgEl.innerHTML = msg;
+    msgEl.scrollIntoView(false);
   }
 
   /** getMessages: メッセージの受信
-   * 
+   * @param {void} - なし
+   * @returns {void} なし
    */
   getMessages = () => {
+    console.log('getMessages start.');
 
+    /* 配信局へ配信要求
+    * @param {string}   arg.to       - 受信側のコード名(平文)
+    * @param {string}   arg.func     - GAS側で処理分岐の際のキー文字列
+    * @param {any}      arg.data     - 処理対象データ
+    * @param {function} arg.callback - GAS処理結果を受けた後続処理 */
+    fetchGAS({
+      to: 'Agent',
+      func: 'castMessages',
+      data: this.lastUpdate,
+      callback: (res) => {
+        console.log('getMessages res='+JSON.stringify(res));
+        if( !res.isErr ){
+          this.posts = this.posts.concat(res.posts);
+          const map = res.posts.map(x => new Date(x.timestamp).getTime());
+          console.log('map='+JSON.stringify(map));
+          const mapMax = map.reduce((a,b)=>{return Math.max(a,b)},-Infinity);
+          console.log('mapMax='+mapMax);
+          this.lastUpdate = new Date(mapMax);
+          this.display();
+        }
+        console.log('getMessages lastUpdate='+getJPDateTime(this.lastUpdate)
+          +'\nposts='+JSON.stringify(this.posts));
+      }
+    });
+   
   }
 
   /** postMessage: メッセージを投稿
-   * 
+   * @param {void} - なし
+   * @returns {void} なし
    */
   postMessage = () => {
     console.log('postMessage start.');

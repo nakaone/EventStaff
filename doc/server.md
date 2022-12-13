@@ -256,7 +256,7 @@ sequenceDiagram
   alt ErrorCounter = 0
     guest ->> guest : ErrorCounter = 1
     guest ->>+ agent : 配信要求
-    Note right of agent : getMessages()
+    Note right of agent : castMessages()
     agent ->>- guest : 投稿内容
     guest ->> guest : ErrorCounter = 0
 
