@@ -11,7 +11,7 @@ class Broadcast {
     this.start();
   }
 
-  display = () => {
+  display(){
     this.dom.title.innerText = 'お知らせ';
     // 1.投稿権限がある場合は投稿エリアを表示
     if( (config.private.menuFlags & 2) > 0 ){
@@ -126,7 +126,7 @@ class Broadcast {
    * @param {void} - なし
    * @returns {void} なし
    */
-  getMessages = () => {
+  getMessages(){
     console.log('getMessages start.');
 
     /* 配信局へ配信要求
@@ -160,7 +160,7 @@ class Broadcast {
    * @param {void} - なし
    * @returns {void} なし
    */
-  postMessage = () => {
+  postMessage(){
     console.log('postMessage start.');
     config.handleName = this.dom.main.querySelector('[name="from"]').value;
     const toEl = this.dom.main.querySelector('[name="to"]');
@@ -185,20 +185,20 @@ class Broadcast {
    * @param {void} - なし
    * @returns {void} なし
    */
-  start = () => {
+  start(){
     this.getMessages();
     // スリープ時間も含め一定時間毎に実行
     // https://blog-and-destroy.com/28211
     this.intervalId = setInterval(() => {
-      if( Date.now() > (this.startTime + config.Agency.interval - 500) ){
+      if( Date.now() > (this.startTime + config.public.interval - 500) ){
         this.getMessages();
         this.startTime = Date.now();
       }
-    },config.Agency.interval);
+    },config.public.interval);
     console.log('Broad.start'
       + '\nurl=' + this.url
       + '\nkey=' + this.key
-      + '\ninterval=' + config.Agency.interval
+      + '\ninterval=' + config.public.interval
     );
   }
 
@@ -206,9 +206,8 @@ class Broadcast {
    * @param {void} - なし
    * @returns {void} なし
    */
-  stop = () => {
+  stop(){
     clearInterval(this.intervalId);
-    //config.Agency.intervalId = null;
     console.log('Broad.end');
   }
 }
