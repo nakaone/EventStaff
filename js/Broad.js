@@ -6,12 +6,14 @@ class Broadcast {
     this.dom = dom;
     this.posts = [];
     this.lastUpdate = getJPDateTime('1901/01/01');
-    this.getMessages();
+    this.startTime = new Date();
+    this.intervalId = null;
+    this.start();
   }
 
   display = () => {
     this.dom.title.innerText = 'お知らせ';
-    // 投稿権限がある場合は投稿エリアを表示
+    // 1.投稿権限がある場合は投稿エリアを表示
     if( (config.private.menuFlags & 2) > 0 ){
       this.dom.main.innerHTML = `
         <input type="button" name="postButton" value="投稿する" />
@@ -70,11 +72,30 @@ class Broadcast {
       }
     }
 
-    // 投稿内容の表示
+    // 2.投稿内容の表示
     this.dom.main.innerHTML = this.dom.main.innerHTML + '<div class="broadArea"></div>';
-    // 時系列にメッセージを並べ替え
+    this.dom.broadArea =this.dom.main.querySelector('.broadArea');
+
+    // 2.1.新規のお知らせが来たら末尾を表示するよう設定
+    // https://at.sachi-web.com/blog-entry-1516.html
+    const mo = new MutationObserver(() => {
+      console.log('mutation detected');
+      this.dom.broadArea.scrollTop = this.dom.broadArea.scrollHeight;
+    });
+    mo.observe(this.dom.broadArea,{
+      childList: true,
+      attributes: true,
+      characterData: true,
+      subtree: true,//孫以降のノードの変化も検出
+      attributeOldValue: true,//変化前の属性データを記録する
+      characterDataOldValue: true,//変化前のテキストノードを記録する
+      attributeFilter: [],//配列で記述した属性だけを見張る
+    });
+
+    // 2.2.時系列にメッセージを並べ替え
     this.posts.sort((a,b) => a.timestamp < b.timestamp);
-    // 掲示板領域に書き込むHTMLを msg として作成
+
+    // 2.3.掲示板領域に書き込むHTMLを msg として作成
     let msg = '';
     let lastMesDate = '1900/01/01';  // 投稿日が変わったら日付を表示するよう制御
     const t = '<p class="title">[_time] From:_from　To:_to</p><p>_message</p>';
@@ -95,13 +116,13 @@ class Broadcast {
       //console.log('m='+m);
       msg += m;
     }
-    // 掲示板領域に書き込み
+    // 2.4.掲示板領域に書き込み
     const msgEl = this.dom.main.querySelector('div.broadArea');
     msgEl.innerHTML = msg;
     msgEl.scrollIntoView(false);
   }
 
-  /** getMessages: メッセージの受信
+  /** getMessages: メッセージの受信、掲示板への表示
    * @param {void} - なし
    * @returns {void} なし
    */
@@ -158,5 +179,36 @@ class Broadcast {
         console.log('postMessage end. res='+JSON.stringify(res));
       }
     });
+  }
+
+  /** start: 定期的処理の開始
+   * @param {void} - なし
+   * @returns {void} なし
+   */
+  start = () => {
+    this.getMessages();
+    // スリープ時間も含め一定時間毎に実行
+    // https://blog-and-destroy.com/28211
+    this.intervalId = setInterval(() => {
+      if( Date.now() > (this.startTime + config.Agency.interval - 500) ){
+        this.getMessages();
+        this.startTime = Date.now();
+      }
+    },config.Agency.interval);
+    console.log('Broad.start'
+      + '\nurl=' + this.url
+      + '\nkey=' + this.key
+      + '\ninterval=' + config.Agency.interval
+    );
+  }
+
+  /** stop: 定期的処理の停止
+   * @param {void} - なし
+   * @returns {void} なし
+   */
+  stop = () => {
+    clearInterval(this.intervalId);
+    //config.Agency.intervalId = null;
+    console.log('Broad.end');
   }
 }
