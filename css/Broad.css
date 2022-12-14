@@ -1,0 +1,43 @@
+input[type="button"][name="postButton"] {
+  margin-bottom: 1rem;
+}
+
+.postArea {
+  display: none;
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background-color: #deecc6;
+}
+.postArea .fromto label {
+  display: block;
+  float: left;
+  width: 4rem;
+}
+.postArea .fromto input, select {
+  width: 8rem;
+}
+.postArea textarea {
+  width: 90%;
+  height: 4rem;
+}
+.broadArea {
+  width: 100%;
+  height: calc(100% - 2rem);
+  overflow: auto;
+}
+.broadArea p {
+  width: 100%;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+.broadArea p.date {
+  padding-left: 1rem;
+  background-color: forestgreen;
+  color: white;  
+}
+.broadArea p.title {
+  margin-bottom: 0.2rem;
+  background-color: #a0c238;
+  font-size: 0.8rem;
+}

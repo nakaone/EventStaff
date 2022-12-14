@@ -7,7 +7,6 @@ class Broadcast {
     this.posts = [];
     this.lastUpdate = getJPDateTime('1901/01/01');
     this.getMessages();
-    this.display();
   }
 
   display = () => {
@@ -71,52 +70,6 @@ class Broadcast {
       }
     }
 
-    // 表示用CSSの定義　いまここ
-    const style = document.createElement('style');
-    document.head.appendChild(style);
-    style.sheet.insertRule(`
-    .postArea {
-      display: none;
-      width: calc(100% - 1rem);
-      padding: 0.5rem;
-      background-color: #deecc6;
-    }
-    .postArea .fromto label {
-      display: block;
-      float: left;
-      width: 4rem;
-    }
-    .postArea .fromto input, select {
-      width: 8rem;
-    }
-    .postArea textarea {
-      width: 90%;
-      height: 4rem;
-    }
-    .broadArea {
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-    }
-    .broadArea p {
-      width: 100%;
-      margin-top: 0;
-      margin-bottom: 0.5rem;
-    }
-    .broadArea p.date {
-      padding-left: 1rem;
-      background-color: forestgreen;
-      color: white;  
-    }
-    .broadArea p.title {
-      margin-bottom: 0.2rem;
-      background-color: #a0c238;
-      font-size: 0.8rem;
-    }
-    `);
-
-
-
     // 投稿内容の表示
     this.dom.main.innerHTML = this.dom.main.innerHTML + '<div class="broadArea"></div>';
     // 時系列にメッセージを並べ替え
@@ -139,7 +92,7 @@ class Broadcast {
         .replace('_to',this.posts[i].to)
         .replace('_message',this.posts[i].message)
         .replace(/\n/g,'<br>');
-      console.log('m='+m);
+      //console.log('m='+m);
       msg += m;
     }
     // 掲示板領域に書き込み
@@ -169,14 +122,14 @@ class Broadcast {
         if( !res.isErr ){
           this.posts = this.posts.concat(res.posts);
           const map = res.posts.map(x => new Date(x.timestamp).getTime());
-          console.log('map='+JSON.stringify(map));
+          //console.log('map='+JSON.stringify(map));
           const mapMax = map.reduce((a,b)=>{return Math.max(a,b)},-Infinity);
-          console.log('mapMax='+mapMax);
+          //console.log('mapMax='+mapMax);
           this.lastUpdate = new Date(mapMax);
           this.display();
         }
-        console.log('getMessages lastUpdate='+getJPDateTime(this.lastUpdate)
-          +'\nposts='+JSON.stringify(this.posts));
+        //console.log('getMessages lastUpdate='+getJPDateTime(this.lastUpdate)
+        //  +'\nposts='+JSON.stringify(this.posts));
       }
     });
    
