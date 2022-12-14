@@ -4,6 +4,10 @@ class Participant {
     this.dom = dom;
   }
 
+  /** display: 受付業務画面の表示
+   * @param {void} - なし
+   * @returns {void} なし
+   */
   display(){
     this.dom.title.innerText = '受付業務';
     this.dom.main.innerHTML = `
@@ -30,12 +34,29 @@ class Participant {
           this.scanDoc();
           break;
         case 'search':
-          console.log('search clicked.');
+          this.search();
+          break;
       }
     });
 
+    // スキャナのセットアップ
+    this.scanner = new webScanner({
+      /* @param {object} arg.parent - 親要素
+       * @param {number} arg.interval - 動画状態で撮像、読み込めなかった場合の時間間隔
+       * @param {object} arg.RegExp - QRコードスキャン時、内容が適切か判断
+       * @param {boolean} arg.alert - 読み込み完了時に内容をalert表示するか */
+      parent: this.dom.main.querySelector('.scanner'),
+      interval: 0.25,
+      RegExp: /^[0-9]+$/,
+      alert: true
+    });
+    this.scanner.scanQR((r)=>{console.log('scanned => '+r)});
   }
 
+  /** formQR: 未申請者へ申請フォームのURLをQRコードで表示
+   * @param {void} - なし
+   * @returns {void} なし
+   */
   formQR(){
     console.log('formQR clicked.');
     this.dom.main.innerHTML = `
@@ -60,6 +81,10 @@ class Participant {
     });
   }
 
+  /** scanDoc: 紙媒体での申請処理
+   * @param {void} - なし
+   * @returns {void} なし
+   */
   scanDoc(){
     console.log('scanDoc clicked.');
     this.dom.main.innerHTML = `
@@ -75,7 +100,11 @@ class Participant {
     });
   }
 
+  /** search: 検索キー(受付番号または氏名の一部)で検索 */
+  search(){
+    console.log('search clicked.');
 
+  }
 
 
 

@@ -7,7 +7,7 @@
 class webScanner {
   /** constructor
    * @param {object} arg 
-   * @param {string} arg.selector - 親要素のCSSセレクタ文字列
+   * @param {object} arg.parent - 親要素
    * @param {number} arg.interval - 動画状態で撮像、読み込めなかった場合の時間間隔
    * @param {object} arg.RegExp - QRコードスキャン時、内容が適切か判断
    * @param {boolean} arg.alert - 読み込み完了時に内容をalert表示するか
@@ -25,16 +25,14 @@ class webScanner {
     }
   
     this.opt = {   // 未指定設定値に既定値を設定
-      selector: arg.selector || '#webScanner',  // 親要素のCSSセレクタ文字列
+      parent: arg.parent,  // 親要素
       //video   : arg.video || false,    // 動画枠の表示/非表示
       //canvas  : arg.canvas || true,    // 撮像結果の表示/非表示
       interval: arg.interval || 0.25,  // 動画状態で撮像、読み込めなかった場合の時間間隔
       RegExp  : arg.RegExp || new RegExp('.+'), // RegExpオブジェクトとして指定
       alert   : arg.alert || false,    // 読み込み完了時に内容をalert表示するか
     }
-    console.log('this.opt='+JSON.stringify(this.opt));
-
-    console.log('webScanner.constructor end.');
+    console.log('webScanner.constructor end. opt='+JSON.stringify(this.opt));
   }
 
   /** start: カメラを起動する
@@ -79,8 +77,7 @@ class webScanner {
   scanDoc(callback){
 
     // 親要素にカメラやファインダ等の作業用DIVを追加
-    this.scanner = document.querySelector(this.opt.selector);
-    this.scanner.innerHTML
+    this.parent.innerHTML
     = '<video autoplay></video>'
     + '<canvas></canvas>'  // 撮影結果
     + '<div>'  // カメラ操作ボタン
@@ -88,25 +85,25 @@ class webScanner {
     + '<input type="button" name="shutter" value="[ ● ]" />'
     + '<input type="button" name="adopt" value="▶" />'
     + '</div>';
-    this.video = document.querySelector(this.opt.selector+' video');
+    this.video = this.parent.querySelector('video');
     this.video.style.display = 'block';
-    this.canvas = document.querySelector(this.opt.selector+' canvas');
+    this.canvas = this.parent.querySelector('canvas');
     this.canvas.style.display = 'none';
     this.ctx = this.canvas.getContext('2d');
 
     // カメラ操作ボタン関係の定義
-    this.buttons = document.querySelector(this.opt.selector+' div');
+    this.buttons = this.parent.querySelector('div');
     this.buttons.style.display = 'none'; //最初は全部隠蔽
-    this.undo = document.querySelector(this.opt.selector+' input[name="undo"]');
+    this.undo = this.buttons.querySelector('input[name="undo"]');
     this.undo.disabled = true;  // 再撮影
-    this.shutter = document.querySelector(this.opt.selector+' input[name="shutter"]');
+    this.shutter = this.buttons.querySelector('input[name="shutter"]');
     this.shutter.disabled = false;  // シャッター
-    this.adopt = document.querySelector(this.opt.selector+' input[name="adopt"]');
+    this.adopt = this.buttons.querySelector('input[name="adopt"]');
     this.adopt.disabled = true;  // 採用
 
     // 1. スキャナのボタン操作時の定義
     // (1) 再撮影ボタンクリック時
-    this.undo.addEventListener('click',(callback) => {
+    this.undo.addEventListener('click',() => {
       this.video.style.display = 'block';
       this.canvas.style.display = 'none';
       this.undo.disabled = true;
@@ -158,7 +155,7 @@ class webScanner {
     this.start(()=>{console.log('Camera getting started!')});
   }
 
-  /** scanQR: QRコードスキャン
+  /** scanQR: QRコードスキャン　いまここ：innerHTMLの定義から追加
    * @param {function} callback - 後続処理
    * @returns {void} なし
    */
@@ -166,9 +163,9 @@ class webScanner {
     // 動画撮影用Webカメラを起動
     const userMedia = {audio:false, video:{facingMode: "environment"}};
     navigator.mediaDevices.getUserMedia(userMedia).then((stream)=>{
-      video.srcObject = stream;
-      video.setAttribute("playsinline", true);
-      video.play();
+      this.video.srcObject = stream;
+      this.video.setAttribute("playsinline", true);
+      this.video.play();
       this.drawFinder(callback);  // 起動が成功したらdrawFinderを呼び出す
     }).catch(e => {
       alert('カメラを使用できません\n'+e.message);
@@ -176,8 +173,8 @@ class webScanner {
   }
   
   drawFinder(){  // キャンバスに描画する
-    // スキャン実行フラグが立っていなかったら終了
-    if( !config.scanCode )  return;
+    /* スキャン実行フラグが立っていなかったら終了
+    if( !config.scanCode )  return;*/
     if(video.readyState === video.HAVE_ENOUGH_DATA){
       canvas.height = video.videoHeight;
       canvas.width = video.videoWidth;
