@@ -7,7 +7,7 @@
 class webScanner {
   /** constructor
    * @param {object} arg 
-   * @param {object} arg.parent - 親要素
+   * @param {object} arg.parent - 親要素(DOM object)
    * @param {number} arg.interval - 動画状態で撮像、読み込めなかった場合の時間間隔
    * @param {object} arg.RegExp - QRコードスキャン時、内容が適切か判断
    * @param {boolean} arg.alert - 読み込み完了時に内容をalert表示するか
@@ -24,34 +24,26 @@ class webScanner {
       return;
     }
   
-    this.parent = arg.parent;  // 親要素
-    this.interval = arg.interval || 0.25;  // 動画状態で撮像、読み込めなかった場合の時間間隔
-    /*
-    this.opt = {   // 未指定設定値に既定値を設定
-      parent: arg.parent,  // 親要素
-      //video   : arg.video || false,    // 動画枠の表示/非表示
-      //canvas  : arg.canvas || true,    // 撮像結果の表示/非表示
-      interval: arg.interval || 0.25,  // 動画状態で撮像、読み込めなかった場合の時間間隔
-      RegExp  : arg.RegExp || new RegExp('.+'), // RegExpオブジェクトとして指定
-      alert   : arg.alert || false,    // 読み込み完了時に内容をalert表示するか
-    }
-    console.log('webScanner.constructor end. opt='+JSON.stringify(this.opt));
-    */
+    this.parent = arg.parent;
+    this.interval = arg.interval || 0.25;
+    this.RegExp = arg.RegExp || /.+/;
+    this.alert = arg.alert || false;
+    this.onGoing = false; // カメラ動作中はtrue
     console.log('webScanner.constructor end.');
   }
 
   /** start: カメラを起動する(private関数)
-   * @param {function} callback - 後続処理
+   * @param {void} - なし
    * @returns {void} なし
    */
-  start(callback){
-    console.log('webScanner start start.',callback);
+  start(){
+    console.log('webScanner start start.');
+
     // カメラやファインダ等の作業用DIVを追加
     this.parent.innerHTML = '<canvas></canvas>';
     this.video = document.createElement('video');
     this.canvas = this.parent.querySelector('canvas');
     this.ctx = this.canvas.getContext('2d');
-    console.log('l.53');
 
     // 動画撮影用Webカメラを起動
     navigator.mediaDevices.getUserMedia({
@@ -60,49 +52,14 @@ class webScanner {
       },
       audio: false
     }).then((stream) => {
-      console.log('l.62',stream,callback)
-      this.video.srcObject = stream;
-      console.log('l.64')
-      this.video.setAttribute("playsinline", true);
-      console.log('l.66')
-      this.video.play();
-      console.log('l.68')
-      this.video.addEventListener("resize", () => {
-        // 親要素の横幅に合わせて表示する
-        const ratio = this.parent.clientWidth / this.video.videoWidth;
-        const w = this.video.videoWidth * ratio;
-        const h = this.video.videoHeight * ratio;
-        this.video.width = this.canvas.width = w;
-        this.video.height = this.canvas.height = h;
-      });
-      console.log('l.78',callback);
-      callback(stream);
-    }).catch(e => {
-      alert('カメラを使用できません\n'+e.message);
-    });
-    /*
-    navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: "environment",
-      },
-      audio: false
-    }).then(stream => {
       this.video.srcObject = stream;
       this.video.setAttribute("playsinline", true);
       this.video.play();
-      this.video.addEventListener("resize", () => {
-        // 親要素の横幅に合わせて表示する
-        const ratio = this.scanner.clientWidth / this.video.videoWidth;
-        const w = this.video.videoWidth * ratio;
-        const h = this.video.videoHeight * ratio;
-        this.video.width = this.canvas.width = w;
-        this.video.height = this.canvas.height = h;
-      });
-      callback(stream);
+      this.onGoing = true;  // カメラ動作中フラグを立てる
+      this.drawFinder();  // キャンパスへの描画をスタート
     }).catch(e => {
       alert('カメラを使用できません\n'+e.message);
     });
-    */
   }
 
   /** stop: カメラを停止する(private関数)
@@ -110,10 +67,12 @@ class webScanner {
    * @returns {void} なし
    */
   stop(){
+    console.log('webScanner.stop',this.video);
     this.video.srcObject.getVideoTracks().forEach((track) => {
       track.stop();
     });
     this.parent.innerHTML = ''; // 作業用DIVを除去
+    this.onGoing = false;
   }
 
   /** scanDoc: 文書のスキャン */
@@ -198,7 +157,7 @@ class webScanner {
     this.start(()=>{console.log('Camera getting started!')});
   }
 
-  /** scanQR: QRコードスキャン　いまここ：innerHTMLの定義から追加
+  /** scanQR: QRコードスキャン
    * @param {function} callback - 後続処理
    * @param {object} opt - オプション
    * @param {object} opt.RegExp - スキャン結果が適切か判断。RegExpオブジェクト
@@ -206,70 +165,54 @@ class webScanner {
    * @returns {void} なし
    */
   scanQR(callback,opt={}){
-    console.log('webScanner.scanQR start.',callback,opt);
-    console.log('webScanner.scanQR start. opt='+JSON.stringify(opt));
-    // 既定値の設定
-    this.RegExp = opt.RegExp || /.+/;
-    this.alert = opt.alert || false;
+    console.log('webScanner.scanQR start. opt='+JSON.stringify(opt)+'\n',callback);
 
+    // 既定値の設定
+    this.RegExp = opt.RegExp || this.RegExp;
+    this.alert = opt.alert || this.alert;
+    this.callback = callback; // 後続処理をメンバとして保存
 
     // 動画撮影用Webカメラを起動
-    this.start((stream) => {
-      console.log('webScanner.start callback start.');
-      // キャンバスへの描画に続く
-      console.log('l.220 this.video',this.video);
-      this.drawFinder(stream);
-      /*
-      // キャプチャボタンの追加
-      this.parent.innerHTML = this.parent.innerHTML
-      + '<input type="file" accept="image/*" capture="camera" name="file" />';
-      // キャンバスへの描画に続く
-      this.drawFinder(stream);
-      */
-    });
-    /*
-    const userMedia = {audio:false, video:{facingMode: "environment"}};
-    navigator.mediaDevices.getUserMedia(userMedia).then((stream)=>{
-      this.video.srcObject = stream;
-      this.video.setAttribute("playsinline", true);
-      this.video.play();
-      this.drawFinder(callback);  // 起動が成功したらdrawFinderを呼び出す
-    }).catch(e => {
-      alert('カメラを使用できません\n'+e.message);
-    });
-    */
+    this.start();
   }
   
   drawFinder(){  // キャンバスに描画する
     console.log('webScanner.drawFinder start.',this.video);
 
-    /* スキャン実行フラグが立っていなかったら終了
-    if( !config.scanCode )  return;*/
+    // スキャン実行フラグが立っていなかったら終了
+    if( !this.onGoing )  return;
+
     if(this.video.readyState === this.video.HAVE_ENOUGH_DATA){
-      console.log('l.247');
-      this.canvas.height = this.video.videoHeight;
-      this.canvas.width = this.video.videoWidth;
+
+      // 親要素の横幅に合わせて表示する
+      const ratio = this.parent.clientWidth / this.video.videoWidth;
+      //console.log('l.196 this.parent.clientWidth='+this.parent.clientWidth+', this.video.videoWidth='+this.video.videoWidth+' -> ratio='+ratio);
+      const w = this.video.videoWidth * ratio;
+      const h = this.video.videoHeight * ratio;
+      //console.log('l.199 w ='+w+', h='+h);
+      this.video.width = this.canvas.width = w;
+      this.video.height = this.canvas.height = h;
+
       this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
       let img = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
       // このタイミングでQRコードを判定
       let code = jsQR(img.data, img.width, img.height, {inversionAttempts: "dontInvert"});
-      console.log('l.254')
 			if(code){
         console.log('drawFinder: code='+JSON.stringify(code));
         // QRコード読み取り成功
 				this.drawRect(code.location);// ファインダ上のQRコードに枠を表示
         if( this.alert ) alert(code.data);  // alert出力指定があれば出力
-        if( code.data.match(this.RegExp) ){
-          // 正しい内容が読み込まれた場合
+        if( code.data.match(this.RegExp) ){  // 正しい内容が読み込まれた場合
           this.drawRect(code.location);
-          alert(code.data);
-          //callback(code.data);
-          //config.scanCode = false;
-          //this.parent.innerHTML = ''; // 作業用DIVを除去
+          this.stop();
+          this.callback(code.data); // 読み込んだQRコードを引数にコールバック
         } else {
           // 不適切な、別のQRコードが読み込まれた場合
           alert('不適切なQRコードです。再読込してください。');
           console.log('[scanCode.drawFinder] Error: not match pattern. code='+code.data);
+          // 再読込。drawFinderはクラス内のメソッドなのでアロー関数で呼び出す
+          // MDN setTimeout() thisの問題
+          // https://developer.mozilla.org/ja/docs/Web/API/setTimeout#this_%E3%81%AE%E5%95%8F%E9%A1%8C
           setTimeout(()=>this.drawFinder(), this.interval);
         }
 			}

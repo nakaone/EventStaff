@@ -48,7 +48,9 @@ class Participant {
       parent: this.dom.main.querySelector('.scanner'),
       interval: 0.25,
     });
-    this.scanner.scanQR((r)=>{console.log('scanned => '+r)},{
+    this.scanner.scanQR((code)=>{
+      console.log('scanned => '+code);
+    },{
       RegExp: /^[0-9]+$/,
       alert: true
     });
