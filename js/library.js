@@ -24,6 +24,9 @@ class webScanner {
       return;
     }
   
+    this.parent = arg.parent;  // 親要素
+    this.interval = arg.interval || 0.25;  // 動画状態で撮像、読み込めなかった場合の時間間隔
+    /*
     this.opt = {   // 未指定設定値に既定値を設定
       parent: arg.parent,  // 親要素
       //video   : arg.video || false,    // 動画枠の表示/非表示
@@ -33,13 +36,51 @@ class webScanner {
       alert   : arg.alert || false,    // 読み込み完了時に内容をalert表示するか
     }
     console.log('webScanner.constructor end. opt='+JSON.stringify(this.opt));
+    */
+    console.log('webScanner.constructor end.');
   }
 
-  /** start: カメラを起動する
+  /** start: カメラを起動する(private関数)
    * @param {function} callback - 後続処理
    * @returns {void} なし
    */
   start(callback){
+    console.log('webScanner start start.',callback);
+    // カメラやファインダ等の作業用DIVを追加
+    this.parent.innerHTML = '<canvas></canvas>';
+    this.video = document.createElement('video');
+    this.canvas = this.parent.querySelector('canvas');
+    this.ctx = this.canvas.getContext('2d');
+    console.log('l.53');
+
+    // 動画撮影用Webカメラを起動
+    navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: "environment",
+      },
+      audio: false
+    }).then((stream) => {
+      console.log('l.62',stream,callback)
+      this.video.srcObject = stream;
+      console.log('l.64')
+      this.video.setAttribute("playsinline", true);
+      console.log('l.66')
+      this.video.play();
+      console.log('l.68')
+      this.video.addEventListener("resize", () => {
+        // 親要素の横幅に合わせて表示する
+        const ratio = this.parent.clientWidth / this.video.videoWidth;
+        const w = this.video.videoWidth * ratio;
+        const h = this.video.videoHeight * ratio;
+        this.video.width = this.canvas.width = w;
+        this.video.height = this.canvas.height = h;
+      });
+      console.log('l.78',callback);
+      callback(stream);
+    }).catch(e => {
+      alert('カメラを使用できません\n'+e.message);
+    });
+    /*
     navigator.mediaDevices.getUserMedia({
       video: {
         facingMode: "environment",
@@ -61,9 +102,10 @@ class webScanner {
     }).catch(e => {
       alert('カメラを使用できません\n'+e.message);
     });
+    */
   }
 
-  /** stop: カメラを停止する
+  /** stop: カメラを停止する(private関数)
    * @param {void} - なし
    * @returns {void} なし
    */
@@ -71,6 +113,7 @@ class webScanner {
     this.video.srcObject.getVideoTracks().forEach((track) => {
       track.stop();
     });
+    this.parent.innerHTML = ''; // 作業用DIVを除去
   }
 
   /** scanDoc: 文書のスキャン */
@@ -122,7 +165,7 @@ class webScanner {
     // (3) 採用ボタンクリック時
     this.adopt.addEventListener('click',() => {
       // 正常終了時はスキャナを停止
-      this.scanner.innerHTML = '';
+      this.parent.innerHTML = '';
       this.stop();
       // canvasからイメージをBASE64で取得
       const imageData = this.canvas.toDataURL('image/png',0.7);
@@ -157,10 +200,34 @@ class webScanner {
 
   /** scanQR: QRコードスキャン　いまここ：innerHTMLの定義から追加
    * @param {function} callback - 後続処理
+   * @param {object} opt - オプション
+   * @param {object} opt.RegExp - スキャン結果が適切か判断。RegExpオブジェクト
+   * @param {boolean} opt.alert - true:読み込み完了時に内容をalert表示
    * @returns {void} なし
    */
-  scanQR(callback){
+  scanQR(callback,opt={}){
+    console.log('webScanner.scanQR start.',callback,opt);
+    console.log('webScanner.scanQR start. opt='+JSON.stringify(opt));
+    // 既定値の設定
+    this.RegExp = opt.RegExp || /.+/;
+    this.alert = opt.alert || false;
+
+
     // 動画撮影用Webカメラを起動
+    this.start((stream) => {
+      console.log('webScanner.start callback start.');
+      // キャンバスへの描画に続く
+      console.log('l.220 this.video',this.video);
+      this.drawFinder(stream);
+      /*
+      // キャプチャボタンの追加
+      this.parent.innerHTML = this.parent.innerHTML
+      + '<input type="file" accept="image/*" capture="camera" name="file" />';
+      // キャンバスへの描画に続く
+      this.drawFinder(stream);
+      */
+    });
+    /*
     const userMedia = {audio:false, video:{facingMode: "environment"}};
     navigator.mediaDevices.getUserMedia(userMedia).then((stream)=>{
       this.video.srcObject = stream;
@@ -170,40 +237,48 @@ class webScanner {
     }).catch(e => {
       alert('カメラを使用できません\n'+e.message);
     });
+    */
   }
   
   drawFinder(){  // キャンバスに描画する
+    console.log('webScanner.drawFinder start.',this.video);
+
     /* スキャン実行フラグが立っていなかったら終了
     if( !config.scanCode )  return;*/
-    if(video.readyState === video.HAVE_ENOUGH_DATA){
-      canvas.height = video.videoHeight;
-      canvas.width = video.videoWidth;
-      this.ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      let img = this.ctx.getImageData(0, 0, canvas.width, canvas.height);
+    if(this.video.readyState === this.video.HAVE_ENOUGH_DATA){
+      console.log('l.247');
+      this.canvas.height = this.video.videoHeight;
+      this.canvas.width = this.video.videoWidth;
+      this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+      let img = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
       // このタイミングでQRコードを判定
       let code = jsQR(img.data, img.width, img.height, {inversionAttempts: "dontInvert"});
+      console.log('l.254')
 			if(code){
         console.log('drawFinder: code='+JSON.stringify(code));
         // QRコード読み取り成功
 				this.drawRect(code.location);// ファインダ上のQRコードに枠を表示
-        if( opt.alert ) alert(code.data);  // alert出力指定があれば出力
-        if( code.data.match(opt.RegExp) ){
+        if( this.alert ) alert(code.data);  // alert出力指定があれば出力
+        if( code.data.match(this.RegExp) ){
           // 正しい内容が読み込まれた場合
-          callback(code.data);
-          config.scanCode = false;
-          scanner.innerHTML = ''; // 作業用DIVを除去
+          this.drawRect(code.location);
+          alert(code.data);
+          //callback(code.data);
+          //config.scanCode = false;
+          //this.parent.innerHTML = ''; // 作業用DIVを除去
         } else {
           // 不適切な、別のQRコードが読み込まれた場合
           alert('不適切なQRコードです。再読込してください。');
           console.log('[scanCode.drawFinder] Error: not match pattern. code='+code.data);
-          setTimeout(drawFinder, opt.interval);
+          setTimeout(()=>this.drawFinder(), this.interval);
         }
 			}
     }
-    setTimeout(drawFinder, opt.interval);
+    setTimeout(()=>this.drawFinder(), this.interval);
   }
 
   drawRect(location){  // ファインダ上のQRコードに枠を表示
+    console.log('webScanner.drawRect location='+JSON.stringifylocation);
     this.drawLine(location.topLeftCorner,     location.topRightCorner);
 		this.drawLine(location.topRightCorner,    location.bottomRightCorner);
 		this.drawLine(location.bottomRightCorner, location.bottomLeftCorner);
@@ -211,6 +286,7 @@ class webScanner {
   }
 
   drawLine(begin, end){  // ファインダ上に線を描画
+    console.log('webScanner.drawLine begin='+begin+', end='+end);
 		this.ctx.lineWidth = 4;
 		this.ctx.strokeStyle = "#FF3B58";
 		this.ctx.beginPath();

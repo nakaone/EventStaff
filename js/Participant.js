@@ -47,10 +47,11 @@ class Participant {
        * @param {boolean} arg.alert - 読み込み完了時に内容をalert表示するか */
       parent: this.dom.main.querySelector('.scanner'),
       interval: 0.25,
+    });
+    this.scanner.scanQR((r)=>{console.log('scanned => '+r)},{
       RegExp: /^[0-9]+$/,
       alert: true
     });
-    this.scanner.scanQR((r)=>{console.log('scanned => '+r)});
   }
 
   /** formQR: 未申請者へ申請フォームのURLをQRコードで表示
