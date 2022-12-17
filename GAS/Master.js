@@ -119,10 +119,10 @@ function onFormSubmit(e){
   try {
     // 1.引数からシート上の行番号を取得、それを基に登録日時を特定
     const rowNum = e.range.rowStart;
-    const sObj = szLib.szSheet('マスタ');
+    const sObj = szLib.szSheet('マスタ','タイムスタンプ');
     const timestamp = sObj.raw[rowNum-1][0];
-    const tObj = sObj.lookup('タイムスタンプ',timestamp);
-    console.log('rowNum='+rowNum+', timestamp='+szLib.getJPDateTime(timestamp)+', tObj='+JSON.stringify(tObj));
+    const tObj = sObj.lookup(timestamp);
+    //console.log('rowNum='+rowNum+', timestamp='+szLib.getJPDateTime(timestamp)+', tObj='+JSON.stringify(tObj));
 
     let entryNo;
     let editURL = '';
@@ -140,12 +140,12 @@ function onFormSubmit(e){
       // 3.受付番号を採番、編集用URLと併せてシートに書き込み
       const entryNoList = sObj.data.map(x => x.entryNo);
       entryNo = Math.max(...entryNoList) + 1;
-      console.log('entryNo='+entryNo);
-      const updateResult = sObj.update('タイムスタンプ',new Date(timestamp),[
-        {column:'entryNo', value:entryNo},
-        {column:'editURL', value:editURL},
-      ],false);
-      console.log('updateResult = '+JSON.stringify(updateResult));
+      //console.log('entryNo='+entryNo);
+      const updateResult = sObj.update(
+        {'entryNo':entryNo, 'editURL':editURL},
+        {'value':new Date(timestamp)}
+      );
+      //console.log('updateResult = '+JSON.stringify(updateResult));
     } else {  // 既存申込の編集の場合
       entryNo = Number(tObj.entryNo);
       editURL = tObj.editURL;
@@ -193,18 +193,18 @@ const auth1B = (arg) => {
 
     // 01.申込者情報の取得とパスコードの生成
     const entryNo = Number(arg);
-    const dObj = szLib.szSheet('マスタ');
-    const participant = dObj.lookup('entryNo',entryNo);
-    console.log('管理局.participant='+JSON.stringify(participant));
+    const dObj = szLib.szSheet('マスタ','entryNo');
+    const participant = dObj.lookup(entryNo);
+    //console.log('管理局.participant='+JSON.stringify(participant));
     const passCode = ('00000' + Math.floor(Math.random() * 1000000)).slice(-6);
-    console.log('管理局.passCode='+passCode);
+    //console.log('管理局.passCode='+passCode);
 
     // 02.マスタにパスコードを記録
-    let r = dObj.update('entryNo',entryNo,[
-      {column:'passCode',value:passCode},
-      {column:'passTime',value:new Date()},
-    ])
-    console.log('管理局.update='+JSON.stringify(r));
+    let r = dObj.update(
+      {'passCode':passCode,'passTime':new Date()},
+      {value:entryNo}
+    );
+    //console.log('管理局.update='+JSON.stringify(r));
 
     // 03.メール送信要求
     rv = szLib.fetchGAS({from:'Master',to:'Post',func:'postMails',data:{
@@ -230,7 +230,7 @@ const auth1B = (arg) => {
  * @param {string} arg.entryNo    - 利用者が入力した受付番号
  * @param {string} arg.passCode   - 利用者が入力したパスコード
  * @param {string} arg.key - 利用しない(config.Master.Key)
- * @return {object} - 処理結果
+ * @returns {object} - 処理結果
  * <ul>
  * <li>isErr {boolean} - エラーならtrue
  * <li>message {string} - エラーの場合はメッセージ。正常終了ならundefined
@@ -241,7 +241,7 @@ const auth1B = (arg) => {
  * @example <caption>引数の例</caption>
  * 管理局.auth2B start. arg={"func":"auth2B","entryNo":"1.0","passCode":"478608","key":"GQD*4〜aQ8r"}
  */
-const auth2Btest = () => auth2B({entryNo:1,passCode:883594});
+//const auth2Btest = () => auth2B({entryNo:1,passCode:232027});
 const auth2B = (arg) => {
   console.log('管理局.auth2B start. arg='+JSON.stringify(arg));
   let rv = null;
@@ -249,52 +249,32 @@ const auth2B = (arg) => {
   const entryNo = Number(arg.entryNo);  // finallyで使用なのでtry外で宣言
   try {
 
-    // 01.受付番号を基にパスコード・生成日時を取得、検証
+    // 受付番号を基にパスコード・生成日時を取得、検証
     const passCode = Number(arg.passCode);
     const participant = dObj.data.filter(x => {return Number(x.entryNo) === entryNo})[0];
     console.log('管理局.participant='+JSON.stringify(participant));
     const revice = [];
 
-    // 02.パスコードが一致したかの判定
+    // パスコードが一致したかの判定
     const validCode = passCode === Number(participant.passCode);
     // 発行日時は一時間以内かの判定
     const validTime = new Date().getTime() - new Date(participant.passTime).getTime() < conf.Master.validTime;
     if(  validCode && validTime ){
-      // 02.a.検証OK：表示に必要なURLとメニューフラグをconfigとして作成
-      // (1) 受付番号に紐付く情報を追加
-      rv = {isErr:false, config:{private: participant}};
-      // (2) config.jsonからAuthLevelに応じた局・公開情報を追加
+      // 検証OK：表示に必要なURLとメニューフラグをconfigとして作成
+      // (1) AuthLevelに応じたconfigを作成。管理局「AuthLevel」シートが原本
       //     認証局:1, 放送局:2, 予約局:4, 管理局:8, 郵便局:16, 資源局:32
-      //     ※管理局「AuthLevel」シートが原本
+      rv = {isErr:false, config:{
+        AuthLevel: Number(participant.AuthLevel),
+        menuFlags: Number(participant.menuFlags), // 表示するメニューのフラグ(menuFlags)
+        editURL: participant.editURL, // 参加申請フォームの編集用URL
+      }};
       for( let x in conf ){
-        if( (conf[x].level & rv.config.private.AuthLevel) > 0 ){
+        if( conf[x].level & rv.config.AuthLevel > 0 ){
           rv.config[x] = conf[x];
         }
       }
-      // (3) 配信局情報の追加
-      // 資源局から配信局のリストを取得
-      const res = szLib.fetchGAS({
-        from: 'Master',
-        to: 'Agency',
-        func: 'listAgents',
-      });
-      console.log('l.281 res='+JSON.stringify(res));
-      if( res.isErr ){
-        throw new Error(res.message);
-      }
-      // 配信局を選択(type=='agent' & status=='稼働中' & elaps最小)
-      rv.config.Agent = {key:null,url:null,elaps:9999999};
-      for( let i=0 ; i<res.result.length ; i++ ){
-        const d = res.result[i];
-        if( d.type === 'Agent' && d.status === '稼働中' && d.elaps < rv.config.Agent.elaps ){
-          rv.config.Agent.key = d.key;
-          rv.config.Agent.url = d.endpoint;
-          rv.config.Agent.elaps = d.elaps;
-        }
-      }
-      delete rv.config.Agent.elaps;  // 不要なメンバを削除
     } else {
-      // 02.b.検証NG：エラー通知
+      // 検証NG：エラー通知
       rv = {
         isErr: true,
         message: !validCode ? 'パスコードが一致しません' : 'パスコードの有効期限が切れています',
@@ -319,33 +299,49 @@ const auth2B = (arg) => {
 }
 
 /** candidates: 該当者リストの作成
- * 
- * @param {object} data     - 以下のメンバを持つオブジェクト
- * @param {string} data.key - 候補者検索のためのキーワード(受付番号、氏名読み)
- * @returns {object[]}      - 該当者のマスタ上のデータ
+ * @param {string} data - 候補者検索のためのキーワード(受付番号、氏名読み)
+ * @return {object} - 処理結果
+ * <ul>
+ * <li>isErr {boolean} - エラーならtrue
+ * <li>message {string} - エラーの場合はメッセージ。正常終了ならundefined
+ * <li>result {object[]} - 検索キーにマッチした申込の配列。[{項目名:値,..},{..},..]形式
+ * </ul>
  */
-const candidates = (data) => {
-  console.log('管理局.candidates start.',data);
-
-  const dObj = szLib.szSheet({sheetName:'マスタ'}); // データをシートから取得
-  let result = [];
-  const sKey = String(data.key);
-  if( sKey.match(/^[0-9]+$/) ){
-    console.log('管理局.number='+Number(sKey));
-    result = dObj.data.filter(x => {return Number(x['受付番号']) === Number(sKey)});
-  } else if( sKey.match(/^[ァ-ヾ　]+$/) ){
-    console.log('管理局.katakana='+sKey);
-    result = dObj.data.filter(x => {return x['読み'].indexOf(sKey) === 0});
-  } else if( sKey.match(/^[ぁ-ゟ　]+$/) ){
-    console.log('管理局.hiragana='+sKey);
-    result = dObj.data.filter(x => {return x['読み'].indexOf(sKey) === 0});
-  } else {
-    console.log('管理局.kanji='+sKey);
-    result = dObj.data.filter(x => {return x['氏名'].indexOf(sKey) === 0});
+const candidatesTest = () => {
+  const testData = [8,'007','シマヅ','な','嶋津'];
+  for( let i=0 ; i<testData.length ; i++ ){
+    console.log(testData[i]+' -> '+JSON.stringify(candidates(testData[i])));
   }
+}
+const candidates = (data) => {
+  console.log('管理局.candidates start. data='+data);
+  let rv = {};
+  try {
+    const dObj = szLib.szSheet('マスタ');  // データをシートから取得
 
-  console.log('管理局.candidates end. result='+JSON.stringify(result));
-  return result;
+    const sKey = String(data);
+    if( sKey.match(/^[0-9]+$/) ){            // 受付番号
+      console.log('管理局.number='+Number(sKey));
+      rv.result = dObj.data.filter(x => {return Number(x.entryNo) === Number(sKey)});
+    } else if( sKey.match(/^[ァ-ヾ　]+$/) ){  // 氏名読み(カタカナ)
+      console.log('管理局.katakana='+sKey);
+      rv.result = dObj.data.filter(x => {return x.yomi00.indexOf(sKey) === 0});
+    } else if( sKey.match(/^[ぁ-ゟ　]+$/) ){  // 氏名読み(ひらがな)
+      console.log('管理局.hiragana='+sKey);
+      rv.result = dObj.data.filter(x => {return x.yomi00.indexOf(sKey) === 0});
+    } else {
+      console.log('管理局.kanji='+sKey);      // 氏名(漢字、他)
+      rv.result = dObj.data.filter(x => {return x.name00.indexOf(sKey) === 0});
+    }
+    rv.isErr = false;
+
+  } catch(e) {
+    rv.isErr = true;
+    rv.message = e.message;
+  } finally {
+    console.log('管理局.candidates end. rv='+JSON.stringify(rv));
+    return rv;
+  }
 };
 
 /** updateParticipant: 参加者情報を更新

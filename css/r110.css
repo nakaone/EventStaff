@@ -104,3 +104,7 @@ a div.button {
   height: 2rem;
   background-color: aquamarine;
 }
+
+.error {
+  color: red;
+}

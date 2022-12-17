@@ -34,7 +34,7 @@ class Participant {
           this.scanDoc();
           break;
         case 'search':
-          this.search();
+          this.searchKey();
           break;
       }
     });
@@ -48,8 +48,9 @@ class Participant {
       parent: this.dom.main.querySelector('.scanner'),
       interval: 0.25,
     });
-    this.scanner.scanQR((code)=>{
+    this.scanner.scanQR((code)=>{  // QRコード読込後の処理
       console.log('scanned => '+code);
+      this.searchKey(code);
     },{
       RegExp: /^[0-9]+$/,
       alert: true
@@ -103,17 +104,51 @@ class Participant {
     });
   }
 
-  /** search: 検索キー(受付番号または氏名の一部)で検索 */
-  search(){
-    console.log('search clicked.');
+  /** searchKey: 検索キー(受付番号または氏名の一部)で検索
+   * @param {string|undefined} - 検索キーとなる受付番号または氏名の一部
+   * @returns {object} 検索結果のオブジェクト
+   * <ul>
+   * <li>isErr {boolean} - エラーならtrue
+   * <li>message {string} - エラーの場合はメッセージ。正常終了ならundefined
+   * <li>result {object[]} - 検索キーにマッチした申込の配列。[{項目名:値,..},{..},..]形式
+   * </ul>
+  */
+  searchKey(arg=''){
+    console.log('Participant.search start. arg='+JSON.stringify(arg));
+    this.dom.title.innerText = '該当者の検索';
 
+    this.dom.main.innerHTML = '<img src="img/loading.gif" />';
+
+    /* fetchGAS
+    * @param {object}   arg          - 引数
+    * @param {string}   arg.to       - 受信側のコード名(平文)
+    * @param {string}   arg.func     - GAS側で処理分岐の際のキー文字列
+    * @param {any}      arg.data     - 処理対象データ
+    * @param {function} arg.callback - GAS処理結果を受けた後続処理 */
+    fetchGAS({
+      to: 'Master',
+      func: 'candidates',
+      data: arg.length > 0 ? arg : this.dom.keyWordArea.value,
+      callback: (res => {
+        if( res.isErr ){
+          this.dom.main.innerHTML = '<h1 class="error">' + res.message + '</h1>';
+          return;
+        } else {
+          if( res.result.length === 0 ){
+            alert("該当する参加者は存在しませんでした");
+            this.display();
+          } else if( res.result.length > 1){
+            this.selectParticipant(res.result);  // 該当が複数件なら選択画面へ
+          } else {
+            this.editParticipant(res.result[0]);  // 該当が1件のみなら編集画面へ
+          }
+        }
+      })
+    });
   }
-
-
 
   /** inputSearchKey: 参加者の検索キーを入力
    * 
-   */
   inputSearchKey(){
     console.log('inputSearchKey start.');
     changeScreen('inputSearchKey','該当者の検索');
@@ -160,52 +195,99 @@ class Participant {
   
     console.log('inputSearchKey end.');
   }
+  */
   
   /** selectParticipant: 複数検索結果からの選択
-   * 
-   * @param {*} arg 
+   * @param {object[]} arg - 候補者のオブジェクトの配列。[{項目名:値,..},{..},..]形式
+   * @returns {void} なし
    */
   selectParticipant(arg){
-    console.log('selectParticipant start.',arg);
-    changeScreen('selectParticipant','該当者リスト');
-  
-    const editArea = document.querySelector("#selectParticipant");
-    editArea.innerHTML = '<p>検索結果が複数あります。選択してください。</p>';
-    for( let i=0 ; i<arg.length ; i++ ){
-      const o = document.createElement('div');
-      o.innerText = arg[i]['氏名'] + '(' + arg[i]['読み'] + ')';
-      o.addEventListener('click',() => {
-        editParticipant(arg[i]);  // 選択後編集画面へ
-      });
-      editArea.appendChild(o);
+    console.log('selectParticipant start. arg='+JSON.stringify(arg));
+    this.dom.title.innerText = '対象者の選択';
+    try {
+      const editArea = this.dom.main;
+      editArea.innerHTML = '<p>検索結果が複数あります。選択してください。</p>';
+      for( let i=0 ; i<arg.length ; i++ ){
+        const o = document.createElement('div');
+        o.innerText = arg[i]['氏名'] + '(' + arg[i]['読み'] + ')';
+        o.addEventListener('click',() => {
+          editParticipant(arg[i]);  // 選択後編集画面へ
+        });
+        editArea.appendChild(o);
+      }
+      console.log('selectParticipant end.');
+    } catch(e) {
+      console.error('selectParticipant abnormal end.\n'+e.message);
+      alert(e.message);
     }
-  
-    console.log('selectParticipant end.');
   }
   
   /** editParticipant: 検索結果の内容編集
-   * 
-   * @param {*} arg 
+   * @param {object} - 編集対象のオブジェクト。{項目名:値,..}形式
+   * @returns {void} なし
    */
   editParticipant(arg){
-    console.log('editParticipant start.',arg);
-    changeScreen('editParticipant','参加者情報入力');
-  
-    // 該当が1件のみなら編集画面へ
+    console.log('editParticipant start. arg='+JSON.stringify(arg));
+    this.dom.title.innerText = '参加者情報の編集';
+    try {
+
+      // [01] データクレンジング
+      arg.entryNo = ('000'+arg.entryNo).slice(-4);  // 0パディング
+      arg.timestamp = getJPDateTime(arg['タイムスタンプ']);
+      /* 「取消」の文字列が入っていればtrue
+      arg['取消'] = arg['取消'].length === 0 ? "無し" : "有り";
+      ['','①','②','③'].forEach(x => {
+        if( arg[x+'状態'].length === 0 )
+          arg[x+'状態'] = arg[x+'氏名'].length === 0 ? '未登録' : '未入場';
+        if( arg[x+'参加費'].length === 0 )
+          arg[x+'参加費'] = arg[x+'氏名'].length === 0 ? '無し' : '未収';
+      });*/
+
+      /*
++ '<div class="table">'
+
+// 申込者識別
++ '  <div class="tr">'
++ '    <div class="td entryNo">' + arg.entryNo + '</div>'
++ '    <div class="td name">'
++ '      <ruby><rb>' + arg.name00 + '</rb><rt>' + arg.yomi00 + '</rt></ruby>'
++ '    </div>'
++ '    <button name="details">詳細</button>'
++ '  </div>'
+
+// 詳細情報
++ '  <div class="tr">'
++ '    <div>受付日時：' + arg['タイムスタンプ'] + '</div>'
++ '    <div>e-mail：' + arg['メールアドレス'] + '</div>'
++ '    <div>緊急連絡先：' + arg['緊急連絡先'] + '</div>'
++ '    <div>引取者：' + arg['引取者氏名'] + '</div>'
++ '    <div>備考：' + arg['備考'] + '</div>'
++ '    <div>キャンセル：' + arg['キャンセル'] + '</div>'
++ '    <div>申込フォーム：<div class="qrcode"></div></div>'
++ '  </div>'
+
+// 申請者の状態・参加費
++ '  <div></div>'
++ '</div>'
+
+// 関数化？
++ '    <label>入退場</label>'
++ '    <select name="status00">'
++ '    </select>'
++ '  </div>'
+      */
+
+      console.log('editParticipant end.');
+
+    } catch(e) {
+      console.error('editParticipant abnormal end.\n'+e.message);
+      alert(e.message);
+    }
+    
+    /* 該当が1件のみなら編集画面へ
     const editArea = document.querySelector('#editParticipant .edit');
     editArea.innerHTML = '';
   
-    // [01] データクレンジング
-    arg['受付番号'] = ('000'+arg['受付番号']).slice(-4);  // 0パディング
-    arg['登録日時'] = new Date(arg['登録日時']).toLocaleString('ja-JP');
-    // 「取消」の文字列が入っていればtrue
-    arg['取消'] = arg['取消'].length === 0 ? "無し" : "有り";
-    ['','①','②','③'].forEach(x => {
-      if( arg[x+'状態'].length === 0 )
-        arg[x+'状態'] = arg[x+'氏名'].length === 0 ? '未登録' : '未入場';
-      if( arg[x+'参加費'].length === 0 )
-        arg[x+'参加費'] = arg[x+'氏名'].length === 0 ? '無し' : '未収';
-    });
   
     // [02] 各要素への値設定
   
@@ -238,9 +320,8 @@ class Participant {
       // 「申込フォームを表示」ボタンクリック時の遷移先を定義
       document.querySelector('#editParticipant .form input[type="button"]')
         .onclick = () => window.open(arg['編集用URL'], '_blank');
-    }
+    } */
   
-    console.log('editParticipant end.');
   }
   
   /** updateParticipant: 参加者情報更新
