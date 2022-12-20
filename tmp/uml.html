@@ -1,0 +1,131 @@
+<!DOCTYPE html><html lang="ja">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <meta http-equiv="Content-Script-Type" content="text/javascript">
+  <title>UML</title>
+  <!-- UML: mermaid -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mermaid/7.0.0/mermaid.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+  <!-- UML: PlantUML
+    参考：JavaScriptを用いてPlantUMLを呼び出す
+    https://168iroha.net/blog/topic/?id=202206081036&sorting=post_date
+  -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/plantuml-encoder@1.4.0/dist/plantuml-encoder.min.js"></script>
+
+  <style>
+    /* =========================================================
+    ========================================================= */
+    html {font-size:10pt;  /* 基本となる文字サイズ */}
+    body {box-sizing: border-box;}  /* 枠線は要素サイズに含める */
+    div {margin:0px;padding:0px;}
+  </style>
+</head>
+
+<body>
+  <div id="flow">
+    <!-- img id="view"></img -->
+  </div>
+
+  <div id="sequence">
+    <ol>
+      <li>configの変更があればそれを反映させる</li>
+    </ol>
+
+    <h1>クライアントへの定期配信</h1>
+    <div class="mermaid">
+    sequenceDiagram
+      autonumber
+      actor guest as 参加者
+      participant broad as 放送局
+      participant agent as 配信局
+      participant agency as 資源局
+      actor admin as システム管理者
+    
+      alt ErrorCounter = 0
+        guest ->> guest : ErrorCounter = 1
+        guest ->>+ agent : 配信要求
+        Note right of agent : castMessages()
+        agent ->>- guest : 投稿内容
+        guest ->> guest : ErrorCounter = 0
+    
+      else ErrorCounter > 0
+        guest ->>+ agency : 前回配信失敗報告
+        Note right of agency : confirmAlive()
+        agency ->> guest : 報告局以外から選択、連絡
+        guest ->> agent : 配信要求　※以降ErrorCounter = 0と同じ
+    
+        agency ->> agency : 報告局の状態を参照
+        alt 報告局の状態が「稼働中」
+          agency ->>- agent : 報告局に死活報告要求
+          activate agent
+          Note right of agent : reportAlive()
+          agent ->> agency : 死活報告
+          deactivate agent
+          Note right of agency : ※10秒待機
+          activate agency
+          Note right of agency : disposal()
+          agency ->> agency : 死活報告存否確認
+          alt 死活報告なし
+            agency ->> agency : 報告局の状態を「退役」に変更<br>待機局のひとつを「稼働中」に変更
+            agency ->>+ broad : 新規稼働局にメッセージリスト配信要求
+            Note right of broad : setupAgent()
+            broad ->>+ agent : 新規稼働局に全メッセージを送信
+            Note right of agent : setupMessages()
+            agent ->>- broad : 全メッセージ登録終了報告
+            broad ->>- agency : 終了報告
+          end
+          agency ->> admin : 報告メール送信
+          deactivate agency
+        end
+      end
+    </div>
+
+  </div>
+
+</body>
+<script type="text/javascript">
+document.getElementById('view').src = "http://www.plantuml.com/plantuml/svg/"+plantumlEncoder.encode(`
+  @startuml
+  |参加者|
+
+  start
+    |検温担当|
+    :検温を実施;
+    if (発熱あり？) then (≧37.5℃)
+      |参加者|
+      :帰宅;
+    else (＜37.5℃)
+      |検温担当|
+      if (参加登録済？) then (当日参加)
+        |検温担当|
+        :当日参加受付票\n記入コーナーを案内;
+        |参加者|
+        :当日参加受付票に記入;
+        |受付|
+        :当日参加受付票の\n記入内容を確認;
+        if(親も参加？) then (子供が受付)
+          :お迎えが決まって\nいることを確認;
+          :参加証は\n【赤】;
+        else (大人が受付);
+          :参加証は\n【黄色】;
+        endif
+      else (登録済)
+        |受付|
+        :「参加者リスト」に\n必要事項を記入;
+        if(申込者名欄の背景色) then (灰色)
+          :親は不参加なので\n参加証は【赤】;
+        else (白);
+          :親も参加するので\n参加証は【黄色】;
+        endif
+      endif
+      :参加料を収受;
+      :参加証を左肩袖に貼付し\n「参加のしおり」を渡す;
+    endif
+
+  stop
+  @enduml
+`);
+</script>
+</html>
