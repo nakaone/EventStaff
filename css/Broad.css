@@ -24,6 +24,7 @@ input[type="button"][name="postButton"] {
 .broadArea {
   width: 100%;
   height: calc(100% - 2rem);
+  flex-direction: column;
   overflow: auto;
 }
 .broadArea p {
@@ -32,6 +33,7 @@ input[type="button"][name="postButton"] {
   margin-bottom: 0.5rem;
 }
 .broadArea p.date {
+  width: calc(100% - 1rem);
   padding-left: 1rem;
   background-color: forestgreen;
   color: white;  

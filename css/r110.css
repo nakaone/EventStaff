@@ -3,7 +3,7 @@ html {
   padding: 0;
   width: 100vw;
   height: 100vh;
-  font-size: 5vw;  /* 基本となる文字サイズ */
+  font-size: 4vw;
 }
 
 body {
@@ -11,10 +11,29 @@ body {
 }
 
 div {
-  width: 100%;
   margin: 0px;
   padding: 0px;
-  box-sizing: border-box; /* 枠線は要素サイズに含める */
+  box-sizing: border-box;
+  display: flex;
+  display: -webkit-flex;
+}
+
+div.table {
+  width: 100%;
+  flex-direction: column;
+}
+div.tr {
+  width: 100%;
+  padding: 0.25rem;
+  flex-direction: row;
+}
+
+h1 {
+  font-size: 1.6rem;
+}
+
+.error {
+  color: red;
 }
 
 /* =========================================================
@@ -91,10 +110,7 @@ nav li {
   left: 0.5rem;
   width: calc(100% - 1rem);
   height: calc(100% - 3rem);
-}
-
-h1 {
-  font-size: 1.6rem;
+  flex-direction: column;
 }
 
 a div.button {
@@ -103,8 +119,4 @@ a div.button {
   width: 80%;
   height: 2rem;
   background-color: aquamarine;
-}
-
-.error {
-  color: red;
 }
