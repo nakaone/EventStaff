@@ -397,7 +397,7 @@ const fetchGAS = (arg) => {
 /** genChild: テンプレートに差込データをセットした要素を生成
  * 
  * @param {object} template - 生成対象となる要素のテンプレート
- * @param {string} template.tag      - タグ
+ * @param {string} template.tag      - タグ。既定値'div'
  * @param {string} template.children - 子要素。templateを再帰的に定義
  * @param {string} template.text - テキスト要素。'\t'の部分はvariableの値で置換
  * @param {string} template.skip - 「dObj[skip]=undefined⇒スキップ」の指定<br>例：参加者名が空欄なら名簿行を作成しない
@@ -415,7 +415,7 @@ const fetchGAS = (arg) => {
  * @param {string} template.style - setAttributeで設定
  * @param {string} template.onclick - location.hrefする場合の遷移先URL
  * @param {boolean} template.checked - trueならcheckedを追加
- * @param {string} template.opt - tag="select"の場合に作成されるoptions。variableの値が選択された状態になる
+ * @param {string[]} template.opt - tag="select"の場合に作成されるoptions。variableの値が選択された状態になる
  * @param {object} dObj - 実データのオブジェクト
  * @param {string} pFP - パン屑リストの表示名
  * 
@@ -451,7 +451,7 @@ const fetchGAS = (arg) => {
  *   }
  * }
  */
-const genChild = (template,dObj,pFP) => {
+const genChild = (template,dObj={},pFP='root') => {
   let rv = {append:true, status:'node', result:null};  // catch節でも使用する変数を、try節の前で宣言
   try {
 
@@ -461,7 +461,7 @@ const genChild = (template,dObj,pFP) => {
     // 1.1.テンプレートの定義(メンバ)がundefinedにならないよう初期値を設定し、
     //     'sDef'とする(structure definition)
     const sDef = {  // template.specにある、文書構造定義に使用される項目
-      tag:'', children:[], text:'', skip:'', variable:'', max:0,
+      tag:'div', children:[], text:'', skip:'', variable:'', max:0,
       class:'', // 生成される要素(タグ)に指定する属性(現在classのみ)
       ...template  // 既定値を指定値で上書き
     };
@@ -470,7 +470,7 @@ const genChild = (template,dObj,pFP) => {
     const cFP = pFP + ' > '
       + (sDef.tag.length === 0 ? '(no tag)' : sDef.tag)
       + (sDef.class.length > 0 ? '.'+sDef.class : '');
-    console.log('genChild start: ' + cFP + '\n');
+    console.log('genChild start. cFP='+cFP+'\n'+JSON.stringify(sDef));
 
     // 1.3.内部関数の定義
     const addSeqNo = (cDef,no) => {
@@ -482,9 +482,12 @@ const genChild = (template,dObj,pFP) => {
       }
     };
 
+    // 1.4.作成不要ならスキップ
+    // ①skip指定有り & ②実データに指定項目が存在 & ③実データの指定項目が空白
     if( sDef.skip.length > 0 && dObj[sDef.skip] && dObj[sDef.skip].length === 0 ){
       return {append:false, status:'skipped', result:null};
     }
+    //console.log('l.490')
 
     /* ========================================
       2. 自要素の作成
@@ -504,22 +507,25 @@ const genChild = (template,dObj,pFP) => {
 
     // 2.2.中の文字列をstrとして作成
     let str = '';
-    if( sDef.text.length === 0 ){
-      if( dObj[sDef.variable] !== undefined ){
-        rv.status = 'variable';
-        str = dObj[sDef.variable];
-      }
-    } else {
-      if( sDef.text.match(/\t/) ){
+    if( sDef.text.length === 0 ){ // sDef.text指定無し
+      if( sDef.variable.length > 0 ){ // sDef.variable指定有り
         if( dObj[sDef.variable] !== undefined ){
+          rv.status = 'variable';
+          str = dObj[sDef.variable];  // 中の文字列はsDef.variable
+        }
+      }
+    } else { // sDef.text指定有り
+      if( sDef.text.match(/\t/) ){  // プレースホルダあり
+        if( dObj[sDef.variable] !== undefined ){  // 変数指定もあり
           rv.status = 'replaced';
           str = sDef.text.replace(/\t/g,dObj[sDef.variable]);
-        }
-      } else {
+        } // else -> プレースホルダが有っても変数指定が無ければ何もしない
+      } else {  // プレースホルダなし
         rv.status = 'fixed';
-        str = sDef.text;
+        str = sDef.text;  // 中の文字列はsDef.textそのまま
       }
     }
+    //console.log('l.523 str='+str);
 
     // 2.3.自要素(element)の生成
     if( sDef.tag.length > 0 ){
@@ -529,14 +535,15 @@ const genChild = (template,dObj,pFP) => {
     } else {
       rv.result = document.createTextNode(str);
     }
-    //console.log('l.216 rv',rv.result);
+    //console.log('l.532 rv',rv.result);
 
     // 2.4.自要素に属性を追加
     if( sDef.class && sDef.class.length > 0 ){
-      /* sDef.classが三項演算子の場合、評価結果をクラスとする。
-        それ以外は文字列としてそのまま適用 */
+      /* sDef.classが三項演算子の場合、評価結果をクラスとする。 -> evalなので削除
+        それ以外は文字列としてそのまま適用
       rv.result.className = sDef.class.match(/.+\?.+:.+/)
-        ? eval(sDef.class) : sDef.class;
+        ? eval(sDef.class) : sDef.class; */
+      rv.result.className = sDef.class;
     }
     ['id','type','name','value','accept','capture','width','height','style'].forEach(x => {
       if( sDef[x] && sDef[x].length > 0 ){
@@ -552,18 +559,18 @@ const genChild = (template,dObj,pFP) => {
       rv.result.checked = true;
     }
     if( sDef.tag === 'select' ){  // select文の場合、子要素としてoptionを作成
-      const options = sDef.opt.split(',');
-      for( let i=0 ; i<options.length ; i++ ){
+      console.log('l.562 sDef='+JSON.stringify(sDef)+'\ndObj='+JSON.stringify(dObj));
+      for( let i=0 ; i<sDef.opt.length ; i++ ){
         let opt = document.createElement('option');
-        opt.value = options[i];
-        opt.appendChild(document.createTextNode(options[i]));
-        if( options[i] === dObj[sDef.variable] ){
+        opt.value = sDef.opt[i];
+        opt.appendChild(document.createTextNode(sDef.opt[i]));
+        if( sDef.opt[i] === dObj[sDef.variable] ){
           opt.selected = true;
         }
         rv.result.appendChild(opt);
       }
     }
-    //console.log('l.225 rv',rv.result);
+    //console.log('l.571 rv',rv.result);
 
     /* ========================================
       3. 子要素の作成
@@ -577,7 +584,7 @@ const genChild = (template,dObj,pFP) => {
         if( o.append ) rv.result.appendChild(o.result);
       }
     }
-    //console.log('l.239 rv',rv.result);
+    //console.log('l.585 rv',rv.result);
 
     /* ========================================
       5. 結果表示して作成した要素を返す
@@ -586,7 +593,7 @@ const genChild = (template,dObj,pFP) => {
     return rv;
 
   } catch(e) {
-    console.error(e);
+    console.error(e.message);
     return rv;
   }
 };

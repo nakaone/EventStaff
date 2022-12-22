@@ -1,0 +1,33 @@
+.wrapper {
+  flex-direction: column;
+}
+.applicant button {
+  height: 1.5rem;
+  margin-left: auto;
+}
+.details {
+  display: none;
+}
+.details .th {
+  width: 8rem;
+}
+.details div.tr:nth-child(odd) {
+  background-color: #aff;
+}
+.members .no {
+  width: 2rem;
+}
+.members .name {
+  width: 8rem;
+}
+.members .status,.fee {
+  width: 4rem;
+}
+.members div.tr:nth-child(odd) {
+  background-color: #bfb;
+}
+.members div.tr:last-child {
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  margin-top: 1rem;
+}

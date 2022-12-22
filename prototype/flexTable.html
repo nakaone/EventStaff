@@ -1,0 +1,210 @@
+<!DOCTYPE html><html lang="ja">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <meta http-equiv="Content-Script-Type" content="text/javascript">
+  <title></title>
+  <style type="text/css">
+    html {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      font-size: 5vw;  /* 基本となる文字サイズ */
+    }
+
+    body {
+      font-size: 1rem;
+    }
+
+    /*div {
+      width: 100%;
+      margin: 0px;
+      padding: 0px;
+      box-sizing: border-box;
+    }*/
+
+    div {
+      margin: 0px;
+      padding: 0px;
+      box-sizing: border-box;
+      /*width: 100%;*/
+      display: flex;
+      display: -webkit-flex;
+      flex-direction: row;  /* row:横並び */
+      /*-webkit-justify-content: space-between;
+      justify-content: space-between;
+      -webkit-align-items: flex-start;
+      align-items: flex-start;
+      flex-wrap: wrap;*/
+    }
+    div.table {
+      width: 100%;
+      flex-direction: column;
+    }
+    div.tr {
+      width: 100%;
+      padding: 0.25rem;
+      flex-direction: row;
+    }
+    /* 以下、Participant特有 */
+    .wrapper {
+      flex-direction: column;
+    }
+    .applicant button {
+      height: 1.5rem;
+      margin-left: auto;
+    }
+    .details {
+      display: none;
+    }
+    .details .th {
+      width: 8rem;
+    }
+    .details div.tr:nth-child(odd) {
+      background-color: #aff;
+    }
+    .members .no {
+      width: 2rem;
+    }
+    .members .name {
+      width: 8rem;
+    }
+    .members .status,.fee {
+      width: 4rem;
+    }
+    .members div.tr:nth-child(odd) {
+      background-color: #bfb;
+    }
+    .members div.tr:last-child {
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+      margin-top: 1rem;
+    }
+  </style>
+  <!-- style type="text/css" media="print"></style -->
+  <!--
+    .table div.tr:nth-child(2n+3):nth-child(-n+6) { /* 3〜6番目の奇数行 */
+      background-color: #cfc;
+    }
+    button {
+      height: 2rem;
+    }
+    .applicant div {
+      font-size: 1.4rem;
+    }
+    .applicant div:last-child {
+      font-size: 1rem;
+      margin-left: auto;
+    }
+    .details .table div.tr:nth-child(odd) {
+      background-color: #6ff;
+    }
+    .details .th {
+      width: 8rem;
+    }
+    .member label { margin-right: 0.5rem;}
+    .member div:first-child {width:2rem;}
+    .member div:nth-child(2) {width: 10rem;}
+    .member div:nth-child(3) {width: 10rem;}
+    .member div:nth-child(4) {width: 10rem;}
+    .button {
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+      margin-top: 1rem;
+    }
+
+  -->
+</head>
+
+<body>
+
+<div class="wrapper"><div class="applicant"><div>0001</div><ruby><rb>奥田　美香</rb><rt>オクダ　ミカ</rt></ruby><button name="details">詳細</button></div><div class="details table"><div class="tr"><div class="th">受付日時</div><div class="td">2022/10/9 13:34:42.211</div></div><div class="tr"><div class="th">e-mail</div><div class="td">shimokitasho.oyaji@gmail.com</div></div><div class="tr"><div class="th">緊急連絡先</div><div class="td"></div></div><div class="tr"><div class="th">引取者</div><div class="td"></div></div><div class="tr"><div class="th">備考</div><div class="td"></div></div><div class="tr"><div class="th">キャンセル</div><div class="td">( — )</div></div><div class="tr"><div class="th">申込フォーム</div><div class="td qrcode"></div></div></div><div class="members table"><div class="tr"><div class="th no">No</div><div class="th name">氏名</div><div class="th status">入退場</div><div class="th fee">参加費</div></div><div class="tr"><div class="td no"></div><div class="td name">奥田　美香</div><div class="td status"><select name="status00">未入場<option value="未入場">未入場</option><option value="入場済">入場済</option><option value="退場済">退場済</option><option value="不参加">不参加</option><option value="未登録">未登録</option></select></div><div class="td fee"><select name="fee00">未収<option value="未収">未収</option><option value="既収">既収</option><option value="免除">免除</option><option value="無し">無し</option></select></div></div><div class="tr"><div class="td no">①</div><div class="td name">太郎</div><div class="td status"><select name="status01">未入場<option value="未入場">未入場</option><option value="入場済">入場済</option><option value="退場済">退場済</option><option value="不参加">不参加</option><option value="未登録">未登録</option></select></div><div class="td fee"><select name="fee01">未収<option value="未収">未収</option><option value="既収">既収</option><option value="免除">免除</option><option value="無し">無し</option></select></div></div><div class="tr"><div class="td no">②</div><div class="td name">二郎</div><div class="td status"><select name="status02">未入場<option value="未入場">未入場</option><option value="入場済">入場済</option><option value="退場済">退場済</option><option value="不参加">不参加</option><option value="未登録">未登録</option></select></div><div class="td fee"><select name="fee02">未収<option value="未収">未収</option><option value="既収">既収</option><option value="免除">免除</option><option value="無し">無し</option></select></div></div><div class="tr"><div class="td no">③</div><div class="td name"></div><div class="td status"><select name="status03">未登録<option value="未入場">未入場</option><option value="入場済">入場済</option><option value="退場済">退場済</option><option value="不参加">不参加</option><option value="未登録">未登録</option></select></div><div class="td fee"><select name="fee03">無し<option value="未収">未収</option><option value="既収">既収</option><option value="免除">免除</option><option value="無し">無し</option></select></div></div><div class="tr"><button name="cancel">取消</button><button name="update">更新</button></div></div></div>
+
+
+  <!--div class="table">
+    <div class="tr">
+      <div class="th">タイムスタンプ</div>
+      <div class="th">メールアドレス</div>
+      <div class="th">申請者氏名</div>
+      <div class="th">申請者氏名読み</div>
+      <div class="th">申請者はイベントに参加しますか？</div>
+      <div class="th">参加者①氏名</div>
+      <div class="th">参加者①氏名読み</div>
+      <div class="th">参加者①所属</div>
+      <div class="th">参加者②氏名</div>
+      <div class="th">参加者②氏名読み</div>
+      <div class="th">参加者②所属</div>
+    </div>
+    <div class="tr">
+      <div class="td">2022/10/09 13:34:42.211</div>
+      <div class="td">shimokitasho.oyaji@gmail.com</div>
+      <div class="td">奥田　美香</div>
+      <div class="td">オクダ　ミカ</div>
+      <div class="td">参加する</div>
+      <div class="td">太郎</div>
+      <div class="td">タロウ</div>
+      <div class="td">未就学児</div>
+      <div class="td">二郎</div>
+      <div class="td">ジロウ</div>
+      <div class="td">1年</div>
+    </div>
+    <div class="tr">
+      <div class="td">2022/10/09 13:39:20.911</div>
+      <div class="td">shimokitasho.oyaji@gmail.com</div>
+      <div class="td">榎田　道子</div>
+      <div class="td">エノキダ　ミチコ</div>
+      <div class="td">参加する</div>
+      <div class="td"></div>
+      <div class="td"></div>
+      <div class="td"></div>
+      <div class="td"></div>
+      <div class="td"></div>
+      <div class="td"></div>
+    </div>
+    <div class="tr">
+      <div class="td">2022/10/09 13:43:02.010</div>
+      <div class="td">shimokitasho.oyaji@gmail.com</div>
+      <div class="td">吉野　佳代子</div>
+      <div class="td">ヨシノ　カヨコ</div>
+      <div class="td">参加しない</div>
+      <div class="td">太郎</div>
+      <div class="td">タロウ</div>
+      <div class="td">未就学児</div>
+      <div class="td">二郎</div>
+      <div class="td">ジロウ</div>
+      <div class="td">1年</div>
+    </div>
+    <div class="tr">
+      <div class="td">2022/10/09 13:47:13.179</div>
+      <div class="td">shimokitasho.oyaji@gmail.com</div>
+      <div class="td">新田　恵利</div>
+      <div class="td">ニッタ　エリ</div>
+      <div class="td">参加する</div>
+      <div class="td"></div>
+      <div class="td"></div>
+      <div class="td"></div>
+      <div class="td"></div>
+      <div class="td"></div>
+      <div class="td"></div>
+    </div>
+    <div class="tr">
+      <div class="td">2022/10/09 13:50:52.797</div>
+      <div class="td">shimokitasho.oyaji@gmail.com</div>
+      <div class="td">中島　美春</div>
+      <div class="td">ナカシマ　ミカ</div>
+      <div class="td">参加する</div>
+      <div class="td"></div>
+      <div class="td"></div>
+      <div class="td"></div>
+      <div class="td"></div>
+      <div class="td"></div>
+      <div class="td"></div>
+    </div>  
+  </div-->
+</body>
+<script type="text/javascript">
+</script>
+</html>
+
+

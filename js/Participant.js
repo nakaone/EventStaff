@@ -230,68 +230,43 @@ class Participant {
     console.log('editParticipant start. arg='+JSON.stringify(arg));
     this.dom.title.innerText = '参加者情報の編集';
     try {
+      this.dom.main.innerHTML = '';
 
-      // 01. htmlの生成
-      let iHtml = '<div class="table">';  // wrapper start
-      // 01.1 申込者識別
-      iHtml += '<div class="tr">'
-      + '  <div class="td entryNo">' + (('000'+arg.entryNo).slice(-4)) + '</div>'
-      + '  <div class="td name">'
-      + '    <ruby><rb>' + arg.name00 + '</rb><rt>' + arg.yomi00 + '</rt></ruby>'
-      + '  </div>'
-      + '  <button name="details">詳細</button>'
-      + '</div>';
-      // 01.2 詳細情報
-      iHtml += '<div name="details" class="tr">'
-      + '  <div>受付日時：' + getJPDateTime(arg['タイムスタンプ']) + '</div>'
-      + '  <div>e-mail：' + arg['メールアドレス'] + '</div>'
-      + '  <div>緊急連絡先：' + arg['緊急連絡先'] + '</div>'
-      + '  <div>引取者：' + arg['引取者氏名'] + '</div>'
-      + '  <div>備考：' + arg['備考'] + '</div>'
-      + '  <div>キャンセル：' + (arg.cancel < 0 ? "取消済" : "( — )") + '</div>'
-      + '  <div>申込フォーム：<div class="qrcode"></div></div>'
-      + '</div>';
-      // 01.3 申請者の状態・参加費
-      const maruNo = ['','①','②','③'];  // 丸数字
-      for( let i=0 ; i<4 ; i++ ){
-        const num = ('0'+i).slice(-2);
-        // 空欄の場合、既定値を設定
-        if( arg['status'+num].length === 0 ){
-          arg['status'+num] = arg['name'+num].length === 0 ? '未登録' : '未入場';
-        }
-        if( arg['fee'+num].length === 0 ){
-          arg['fee'+num] = arg['name'+num].length === 0 ? '無し' : '未収';
-        }
-        iHtml += '<div>' + maruNo[i] + '</div>';  // 番号
-        iHtml += '<div>' + arg['name'+num] + '</div>';  // 氏名
-        // 状態
-        iHtml += '<div><label>入退場</label><select name="status' + num + '">';
-        let opt = ['未入場','入場済','退場済','不参加','未登録'];
-        for( let j=0 ; j<opt.length ; j++ ){
-          iHtml += '<option value="' + opt[j] + '"'
-            + ( arg['status'+num] === opt[j] ? ' selected' : '')
-            + '>' + opt[j] + '</option>';
-        }
-        iHtml += '</select></div>';
-        // 参加費
-        iHtml += '<div><label>参加費</label><select name="fee' + num + '">';
-        opt = ['未収','既収','免除','無し'];
-        for( let j=0 ; j<opt.length ; j++ ){
-          iHtml += '<option value="' + opt[j] + '"'
-            + ( arg['fee'+num] === opt[j] ? ' selected' : '')
-            + '>' + opt[j] + '</option>';
-        }
-        iHtml += '</select></div>';
+      // 01. 全体の枠組みを生成
+      let o = genChild({class:'wrapper', children:[
+        {class:'applicant'},        // 申込概要
+        {class:'details table'},    // 申込詳細
+        {class:'members table'}     // 参加者リスト
+      ]});
+      if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
+        throw o.result;
+      } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
+        this.dom.main.appendChild(o.result);
       }
-      iHtml += '<button name="update">登録</button>'
-      iHtml += '<button name="cancel">取消</button>'
-      iHtml += '</div>';  // wrapper end
-      this.dom.main.innerHTML = iHtml;
-      // 詳細情報は当初非表示に
-      this.dom.main.querySelector('div[name="details"]').style.display = 'none';
 
-      // 02. イベント定義
-      // 02.1 「詳細」ボタンクリック
+      // 02.申込概要
+      // 02.1 空欄・読替処理
+      arg.entryNo = ('000'+arg.entryNo).slice(-4);
+      // 02.2 追加するテンプレートの作成
+      const applicant = [
+        {variable:'entryNo'},
+        {tag:'ruby', children:[
+          {tag:'rb', variable:'name00'},
+          {tag:'rt', variable:'yomi00'}
+        ]},
+        {tag:'button', name:'details', text:'詳細'},
+      ];
+      // 02.3 追加処理
+      for( let i=0 ; i<applicant.length ; i++ ){
+        o = genChild(applicant[i],arg,'applicant'+i);
+        if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
+          throw o.result;
+        } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
+          this.dom.main.querySelector('.applicant').appendChild(o.result);
+        }
+      }
+      // 02.4 イベントリスナの定義
+      // 「詳細」ボタンクリック
       this.dom.main.querySelector('button[name="details"]').addEventListener('click',() => {
         const btn = this.dom.main.querySelector('button[name="details"]');
         if( btn.value === '詳細' ){
@@ -302,11 +277,84 @@ class Participant {
           btn.value = '詳細';
         }
       });
-      // 02.2 「登録」ボタンクリック
+
+      // 03.申込詳細
+      // 03.1 空欄・読替処理
+      arg['タイムスタンプ'] = getJPDateTime(arg['タイムスタンプ']);
+      arg.cancel = arg.cancel < 0 ? "取消済" : "( — )";
+      // 03.2 追加するテンプレートの作成
+      const details = [
+        {class:'tr', children:[{class:'th', text:'受付日時'},{class:'td',variable:'タイムスタンプ'}]},
+        {class:'tr', children:[{class:'th', text:'e-mail'},{class:'td',variable:'メールアドレス'}]},
+        {class:'tr', children:[{class:'th', text:'緊急連絡先'},{class:'td',variable:'緊急連絡先'}]},
+        {class:'tr', children:[{class:'th', text:'引取者'},{class:'td',variable:'引取者氏名'}]},
+        {class:'tr', children:[{class:'th', text:'備考'},{class:'td',variable:'備考'}]},
+        {class:'tr', children:[{class:'th', text:'キャンセル'},{class:'td',variable:'cancel'}]},
+        {class:'tr', children:[{class:'th', text:'申込フォーム'},{class:'td qrcode'}]},
+      ];
+      // 03.3 追加処理
+      for( let i=0 ; i<details.length ; i++ ){
+        o = genChild(details[i],arg,'details'+i);
+        if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
+          throw o.result;
+        } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
+          this.dom.main.querySelector('.details').appendChild(o.result);
+        }
+      }
+      // 03.4 イベントリスナの定義 ⇒ なし
+
+      // 04.参加者リスト(状態・参加費)
+      // 04.1 空欄・読替処理
+      for( let i=0 ; i<4 ; i++ ){
+        const num = ('0'+i).slice(-2);
+        if( arg['status'+num].length === 0 ){
+          arg['status'+num] = arg['name'+num].length === 0 ? '未登録' : '未入場';
+        }
+        if( arg['fee'+num].length === 0 ){
+          arg['fee'+num] = arg['name'+num].length === 0 ? '無し' : '未収';
+        }
+      }
+      // 04.2 追加するテンプレートの作成
+      const maruNo = ['','①','②','③'];  // 丸数字
+      const members = [{class:'tr', children:[ // 表のラベル行
+        {class:'th no', text:'No'},
+        {class:'th name', text:'氏名'},
+        {class:'th status', text:'入退場'},
+        {class:'th fee', text:'参加費'}
+      ]}];
+      for( let i=0 ; i<4 ; i++ ){   // 申込者、参加者行
+        const num = ('0'+i).slice(-2);
+        members.push({class:'tr',children:[
+          {class:'td no', text:maruNo[i]},
+          {class:'td name', text:arg['name'+num]},
+          {class:'td status', children:[
+            {tag:'select', name:'status'+num, variable:'status'+num, opt:['未入場','入場済','退場済','不参加','未登録']},
+          ]},
+          {class:'td fee', children:[
+            {tag:'select', name:'fee'+num, variable:'fee'+num, opt:['未収','既収','免除','無し']},
+
+          ]}
+        ]});
+      }
+      members.push({class:'tr', children:[  // 更新・取消ボタン行
+        {tag:'button', name:'cancel', text:'取消'},
+        {tag:'button', name:'update', text:'更新'}
+      ]});
+      // 04.3 追加処理
+      for( let i=0 ; i<members.length ; i++ ){
+        o = genChild(members[i],arg,'members'+i);
+        if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
+          throw o.result;
+        } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
+          this.dom.main.querySelector('.members').appendChild(o.result);
+        }
+      }
+      // 04.4 イベントリスナの定義
+      // 「更新」ボタンクリック
       this.dom.main.querySelector('button[name="update"]').addEventListener('click',() => {
         this.updateParticipant();
       });
-      // 02.3 「取消」ボタンクリック
+      // 「取消」ボタンクリック
       this.dom.main.querySelector('button[name="cancel"]').addEventListener('click',() => {
         this.display();
       });
@@ -316,136 +364,7 @@ class Participant {
     } catch(e) {
       console.error('editParticipant abnormal end.\n'+e.message);
       alert(e.message);
-    }
-    
-    /* 該当が1件のみなら編集画面へ
-    const editArea = document.querySelector('#editParticipant .edit');
-    editArea.innerHTML = '';
-  
-  
-    // [02] 各要素への値設定
-  
-    // 要素の作成とセット
-    let o = genChild(config.editParticipant,arg,'root');  // 全体の定義と'root'を渡す
-    if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
-      throw o.result;
-    } else if( o.append ){  // 追加フラグがtrue
-      // 親要素に追加
-      editArea.appendChild(o.result);
-  
-      // 「詳細」ボタンクリック時の処理を定義
-      document.querySelector('#editParticipant .entry input[type="button"]')
-      .addEventListener('click', () => {
-        const detail = document.querySelector('#editParticipant .detail');
-        const button = document.querySelector('#editParticipant .entry input[type="button"]');
-        if( button.value === '詳細' ){
-          button.value = '閉じる';
-          detail.style.display = 'block';
-        } else {
-          button.value = '詳細';
-          detail.style.display = 'none';
-        }
-      });
-  
-      // 編集用URLをQRコードで表示
-      // https://saitodev.co/article/QRCode.js%E3%82%92%E8%A9%A6%E3%81%97%E3%81%A6%E3%81%BF%E3%81%9F/
-      setQRcode('#editParticipant .qrcode',{text:arg['編集用URL']});
-  
-      // 「申込フォームを表示」ボタンクリック時の遷移先を定義
-      document.querySelector('#editParticipant .form input[type="button"]')
-        .onclick = () => window.open(arg['編集用URL'], '_blank');
-
-  editParticipant: {tag:"div", class:"table", children:[
-    {tag:"div", class:"tr entry", children:[
-      {tag:"div", class:"td entryNo", variable:"受付番号"},
-      {tag:"div", class:"td name", children:[
-        {tag:"ruby", children:[
-          {tag:"rb", variable:"氏名"},
-          {tag:"rt", variable:"読み"},
-        ]},
-      ]},
-      {tag:"div", children:[
-        {tag:"input", type:"button", value:"詳細"},
-      ]},
-    ]},
-    {tag:"div", class:"tr detail", children:[ // 詳細情報
-      {tag:"div", text:"受付日時：\t", variable:"登録日時"},
-      {tag:"div", text:"e-mail：\t", variable:"メール"},
-      {tag:"div", text:"緊急連絡先：\t", variable:"連絡先"},
-      {tag:"div", text:"引取者：\t", variable:"引取者"},
-      {tag:"div", text:"備考：\t", variable:"備考"},
-      {tag:"div", text:"キャンセル：\t", variable:"取消"},
-      {tag:"div", class:"form", children:[
-        {tag:"div", text:"申込フォーム："},
-        {tag:"div", class:"qrcode"},
-        {tag:"input", type:"button", value:"申込フォームの表示"},
-      ]},
-    ]},
-    {tag:"div", class:"tr participant", children:[ // 申請者の状態・参加費
-      {tag:"div"},
-      {tag:"div"},
-      {tag:"div", children:[
-        {tag:"label", text:"入退場"},
-        {tag:"select", class:"status", name:"status00",
-          opt:"未入場,入場済,退場済,不参加,未登録", variable:"状態"},
-      ]},
-      {tag:"div", children:[
-        {tag:"label", text:"参加費"},
-        {tag:"select", class:"fee", name:"fee00",
-          opt:"未収,既収,免除,無し", variable:"参加費"},
-      ]},
-    ]},
-    {tag:'hr'}, // 以下参加者
-    {tag:"div", class:"tr participant", children:[
-      {tag:"div", text:"①"},
-      {tag:"div", variable:"①氏名"},
-      {tag:"div", children:[
-        {tag:"label", text:"入退場"},
-        {tag:"select", class:"status", name:"status01",
-          opt:"未入場,入場済,退場済,不参加,未登録", variable:"①状態"},
-      ]},
-      {tag:"div", children:[
-        {tag:"label", text:"参加費"},
-        {tag:"select", class:"fee", name:"fee01",
-          opt:"未収,既収,免除,無し", variable:"①参加費"},
-      ]},
-    ]},
-    {tag:"div", class:"tr participant", children:[
-      {tag:"div", text:"②"},
-      {tag:"div", variable:"②氏名"},
-      {tag:"div", children:[
-        {tag:"label", text:"入退場"},
-        {tag:"select", class:"status", name:"status02",
-          opt:"未入場,入場済,退場済,不参加,未登録", variable:"②状態"},
-      ]},
-      {tag:"div", children:[
-        {tag:"label", text:"参加費"},
-        {tag:"select", class:"fee", name:"fee02",
-          opt:"未収,既収,免除,無し", variable:"②参加費"},
-      ]},
-    ]},
-    {tag:"div", class:"tr participant", children:[
-      {tag:"div", text:"③"},
-      {tag:"div", variable:"③氏名"},
-      {tag:"div", children:[
-        {tag:"label", text:"入退場"},
-        {tag:"select", class:"status", name:"status03",
-          opt:"未入場,入場済,退場済,不参加,未登録", variable:"③状態"},
-      ]},
-      {tag:"div", children:[
-        {tag:"label", text:"参加費"},
-        {tag:"select", class:"fee", name:"fee03",
-          opt:"未収,既収,免除,無し", variable:"③参加費"},
-      ]},
-    ]},
-  ]},
-
-
-
-
-
-    } */
-  
+    }  
   }
   
   /** updateParticipant: 参加者情報更新
