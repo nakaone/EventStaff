@@ -75,6 +75,9 @@ function doPost(e){
         case 'appendMessages':
           rv = appendMessages(arg.data);
           break;
+        case 'castMessages':
+          rv = castMessages(arg.data);
+          break;
         case 'ping':
           rv = {isErr:false,message:'ping OK.'};
           break;
@@ -160,9 +163,9 @@ const appendMessages = (arg) => {
 
     // 2.「掲示板」シート上の最終投稿より後の投稿は追加
     const lastUpdate = sheet.data.length > 0
-    ? new Date(sheet.data[board.data.length-1].timestamp).getTime()
+    ? new Date(sheet.data[sheet.data.length-1].timestamp).getTime()
     : new Date('1901-01-01').getTime();
-
+  
     for( let i=0 ; i<arg.length ; i++ ){
       if( new Date(arg[i].timestamp).getTime() > lastUpdate ){
         sheet.append(arg[i]);
@@ -178,4 +181,50 @@ const appendMessages = (arg) => {
     console.log('配信局.appendMessages end. rv='+JSON.stringify(rv));
     return rv;
   }
+}
+
+/** castMessages: クライアントへの掲示板データの配信
+ * @param {string|object} arg - 最終投稿の日時文字列または日付型オブジェクト
+ * @returns {object} - 処理結果
+ * <ul>
+ * <li>isErr {boolean} : エラーならtrue
+ * <li>message {string} : エラーの場合はメッセージ。正常終了ならundefined
+ * <li>posts {object[]} : 投稿オブジェクトの配列
+ * <ul>
+ *   <li>timestamp {object} - 投稿日時
+ *   <li>from {string} - 投稿者名
+ *   <li>to {string} - 宛先名
+ *   <li>message {string} - 本文
+ * </ul>
+ * </ul>
+ */
+const castMessagesTest = () => {
+  console.log(castMessages('2022/12/01'));
+}
+const castMessages = (arg) => {
+  console.log('配信局.castMessages start. arg='+JSON.stringify(arg));
+  let rv = {posts:[]};
+  try {
+
+    // 1. 既存登録内容を「掲示板」シートから取得
+    const sheet = szLib.szSheet('掲示板','timestamp');
+
+    // 2. 引数として渡された日時より後のメッセージを抽出
+    const lastUpdate = new Date(arg).getTime();
+    for( let i=0 ; i<sheet.data.length ; i++ ){
+      if( new Date(sheet.data[i].timestamp).getTime() > lastUpdate ){
+        rv.posts.push(sheet.data[i]);
+      }
+    }
+
+    rv.isErr = false;  // 正常終了
+  
+  } catch(e) {
+    // Errorオブジェクトをrvとするとmessageが欠落するので再作成
+    rv = {isErr:true, message:e.name+': '+e.message};
+  } finally {
+    console.log('配信局.castMessages end. rv='+JSON.stringify(rv));
+    return rv;
+  }
+
 }
