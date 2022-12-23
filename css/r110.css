@@ -1,0 +1,148 @@
+html {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  font-size: 4vw;
+}
+
+body {
+  font-size: 1rem;
+}
+
+div {
+  margin: 0px;
+  padding: 0px;
+  box-sizing: border-box;
+  display: flex;
+  display: -webkit-flex;
+}
+
+div.table {
+  width: 100%;
+  flex-direction: column;
+}
+div.tr {
+  width: 100%;
+  padding: 0.25rem;
+  flex-direction: row;
+}
+
+h1 {
+  font-size: 1.6rem;
+}
+
+.error {
+  color: red;
+}
+.flex {
+  display: flex;
+  display: -webkit-flex;
+}
+.none {
+  display: none;
+}
+
+/* =========================================================
+  ヘッダ
+========================================================= */
+header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2rem;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: row;
+  flex-direction: row;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  background-color: #a0c238;
+}
+header .icon, .menuIcon {
+  margin: 0.2rem;
+  width: 1.6rem;
+  height: 1.6rem;
+}
+header img {
+  width: 100%;
+  height: 100%;
+}
+header .title {
+  margin: auto;
+  width: calc(100% - 4rem);
+  font-size: 1.2rem;
+}
+
+/* == メニュー =========================================== */
+header .menu img {
+  margin: 0.3rem;
+  max-width: 1.4rem;
+  max-height: 1.4rem;
+}
+
+nav {
+  z-index: 1;
+	background-color: rgba(0,0,0,.5);
+	position: absolute;
+	top: 2rem;
+  right: 0;
+	width: 15rem;
+	height: calc(100% - 2rem);
+  display: none;
+}
+nav ol {
+  padding: 0;
+  margin: 0;
+}
+nav li {
+  list-style-type: none;
+  margin: 0.75rem;
+  padding-right: 0.8rem;
+  border: solid 3px #888;
+  width: calc(15rem - 2.5rem - 6px);
+	color: white;
+	text-align: right;
+	transition: .5s;
+}
+
+/* =========================================================
+  メイン　※掲示板関係はBroad.cssで定義
+========================================================= */
+#main {
+  position: absolute;
+  top: 2.5rem;
+  left: 0.5rem;
+  width: calc(100% - 1rem);
+  height: calc(100% - 3rem);
+  flex-direction: column;
+}
+
+a div.button {
+  text-decoration: none;
+  margin-left: 10%;
+  width: 80%;
+  height: 2rem;
+  background-color: aquamarine;
+}
+
+/* =========================================================
+  受付業務 -> Participant.css
+========================================================= */
+
+/* =========================================================
+  予約状況参照 -> 未実装
+========================================================= */
+
+/* =========================================================
+  お役立ち情報 -> CSS不要
+========================================================= */
+
+/* =========================================================
+  システム設定
+========================================================= */
+div.system div {
+  flex-direction: column;
+}

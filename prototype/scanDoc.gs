@@ -1,5 +1,5 @@
 //const config = szLib.setConfig(['MasterKey','AuthSheetId','PostURL','PostKey']);
-config = {MasterKey: 'vR4sw$P(*ZBex/Hp'};
+const elaps = {account:'shimokitasho.oyaji@gmail.com',department:'scanDoc局'};
 
 const doPostTest = () => {
   const postData = {parameter:{
@@ -10,13 +10,24 @@ const doPostTest = () => {
   doPost(postData);
 }
 
+const GasPost = (arg) => {
+  console.log('scanDoc.GasPost start. arg='+JSON.stringify(arg));
+  let rv = null;
+  arg.hoge = '11:06';
+  rv = {isErr:false,arg:arg};
+  console.log('scanDoc.GasPost end. rv='+JSON.stringify(rv));
+  return rv;
+}
+
 /** doPost: パラメータに応じて処理を分岐
- * 
- * @param {object} e - POSTされたデータ
- * @param {object} e.parameter - 実データ
- * @param {string} e.parameter.passPhrase - 正当な要求であることを検証するための本APIの秘密鍵
- * @param {object} e.parameter.data - 分岐先の処理に渡すオブジェクト
- * 
+ * ■GASが送信する場合
+ * @param {object} e - Class UrlFetchApp [fetch(url, params)]{@link https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app#fetchurl,-params}の"Make a POST request with a JSON payload"参照
+ * @param {object} arg - データ部分。JSON.parse(e.postData.getDataAsString())の結果
+ * @param {string} arg.passPhrase - 共通鍵。szLib.getUrl()で取得
+ * @param {string} arg.from       - 送信先(自分)
+ * @param {string} arg.to         - 送信元
+ * @param {string} arg.func       - 分岐する処理名
+ * @param {string} arg.data       - 処理対象データ
  * @return {object} 正常終了の場合は分岐先処理の戻り値、エラーの場合は以下。
  * <ul>
  * <li>isErr {boolean}  - true(固定)
@@ -24,45 +35,38 @@ const doPostTest = () => {
  * </ul>
  */
 function doPost(e){
-  const elaps = szLib.getElaps();
-  elaps.start({department:'scanDoc',func:'doPost'});
+  elaps.startTime = Date.now();  // 開始時刻をセット
   console.log('scanDoc.doPost start.',e);
-  // toString
-  const toString = e.postData.getDataAsString();
-  console.log('toString',toString);
-  console.log(typeof toString);
-  console.log(JSON.stringify(toString));
-  console.log(JSON.parse(toString));
-  // contents 
-  const contents = e.postData.contents;
-  console.log('contents',contents);
-  console.log(typeof contents);
-  console.log(JSON.stringify(contents));
-  console.log(JSON.parse(contents));
 
-  const arg = JSON.parse(e.postData.getDataAsString());
+  const arg = JSON.parse(e.postData.getDataAsString()); // contentsでも可
   let rv = null;
-  if( arg.passPhrase === config.MasterKey ){
+  if( arg.passPhrase === szLib.getUrl() ){
     try {
+      elaps.func = arg.func; // 処理名をセット
       switch( arg.func ){
         case 'scanDoc':
           rv = scanDoc(arg.data);
+          break;
+        case 'GasPost':
+          rv = GasPost(arg.data);
           break;
       }
     } catch(e) {
       // Errorオブジェクトをrvとするとmessageが欠落するので再作成
       rv = {isErr:true, message:e.name+': '+e.message};
     } finally {
+      console.log('scanDoc.doPost end. rv='+JSON.stringify(rv));
+      szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');  // 結果を渡して書き込み
       return ContentService
       .createTextOutput(JSON.stringify(rv,null,2))
       .setMimeType(ContentService.MimeType.JSON);
     }
   } else {
     rv = {isErr:true,message:'invalid passPhrase :'+e.parameter.passPhrase};
-    console.error(rv.message);
+    console.error('scanDoc.doPost end. '+rv.message);
+    console.log('end',elaps);
+    szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');
   }
-  console.log('scanDoc.doPost end. rv='+JSON.stringify(rv));
-  elaps.end(rv.isErr ? rv.message : 'OK');
 }
 
 /** scanDoc: 

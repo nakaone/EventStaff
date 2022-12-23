@@ -1,13 +1,4 @@
-# JSDoc
-
-[認証局](./doc/auth/global.html) |
-[放送局](./doc/broad/global.html) |
-[管理局](./doc/master/global.html) |
-[郵便局](./doc/post/global.html) |
-[配達員](./doc/delivery/global.html) |
-[szLib](./doc/szLib/global.html) |
-EventStaff.js |
-[library.js](./doc/library/global.html)
+概要 | [サーバ側仕様](doc/server.md) | [クライアント側仕様](doc/client.md)
 
 # 開発の目的
 
@@ -359,3 +350,4 @@ sequenceDiagram
   other ->> system : コーナー別予約状況参照(随時)
   system ->> other : コーナー別予約状況(回数別予約者数)
 ```
+

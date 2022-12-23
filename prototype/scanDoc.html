@@ -37,10 +37,20 @@
 </body>
 <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@latest/dist/browser-image-compression.js"></script>
 <script type="text/javascript">
-const config = {
-  MasterKey: 'vR4sw$P(*ZBex/Hp',  // GAS側の秘密鍵
-  endpoint: "https://script.google.com/macros/s/AKfycbxCKMuKCVUm1teVCcF-TUq_8Om8blaVoExc9qdjExDILVfUJUPcns9GKcvUTmTdtgPiNA/exec",
+/** getUrl: おまつり奉行関係のAPI URLを返す
+ * <br>
+ * @param {string} arg - 局/htmlのコード名
+ * @return {object|string} APIのURLと共通鍵。引数がない場合は共通鍵
+ */
+function getUrl(arg){
+  const list = {
+    key: "Hrwr7MvnTUv_vh4DyTuxddznVEjzi5UHSiRLrlrwUiXD5b6lx82FZO6t",
+    scanDoc: 'https://script.google.com/macros/s/AKfycbwgcdpGuqWRqZBlXHPuaHI2AQcyHnRctmzBRzwCasa3WBak8ayM7-dDbHyd2Ii5GVPWsw/exec',
+    GasPost: 'https://script.google.com/macros/s/AKfycbxo0SNEOcsjzi5UHSiRLrlrwUiXD5b6lx82FZO6tnw4-0ae5yosZA1oClCqKYdLNFfZEw/exec',
+  }
+  return arg ? {key:list.key,url:list[arg]} : list.key;
 }
+
 class webScanner {
   constructor(arg={}){
     console.log('webScanner.constructor start. opt='+JSON.stringify(arg));
@@ -153,11 +163,17 @@ class webScanner {
         timestamp: getJPDateTime(),
         image: imageData,
       }
-      doPost(config.endpoint,config.MasterKey,'scanDoc',postData,res => {
-        if( res.isErr ){
-          alert(res.message);
-        } else {
-          console.log('scanDoc normal end.',res);
+      fetchGAS({
+        from: 'scanDocHtml',
+        to:   'scanDoc',
+        func: 'scanDoc',
+        data: postData,
+        callback: res => {
+          if( res.isErr ){
+            alert(res.message);
+          } else {
+            console.log('scanDoc normal end.',res);
+          }
         }
       });
       // 以下は圧縮検討時のメモ。削除可
@@ -174,32 +190,40 @@ class webScanner {
   }
 }
 
-const doPost = (endpoint,passPhrase,func,data,callback) => {  // GASのdoPostを呼び出し、後続処理を行う
-  console.log("doPost start. ",endpoint,passPhrase,func,data,callback);
+/** fetchGAS: GASのdoPostを呼び出し、後続処理を行う
+ * <br>
+ * 処理内部で使用する公開鍵・秘密鍵はszLib.getUrlKey()で取得。
+ * 
+ * @param {object}   arg          - 引数
+ * @param {string}   arg.from     - 送信側のコード名(平文)
+ * @param {string}   arg.to       - 受信側のコード名(平文)
+ * @param {string}   arg.func     - GAS側で処理分岐の際のキー文字列
+ * @param {any}      arg.data     - 処理対象データ
+ * @param {function} arg.callback - GAS処理結果を受けた後続処理
+ * @returns {void} なし
+ */
+const fetchGAS = (arg) => {
+  console.log("fetchGAS start.",arg);
 
-  const postData = {
-    passPhrase: passPhrase,
-    func: func,
-    data: data,
-  };
-  console.log('l.169 postData='+JSON.stringify(postData));
+  const endpoint = getUrl(arg.to);
 
   // GASからの返信を受けたらcallbackを呼び出し
-  fetch(endpoint,{
+  fetch(endpoint.url,{
     "method": "POST",
-    "body": JSON.stringify(postData),
+    "body": JSON.stringify({
+      passPhrase: endpoint.key,
+      from: arg.from,
+      to:   arg.to,
+      func: arg.func,
+      data: arg.data,
+    }),
     "Accept": "application/json",
     "Content-Type": "application/json",
   }).then(response => response.json())
   .then(res => {
-    console.log("doPost end.",res);
-    callback(res);  // 成功した場合、後続処理を呼び出し
+    console.log("fetchGAS end.",res);
+    arg.callback(res);  // 成功した場合、後続処理を呼び出し
   });
-}
-
-const doPostTest = () => {
-  postData = {a:10,b:'abc'};
-  doPost(config.endpoint,config.MasterKey,'scanDoc',postData,rv => {console.log('l.178',rv)});
 }
 
 /** getJPDateTime: yyyy-MM-ddThh:mm:ss.nnnZ形式で日本時間の日時文字列を取得
@@ -211,10 +235,15 @@ const getJPDateTime = () => {
   return tObj.toLocaleString('ja-JP') + '.' + tObj.getMilliseconds();
 }
 
+const fetchGASTest = () => {
+  postData = {a:10,b:'abc'};
+  fetchGAS(config.endpoint,config.MasterKey,'scanDoc',postData,rv => {console.log('l.178',rv)});
+}
+
 window.addEventListener('DOMContentLoaded', () => { // 主処理
   const scanner = new webScanner();
   scanner.scanDoc();
-  //doPostTest();
+  //fetchGASTest();
 });
 
 </script>

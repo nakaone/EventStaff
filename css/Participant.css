@@ -1,0 +1,39 @@
+.wrapper {
+  flex-direction: column;
+}
+.applicant {
+  font-size: 1.5rem;
+}
+.applicant button {
+  height: 1.8rem;
+  margin-left: auto;
+}
+.details {
+  margin: 1rem 0;
+}
+.details .th {
+  width: 8rem;
+}
+.details div.tr:nth-child(odd) {
+  background-color: #aff;
+}
+.members .no {
+  width: 10%;
+}
+.members .name {
+  width: 40%;
+}
+.members .status,.fee {
+  width: 25%;
+}
+.members div.tr:nth-child(odd) {
+  background-color: #bfb;
+}
+.members div.tr:last-child {
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  margin-top: 1rem;
+}
+.result {
+  flex-direction: column;
+}

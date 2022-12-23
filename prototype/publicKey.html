@@ -8,17 +8,8 @@
     html {font-size:10pt;}  /* 基本となる文字サイズ */
     body {box-sizing: border-box;}  /* 枠線は要素サイズに含める */
     div {
-      margin: 0px;
-      padding: 0px;
-      width: 100%;
-      display: flex;
-      display: -webkit-flex;
-      flex-direction: row;  /* row:横並び */
-      -webkit-justify-content: space-between;
-      justify-content: space-between;
-      -webkit-align-items: flex-start;
-      align-items: flex-start;
-      flex-wrap: wrap;
+      width: 90vw;
+      word-break: break-all;
     }
   </style>
   <!-- style type="text/css" media="print"></style -->
@@ -28,10 +19,56 @@
   <h1>公開鍵・秘密鍵　動作検証</h1>
   <p>TechAcademy <a href="https://magazine.techacademy.jp/magazine/21244">JavaScriptで暗号化と復号化を行う方法を現役エンジニアが解説【初心者向け】</a></p>
   <p>GAS側 Google Apps Scriptメモ <a href="https://sites.google.com/site/gasgaidobukku/scon-%E3%82%B9%E3%83%97%E3%83%AC%E3%83%83%E3%83%89%E3%82%B7%E3%83%BC%E3%83%88%E3%81%AB%E3%83%AD%E3%82%B0%E3%82%92%E5%87%BA%E5%8A%9B%E3%81%99%E3%82%8B/%E3%83%A9%E3%82%A4%E3%83%96%E3%83%A9%E3%83%AA/cryptojs-%E6%9A%97%E5%8F%B7%E5%8C%96">CryptoJS - 暗号化</a></p>
+  <div>
+    <input type="submit" value="作成" onclick="genKey()" />
+    <div id="client"><h1>client</h1>
+      <div class="passPhrase">
+        <label>key string</label>
+        <input type="text" value="0001 1668843045035 abcdefghijklmn" />
+      </div>
+      <div class="public">
+        <p>公開鍵</p>
+        <p class="result"></p>
+      </div>
+      <div class="private">
+        <details><summary>秘密鍵</summary><p class="result"></p></details>
+      </div>
+      <div class="message">
+        <label>メッセージ</label>
+        <input type="text" value="いろはにほへとちりぬるを" />
+      </div>
+    </div>
+  </div>
+
+  <div id="server"><h1>server</h1>
+    <div class="passPhrase">
+      <label>key string</label>
+      <input type="text" value="090-6511-1788" />
+    </div>
+    <div class="public">
+      <p>公開鍵</p>
+      <p class="result"></p>
+    </div>
+    <div class="private">
+      <details><summary>秘密鍵</summary><p class="result"></p></details>
+    </div>
+  </div>
+
+  <div id="transaction">
+    <h1>処理</h1>
+    <ol>
+      <li>clientのメッセージをclient秘密鍵で署名：<p><span class="result"></span></p></li>
+      <li>[1]をserverの公開鍵で暗号化：<p><span class="result"></span></p></li>
+      <li>[2]をserverの秘密鍵で復号：<p><span class="result"></span></p></li>
+      <li>[3]をclientの公開鍵で検証：<p><span class="result"></span></p></li>
+    </ol>
+  </div>
+</div>
+
 </body>
 <script src="../js/cryptico.min.js"></script>
 <script type="text/javascript">
-  // RSA鍵の作り方
+  /* RSA鍵の作り方
   var PassPhrase = "The Moon is a Harsh Mistress.";
   console.log("PassPhrase:", PassPhrase);
   var Bits = 1024;
@@ -51,5 +88,39 @@
   // 復号化
   var DecryptionResult = cryptico.decrypt(EncryptionResult.cipher, MattsRSAkey);
   console.log("DecryptionResult:", DecryptionResult);
+  */
+
+  const genKey = (tDiv) => {
+    const bits = 1024;
+    const client = {
+      passPhrase: document.querySelector('#client .passPhrase input[type="text"]').value,
+    };
+    client.privateKey =  cryptico.generateRSAKey(client.passPhrase,bits);
+    client.publicKey = cryptico.publicKeyString(client.privateKey);
+    client.message = document.querySelector('#client .message input').value;
+    document.querySelector('#client .public .result').innerText = client.publicKey;
+    document.querySelector('#client .private .result').innerText = JSON.stringify(client.privateKey);
+
+    const server = {
+      passPhrase: document.querySelector('#server .passPhrase input[type="text"]').value,
+    };
+    server.privateKey =  cryptico.generateRSAKey(server.passPhrase,bits);
+    server.publicKey = cryptico.publicKeyString(server.privateKey);
+    document.querySelector('#server .public .result').innerText = server.publicKey;
+    document.querySelector('#server .private .result').innerText = JSON.stringify(server.privateKey);
+
+    // clientのメッセージをclient秘密鍵で署名
+    
+    // [1]をserverの公開鍵で暗号化
+    // [2]をserverの秘密鍵で復号
+    // [3]をclientの公開鍵で検証
+    /*
+    const passPhrase = document.getElementById('passPhrase').value;
+    const privateKey = 
+    const publicKey = 
+    document.getElementById('secret').innerText = JSON.stringify(privateKey);
+    document.getElementById('public').innerText = publicKey;
+    */
+  }
 </script>
 </html>
