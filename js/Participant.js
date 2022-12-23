@@ -146,56 +146,6 @@ class Participant {
       })
     });
   }
-
-  /** inputSearchKey: 参加者の検索キーを入力
-   * 
-  inputSearchKey(){
-    console.log('inputSearchKey start.');
-    changeScreen('inputSearchKey','該当者の検索');
-  
-    // スキャンまたは値入力時の動作を定義
-    const strEl = document.querySelector('#inputSearchKey input[type="text"]');
-  
-    // スキャナから読み込まれた文字列をinput欄にセット
-    const callback = (keyPhrase) => {
-      changeScreen('loading');
-      config.scanCode = false;  // スキャンを停止
-      document.querySelector('#inputSearchKey .scanner')
-        .innerHTML = ''; // スキャナ用DIV内を除去
-      doGet(config.MasterURL,config.MasterKey,{func:'search',data:{key:keyPhrase}},(data) => {
-        if( data.length === 0 ){
-          alert("該当する参加者は存在しませんでした");
-        } else if( data.length > 1){
-          selectParticipant(data);  // 該当が複数件なら選択画面へ
-        } else {
-          editParticipant(data[0]);  // 該当が1件のみなら編集画面へ
-        }
-      });
-    };
-  
-    // スキャナを起動
-    config.scanCode = true;
-    scanCode((code) => {
-      console.log('scanCode: ' + code);
-      strEl.value = code; // 念の為入力欄にもセット
-      callback(code);
-    },{
-      selector:'#inputSearchKey .scanner',  // 設置位置指定
-      RegExp:/^[0-9]+$/,  // 数字かチェック
-      alert: false,  // 読み込み時、内容をalert表示しない
-    });
-  
-    // キーワード入力欄の値が変わったら検索するよう設定
-    document.querySelector('#inputSearchKey input[type="button"]')
-    .addEventListener('click',() => {
-      const keyPhrase = convertCharacters(strEl.value,false);
-      console.log('keyPhrase: '+ strEl.value + ' -> ' + keyPhrase );
-      callback(keyPhrase);
-    });
-  
-    console.log('inputSearchKey end.');
-  }
-  */
   
   /** selectParticipant: 複数検索結果からの選択
    * @param {object[]} arg - 候補者のオブジェクトの配列。[{項目名:値,..},{..},..]形式
@@ -231,12 +181,14 @@ class Participant {
     this.dom.title.innerText = '参加者情報の編集';
     try {
       this.dom.main.innerHTML = '';
+      this.entryNo = arg.entryNo;  // 更新時に利用
 
       // 01. 全体の枠組みを生成
       let o = genChild({class:'wrapper', children:[
-        {class:'applicant'},        // 申込概要
-        {class:'details none table'},    // 申込詳細
-        {class:'members table'}     // 参加者リスト
+        {class:'applicant'},          // 申込概要
+        {class:'details none table'}, // 申込詳細
+        {class:'members table'},      // 参加者リスト
+        {class:'result none'}         // 更新結果表示
       ]});
       if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
         throw o.result;
@@ -368,6 +320,27 @@ class Participant {
         this.display();
       });
 
+      // 05.更新結果表示
+      // 05.1 空欄・読替処理
+      // 05.2 追加するテンプレートの作成
+      const result = [
+        {tag:'p', class:'message', text:''},
+        {tag:'button', name:'result', text:'確認'}
+      ];
+      // 05.3 追加処理
+      for( let i=0 ; i<result.length ; i++ ){
+        o = genChild(result[i],arg,'result'+i);
+        if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
+          throw o.result;
+        } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
+          this.dom.main.querySelector('.result').appendChild(o.result);
+        }
+      }
+      // 05.4 イベントリスナの定義
+      this.dom.main.querySelector('button[name="result"]').addEventListener('click',() => {
+        this.display();
+      });
+
       console.log('editParticipant end.');
 
     } catch(e) {
@@ -378,53 +351,62 @@ class Participant {
   
   /** updateParticipant: 参加者情報更新
    * @param {void} - なし
+   * @returns {void} なし
    */
   updateParticipant(){
     console.log('updateParticipant start.');
-  
-    const sList = {
-      status:'#editParticipant [name="status0_"]',
-      fee:'#editParticipant [name="fee0_"]',
-    };
-    const prefix = ['','①','②','③'];
-  
-    // 更新用のデータオブジェクトの作成
-    const postData = {func:'update',data:{
-      target:{
-        key: '受付番号',  //更新対象のレコードを特定する為の項目名
-        value: Number(document.querySelector("#editParticipant .entryNo")
-          .innerText), //キーの値
-      } ,
-      revice: [],
-    }};
-    for( let i=0 ; i<4 ; i++ ){
-      const s = document.querySelector(sList.status.replace('_',i));
-      postData.data.revice.push({
-        key: prefix[i]+'状態',  // 更新対象の項目名
-        value: s.options[s.selectedIndex].value,  // 更新後の値
-      });
-      const f = document.querySelector(sList.fee.replace('_',i));
-      postData.data.revice.push({
-        key: prefix[i]+'参加費',
-        value: f.options[f.selectedIndex].value,
-      });
-    }
-    doGet(config.MasterURL,config.MasterKey,postData,(data) => {
-      // 結果表示
-      let result = '<p>以下の変更を行いました。</p>';
-      if( data.length > 0 ){
-        for( let i=0 ; i<data.length ; i++ ){
-          result += '<p>_1 : _2 => _3</p>'
-            .replace('_1',data[i].column)
-            .replace('_2',data[i].before)
-            .replace('_3',data[i].after);
-        }
-      } else {
-        result = '<p>変更点はありませんでした。</p>';
-      }
-      document.querySelector('#editParticipant .result').innerHTML = result;
-      console.log('updateParticipant end.',JSON.stringify(data));
-    });
-  }
+    try {
 
+      // 01.更新用のデータオブジェクトの作成
+      const data = {};
+      for( let i=0 ; i<4 ; i++ ){
+        const num = ('0'+i).slice(-2);
+        const s = this.dom.main.querySelector('select[name="status'+num+'"]');
+        data['status'+num] = s.options[s.selectedIndex].value;
+        const f = this.dom.main.querySelector('select[name="fee'+num+'"]');
+        data['fee'+num] = f.options[f.selectedIndex].value;
+      }
+      console.log('l.395 data='+JSON.stringify(data));
+
+      // 02.スプレッドシートの更新
+      /* @param {string}   arg.to       - 受信側のコード名(平文)
+       * @param {string}   arg.func     - GAS側で処理分岐の際のキー文字列
+       * @param {any}      arg.data     - 処理対象データ
+       * @param {function} arg.callback - GAS処理結果を受けた後続処理 */
+      fetchGAS({
+        to: 'Master',
+        func: 'updateParticipant',
+        data: {
+          data: data,
+          opt: {key:'entryNo',value:this.entryNo}
+        },
+        callback: (res) => {
+          /* 03.更新結果の表示
+            * <li>isErr {boolean} - エラーならtrue
+            * <li>message {string} - エラーメッセージ
+            * <li>result {object[]} - 更新結果。空なら変更なし
+            * <ul>
+            * <li>column {string} - 更新した項目名
+            * <li>before {any} - 修正前の値
+            * <li>after {any} - 修正後の値 */
+          this.dom.main.querySelector('div.result').classList.replace('none','flex');
+          const msg = this.dom.main.querySelector('.message');
+          let message = '';
+          if( res.isErr ){
+            msg.classList.add('error');
+            msg.innerText = res.message;
+          } else if( res.result.length === 0 ){
+            msg.innerText = '変更はありませんでした。';
+          } else {
+            msg.innerText = '更新が終了しました。';
+          }
+          console.log('updateParticipant end.\n'+JSON.stringify(res));
+        }
+      });
+     
+    } catch(e) {
+      console.error(e.message);
+      alert(e.message);
+    }
+  }
 }
