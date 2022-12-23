@@ -351,6 +351,16 @@ function getJPDateTime(dt=null,locale='ja-JP'){
   .replace(/(\D)(\d)(\D)/g,'$10$2$3').replace(/(\D)(\d)(\D)/g,'$10$2$3');
 }
 
+/** initClass: 要素に定義されたクラスを全削除して新たなクラスを定義
+ * @param {object} element - 対象となる要素
+ * @param {string} iClass  - 新たに設定するクラス
+ * @returns {void} なし
+ */
+const initClass = (element,iClass) => {
+  element.classList.remove(...element.classList);
+  element.classList.add(iClass);
+}
+
 /** toggleView: ブロック要素の表示(flex)/非表示(none)を切り替え
  * @param {object} element - 切換対象要素(ex.DIV)
  * @param {boolean} force - true:強制的に表示, false:強制的に非表示
