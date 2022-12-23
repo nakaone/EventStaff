@@ -333,10 +333,15 @@ function convertCharacters(str,kana=true){
  * @param {any} dt - 作成する日時の指定。省略時は現在時刻
  * @param {string} locale - 作成する形式
  * @returns {string} 指定形式＋ミリ秒の日時文字列
+ * なおゼロパディングして2桁に整形するためには、replace【×2】が必要。<br>
+ * ∵隣接する箇所と重複があると置換対象から外れる(下例の2日の部分)<br>
+ * ex. '2022/1/2 3:04:5.678'.replace(/(\D)(\d)(\D)/g,'$10$2$3')<br>
+ *     ⇒ '2022/01/2 03:04:05.678'
  */
 function getJPDateTime(dt=null,locale='ja-JP'){
   const tObj = dt === null ? new Date() : new Date(dt);
-  return tObj.toLocaleString(locale) + '.' + tObj.getMilliseconds();
+  return (tObj.toLocaleString(locale) + '.' + tObj.getMilliseconds())
+  .replace(/(\D)(\d)(\D)/g,'$10$2$3').replace(/(\D)(\d)(\D)/g,'$10$2$3');
 }
 
 /** toggleView: ブロック要素の表示(flex)/非表示(none)を切り替え
