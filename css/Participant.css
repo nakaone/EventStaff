@@ -8,6 +8,9 @@
   height: 1.8rem;
   margin-left: auto;
 }
+.details {
+  margin: 1rem 0;
+}
 .details .th {
   width: 8rem;
 }

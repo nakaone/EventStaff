@@ -301,6 +301,15 @@ class Participant {
           this.dom.main.querySelector('.details').appendChild(o.result);
         }
       }
+      // 申込フォームへの誘導用QRコード
+      let qrcode = new QRCode(this.dom.main.querySelector('.qrcode'),{
+        text: config.private.editURL,
+        width: 200,
+        height: 200,
+        colorDark : "#000000",
+        colorLight : "#ffffff",
+        correctLevel : QRCode.CorrectLevel.H
+      })
       // 03.4 イベントリスナの定義 ⇒ なし
 
       // 04.参加者リスト(状態・参加費)
