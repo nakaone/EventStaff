@@ -339,6 +339,22 @@ function getJPDateTime(dt=null,locale='ja-JP'){
   return tObj.toLocaleString(locale) + '.' + tObj.getMilliseconds();
 }
 
+/** toggleView: ブロック要素の表示(flex)/非表示(none)を切り替え
+ * @param {object} element - 切換対象要素(ex.DIV)
+ * @param {boolean} force - true:強制的に表示, false:強制的に非表示
+ * @returns {void} なし
+ */
+const toggleView = (element,force) => {
+  console.log('toggleView classList="'+element.classList.value+'", force='+force);
+  if( force || element.classList.contains('none') ){
+    element.classList.remove('none');
+    element.classList.add('flex');
+  } else {
+    element.classList.remove('flex');
+    element.classList.add('none');
+  }
+}
+
 /** whichType: 変数の型を判定
  * @param {any} arg - 判定対象の変数
  * @returns {string} - 型の名前

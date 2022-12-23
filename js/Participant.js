@@ -18,8 +18,8 @@ class Participant {
       <div class="screen"><!-- 該当者検索 -->
         <input type="text" placeholder="&#x1F50D受付番号または氏名読み(最初の数文字)" />
         <button name="search">検索</button>
-        <div class="scanner"></div><!-- QRコードスキャナ -->
       </div>    
+      <div class="scanner"></div><!-- QRコードスキャナ -->
     `;
     this.dom.formQRBtn = this.dom.main.querySelector('button[name="formQR"]');
     this.dom.scanDocBtn = this.dom.main.querySelector('button[name="scanDoc"]');
@@ -235,7 +235,7 @@ class Participant {
       // 01. 全体の枠組みを生成
       let o = genChild({class:'wrapper', children:[
         {class:'applicant'},        // 申込概要
-        {class:'details table'},    // 申込詳細
+        {class:'details none table'},    // 申込詳細
         {class:'members table'}     // 参加者リスト
       ]});
       if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
@@ -269,12 +269,12 @@ class Participant {
       // 「詳細」ボタンクリック
       this.dom.main.querySelector('button[name="details"]').addEventListener('click',() => {
         const btn = this.dom.main.querySelector('button[name="details"]');
-        if( btn.value === '詳細' ){
-          this.dom.main.querySelector('div[name="details"]').style.display = 'flex';
-          btn.value = '閉じる';
+        if( btn.textContent === '詳細' ){
+          toggleView(this.dom.main.querySelector('div.details'),true);
+          btn.textContent = '閉じる';
         } else {
-          this.dom.main.querySelector('div[name="details"]').style.display = 'none';
-          btn.value = '詳細';
+          toggleView(this.dom.main.querySelector('div.details'),false);
+          btn.textContent = '詳細';
         }
       });
 
