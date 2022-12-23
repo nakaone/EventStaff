@@ -194,7 +194,14 @@ class webScanner {
       this.video.height = this.canvas.height = h;
 
       this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
-      let img = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+      let img;
+      try { // canvasを含む要素が削除済の場合にエラーとなるので回避
+        img = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+      } catch(e) {
+        console.log(e.message);
+        this.stop();
+        return;
+      }
       // このタイミングでQRコードを判定
       let code = jsQR(img.data, img.width, img.height, {inversionAttempts: "dontInvert"});
 			if(code){
