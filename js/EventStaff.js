@@ -88,6 +88,13 @@ const referState = () => {
  */
 const information = () => {
   dom.title.innerText = 'お役立ち情報';
+  const proto = '<div class="button"><a href="_href" target="_blank">_label</a></div>';
+  dom.main.innerHTML
+  = proto.replace('_href',config.public.TableURL).replace('_label','進行予定')
+  + proto.replace('_href',config.public.MapURL).replace('_label','校内案内図')
+  + proto.replace('_href',config.public.SiteURL).replace('_label','募集要項');
+
+  /*
   dom.main.innerHTML = `
     <button name="schedule">進行予定</button>
     <button name="venueMap">校内案内図</button>
@@ -102,6 +109,7 @@ const information = () => {
   dom.main.querySelector('button[name="noticeSite"]').onclick = () => {
     window.open(config.public.SiteURL,'_blank');
   };
+  */
 }
 
 /** enquete: 参加者アンケート画面表示
