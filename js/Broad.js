@@ -208,6 +208,7 @@ class Broadcast {
    */
   stop(){
     clearInterval(this.intervalId);
+    this.intervalId = null;
     console.log('Broad.end');
   }
 }

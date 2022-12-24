@@ -583,6 +583,7 @@ const genChild = (template,dObj={},pFP='root') => {
         ? eval(sDef.class) : sDef.class; */
       rv.result.className = sDef.class;
     }
+    console.log('l.586',rv.result);
     ['id','type','name','value','accept','capture','width','height','style'].forEach(x => {
       if( sDef[x] && sDef[x].length > 0 ){
         rv.result.setAttribute(x,sDef[x]);

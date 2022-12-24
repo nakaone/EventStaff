@@ -131,15 +131,26 @@ const system = () => {
   if( (config.private.menuFlags & 16384) > 0 ){
     const o = genChild({tag:'div', children:[
       {tag:'h1', text:'定期的処理の停止・再開'},
-      {tag:'input', type:'button', value:'再開', name:'start'},
-      {tag:'input', type:'button', value:'停止', name:'stop'},
+      {tag:'input', type:'button', value:'停止', name:'start_stop'},
     ]},{},'root');
     if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
       throw o.result;
     } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
       dom.main.appendChild(o.result);
+      const btn = dom.main.querySelector('input[name="start_stop"]');
+      // ボタンクリック時の動作を定義
+      btn.addEventListener('click',() => {
+        if( !config.broadcast.intervalId || config.broadcast.intervalId === null ){
+          // 停止中の場合
+          config.broadcast.start();
+          btn.value = '停止';
+        } else {
+          // 稼働中の場合
+          config.broadcast.stop();
+          btn.value = '再開';
+        }
+      });
     }
-    
   }
 
   // ヘルプ
