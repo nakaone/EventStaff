@@ -1,3 +1,19 @@
+/* 登録フォーム誘導・紙申請処理ボタン */
+#main > div {
+  margin: 1rem 0;
+  -webkit-justify-content: space-around;
+  justify-content: space-around;  
+}
+#main > div:first-child > button {
+  width: 40%;
+}
+
+/* 受付番号または氏名での検索窓 */
+#main input {
+  width: 15rem;
+}
+
+/* 該当者検索後の編集画面 */
 .wrapper {
   flex-direction: column;
 }
