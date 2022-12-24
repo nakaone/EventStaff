@@ -1,676 +1,199 @@
-/** Participant: 参加者の検索、情報更新 */
-class Participant {
+const dom = {
+  title: document.querySelector('header .title'),
+  menuIcon: document.querySelector('header .menuIcon'),
+  nav  : document.querySelector('nav'),
+  main : document.querySelector('#main'),
+};
 
-  /** inputSearchKey: 参加者の検索キーを入力
-   * 
-   */
-  inputSearchKey(){
-    console.log('inputSearchKey start.');
-    changeScreen('inputSearchKey','該当者の検索');
-  
-    // スキャンまたは値入力時の動作を定義
-    const strEl = document.querySelector('#inputSearchKey input[type="text"]');
-  
-    // スキャナから読み込まれた文字列をinput欄にセット
-    const callback = (keyPhrase) => {
-      changeScreen('loading');
-      config.scanCode = false;  // スキャンを停止
-      document.querySelector('#inputSearchKey .scanner')
-        .innerHTML = ''; // スキャナ用DIV内を除去
-      doGet(config.MasterURL,config.MasterKey,{func:'search',data:{key:keyPhrase}},(data) => {
-        if( data.length === 0 ){
-          alert("該当する参加者は存在しませんでした");
-        } else if( data.length > 1){
-          selectParticipant(data);  // 該当が複数件なら選択画面へ
-        } else {
-          editParticipant(data[0]);  // 該当が1件のみなら編集画面へ
-        }
-      });
-    };
-  
-    // スキャナを起動
-    config.scanCode = true;
-    scanCode((code) => {
-      console.log('scanCode: ' + code);
-      strEl.value = code; // 念の為入力欄にもセット
-      callback(code);
-    },{
-      selector:'#inputSearchKey .scanner',  // 設置位置指定
-      RegExp:/^[0-9]+$/,  // 数字かチェック
-      alert: false,  // 読み込み時、内容をalert表示しない
-    });
-  
-    // キーワード入力欄の値が変わったら検索するよう設定
-    document.querySelector('#inputSearchKey input[type="button"]')
-    .addEventListener('click',() => {
-      const keyPhrase = convertCharacters(strEl.value,false);
-      console.log('keyPhrase: '+ strEl.value + ' -> ' + keyPhrase );
-      callback(keyPhrase);
-    });
-  
-    console.log('inputSearchKey end.');
-  }
-  
-  /** selectParticipant: 複数検索結果からの選択
-   * 
-   * @param {*} arg 
-   */
-  selectParticipant(arg){
-    console.log('selectParticipant start.',arg);
-    changeScreen('selectParticipant','該当者リスト');
-  
-    const editArea = document.querySelector("#selectParticipant");
-    editArea.innerHTML = '<p>検索結果が複数あります。選択してください。</p>';
-    for( let i=0 ; i<arg.length ; i++ ){
-      const o = document.createElement('div');
-      o.innerText = arg[i]['氏名'] + '(' + arg[i]['読み'] + ')';
-      o.addEventListener('click',() => {
-        editParticipant(arg[i]);  // 選択後編集画面へ
-      });
-      editArea.appendChild(o);
-    }
-  
-    console.log('selectParticipant end.');
-  }
-  
-  /** editParticipant: 検索結果の内容編集
-   * 
-   * @param {*} arg 
-   */
-  editParticipant(arg){
-    console.log('editParticipant start.',arg);
-    changeScreen('editParticipant','参加者情報入力');
-  
-    // 該当が1件のみなら編集画面へ
-    const editArea = document.querySelector('#editParticipant .edit');
-    editArea.innerHTML = '';
-  
-    // [01] データクレンジング
-    arg['受付番号'] = ('000'+arg['受付番号']).slice(-4);  // 0パディング
-    arg['登録日時'] = new Date(arg['登録日時']).toLocaleString('ja-JP');
-    // 「取消」の文字列が入っていればtrue
-    arg['取消'] = arg['取消'].length === 0 ? "無し" : "有り";
-    ['','①','②','③'].forEach(x => {
-      if( arg[x+'状態'].length === 0 )
-        arg[x+'状態'] = arg[x+'氏名'].length === 0 ? '未登録' : '未入場';
-      if( arg[x+'参加費'].length === 0 )
-        arg[x+'参加費'] = arg[x+'氏名'].length === 0 ? '無し' : '未収';
-    });
-  
-    // [02] 各要素への値設定
-  
-    // 要素の作成とセット
-    let o = genChild(config.editParticipant,arg,'root');  // 全体の定義と'root'を渡す
-    if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
-      throw o.result;
-    } else if( o.append ){  // 追加フラグがtrue
-      // 親要素に追加
-      editArea.appendChild(o.result);
-  
-      // 「詳細」ボタンクリック時の処理を定義
-      document.querySelector('#editParticipant .entry input[type="button"]')
-      .addEventListener('click', () => {
-        const detail = document.querySelector('#editParticipant .detail');
-        const button = document.querySelector('#editParticipant .entry input[type="button"]');
-        if( button.value === '詳細' ){
-          button.value = '閉じる';
-          detail.style.display = 'block';
-        } else {
-          button.value = '詳細';
-          detail.style.display = 'none';
-        }
-      });
-  
-      // 編集用URLをQRコードで表示
-      // https://saitodev.co/article/QRCode.js%E3%82%92%E8%A9%A6%E3%81%97%E3%81%A6%E3%81%BF%E3%81%9F/
-      setQRcode('#editParticipant .qrcode',{text:arg['編集用URL']});
-  
-      // 「申込フォームを表示」ボタンクリック時の遷移先を定義
-      document.querySelector('#editParticipant .form input[type="button"]')
-        .onclick = () => window.open(arg['編集用URL'], '_blank');
-    }
-  
-    console.log('editParticipant end.');
-  }
-  
-  /** updateParticipant: 参加者情報更新
-   * @param {void} - なし
-   */
-  updateParticipant(){
-    console.log('updateParticipant start.');
-  
-    const sList = {
-      status:'#editParticipant [name="status0_"]',
-      fee:'#editParticipant [name="fee0_"]',
-    };
-    const prefix = ['','①','②','③'];
-  
-    // 更新用のデータオブジェクトの作成
-    const postData = {func:'update',data:{
-      target:{
-        key: '受付番号',  //更新対象のレコードを特定する為の項目名
-        value: Number(document.querySelector("#editParticipant .entryNo")
-          .innerText), //キーの値
-      } ,
-      revice: [],
-    }};
-    for( let i=0 ; i<4 ; i++ ){
-      const s = document.querySelector(sList.status.replace('_',i));
-      postData.data.revice.push({
-        key: prefix[i]+'状態',  // 更新対象の項目名
-        value: s.options[s.selectedIndex].value,  // 更新後の値
-      });
-      const f = document.querySelector(sList.fee.replace('_',i));
-      postData.data.revice.push({
-        key: prefix[i]+'参加費',
-        value: f.options[f.selectedIndex].value,
-      });
-    }
-    doGet(config.MasterURL,config.MasterKey,postData,(data) => {
-      // 結果表示
-      let result = '<p>以下の変更を行いました。</p>';
-      if( data.length > 0 ){
-        for( let i=0 ; i<data.length ; i++ ){
-          result += '<p>_1 : _2 => _3</p>'
-            .replace('_1',data[i].column)
-            .replace('_2',data[i].before)
-            .replace('_3',data[i].after);
-        }
-      } else {
-        result = '<p>変更点はありませんでした。</p>';
-      }
-      document.querySelector('#editParticipant .result').innerHTML = result;
-      console.log('updateParticipant end.',JSON.stringify(data));
-    });
-  }
-
-}
-
-/** Broadcast: お知らせへの投稿、配信
- * 
- */
-class Broadcast {
-  
-  constructor(url=config.BroadURL,key=config.BroadKey,interval=config.BroadInterval){
-    this.url = url;
-    this.key = key;
-    this.interval = interval;
-    this.startTime = 978274800000;  // 2001/01/01 00:00:00
-    console.log('Broad.constructor end.'
-      + '\nurl=' + this.url
-      + '\nkey=' + this.key
-      + '\ninterval=' + this.interval
-    );
-
-    // お知らせ画面「投稿する」ボタンの動作を定義
-    const postButton = document.querySelector('#home .PostArea input');
-    postButton.addEventListener('click',() => {
-      const post = document.querySelector('#home .postMessage');
-      if( postButton.value === '投稿する' ){
-        postButton.value = '閉じる';
-        post.style.display = 'block';
-      } else {
-        postButton.value = '投稿する';
-        post.style.display = 'none';
-      }
-    });
-
-    // 新規のお知らせが来たら末尾を表示するよう設定
-    // https://at.sachi-web.com/blog-entry-1516.html
-    const msgArea = document.getElementById('BroadArea');
-    const mo = new MutationObserver(() => {
-      console.log('mutation detected');
-      msgArea.scrollTop = msgArea.scrollHeight;
-    });
-    mo.observe(msgArea,{
-      childList: true,
-      attributes: true,
-      characterData: true,
-      subtree: true,//孫以降のノードの変化も検出
-      attributeOldValue: true,//変化前の属性データを記録する
-      characterDataOldValue: true,//変化前のテキストノードを記録する
-      attributeFilter: [],//配列で記述した属性だけを見張る
-    });
-
-    // 掲示板定期更新開始
-    config.Broad = new Broad(config.BroadURL,config.BroadKey,config.BroadInterval);
-    config.Broad.start();
-  }
-
-  start(){
-    this.onGoing = true;
-    // スリープ時間も含め一定時間毎に実行
-    // https://blog-and-destroy.com/28211
-    this.IntervalId = setInterval(() => {
-      if( Date.now() > (this.startTime + this.interval - 500) ){
-        this.periodical();
-        this.startTime = Date.now();
-      }
-    },this.interval);
-    this.periodical();
-    console.log('Broad.start'
-      + '\nurl=' + this.url
-      + '\nkey=' + this.key
-      + '\ninterval=' + this.interval
-    );
-  }
-
-  stop(){
-    this.onGoing = false;
-    clearInterval(this.IntervalId);
-    this.IntervalId = null;
-    console.log('Broad.end');
-  }
-
-  periodical(){
-    console.log('Broad.periodical'
-      + '\nurl=' + this.url
-      + '\nkey=' + this.key
-      + '\ninterval=' + this.interval
-    );
-    doGet(this.url,this.key,{func:'getMessages',data:{}},(response) => {
-      console.log('getMessages response='+JSON.stringify(response));
-      // 時系列にメッセージを並べ替え
-      response.sort((a,b) => a.timestamp < b.timestamp);
-      console.log(response);
-      // 掲示板領域に書き込むHTMLを msg として作成
-      let msg = '';
-      let lastMesDate = '1900/01/01';
-      const t = '<p class="title">[_time] From:_from　To:_to</p><p>_message</p>';
-      for( let i=0 ; i<response.length ; i++ ){
-        const dt = new Date(response[i].timestamp);
-        if( dt.toLocaleDateString('ja-JP') !== lastMesDate ){
-          lastMesDate = dt.toLocaleDateString('ja-JP');
-          msg += '<p class="date">' + lastMesDate + '</p>';
-        }
-        const hms = ('0'+dt.getHours()).slice(-2)
-          + ':' + ('0'+dt.getMinutes()).slice(-2)
-          + ':' + ('0'+dt.getSeconds()).slice(-2);
-        const m = t.replace('_time',hms)
-          .replace('_from',response[i].from)
-          .replace('_to',response[i].to)
-          .replace('_message',response[i].message)
-          .replace(/\n/g,'<br>');
-        console.log('m='+m);
-        msg += m;
-      }
-      // 掲示板領域に書き込み
-      const msgEl = document.getElementById('BroadArea');
-      msgEl.innerHTML = msg;
-      msgEl.scrollIntoView(false);
-      console.log('getMessages periodical end: '+msg);
-    })
-  }
-
-  /** postMessage: メッセージを投稿
-   * 
-   */
-  postMessage(){
-    console.log('postMessage start.');
-  
-    // 投稿領域を閉める
-    document.querySelector('#home .PostArea input').value = '投稿する';
-    document.querySelector('#home .postMessage').style.display = 'none';
-  
-    const msg = {
-      timestamp: (()=>{
-        const tObj = new Date();
-        return tObj.toLocaleString('ja-JP') + '.' + tObj.getMilliseconds();
-      })(),
-      from: document.querySelector('#home .postMessage [name="from"]').value,
-      to: '',
-      message: document.querySelector('#home .postMessage [name="message"]').value,
-    }
-    const toEl = document.querySelector('#home .postMessage [name="to"]');
-    const toNum = toEl.selectedIndex;
-    msg.to = toEl.options[toNum].value;
-  
-    doGet(config.BroadURL,config.BroadKey,{func:'postMessage',data:msg},(response) => {
-      console.log(response);
-      config.Broad.periodical(); // 掲示板を更新
-    });
-    console.log('postMessage end.',JSON.stringify(msg));
-  }
-}
-
-const config = {
+let config = {
   Auth:{
-    key: '',
-    url: 'https://script.google.com/macros/s/AKfycbyDrQRT5MWLl_eyNtg6vYRR-uX1nxq5mqEtfDv5vqYWNi_zbtDkBylHmHo0EHxrBDw-5w/exec',
-  },
-  editParticipant: {tag:"div", class:"table", children:[
-    {tag:"div", class:"tr entry", children:[
-      {tag:"div", class:"td entryNo", variable:"受付番号"},
-      {tag:"div", class:"td name", children:[
-        {tag:"ruby", children:[
-          {tag:"rb", variable:"氏名"},
-          {tag:"rt", variable:"読み"},
-        ]},
-      ]},
-      {tag:"div", children:[
-        {tag:"input", type:"button", value:"詳細"},
-      ]},
-    ]},
-    {tag:"div", class:"tr detail", children:[ // 詳細情報
-      {tag:"div", text:"受付日時：\t", variable:"登録日時"},
-      {tag:"div", text:"e-mail：\t", variable:"メール"},
-      {tag:"div", text:"緊急連絡先：\t", variable:"連絡先"},
-      {tag:"div", text:"引取者：\t", variable:"引取者"},
-      {tag:"div", text:"備考：\t", variable:"備考"},
-      {tag:"div", text:"キャンセル：\t", variable:"取消"},
-      {tag:"div", class:"form", children:[
-        {tag:"div", text:"申込フォーム："},
-        {tag:"div", class:"qrcode"},
-        {tag:"input", type:"button", value:"申込フォームの表示"},
-      ]},
-    ]},
-    {tag:"div", class:"tr participant", children:[ // 申請者の状態・参加費
-      {tag:"div"},
-      {tag:"div"},
-      {tag:"div", children:[
-        {tag:"label", text:"入退場"},
-        {tag:"select", class:"status", name:"status00",
-          opt:"未入場,入場済,退場済,不参加,未登録", variable:"状態"},
-      ]},
-      {tag:"div", children:[
-        {tag:"label", text:"参加費"},
-        {tag:"select", class:"fee", name:"fee00",
-          opt:"未収,既収,免除,無し", variable:"参加費"},
-      ]},
-    ]},
-    {tag:'hr'}, // 以下参加者
-    {tag:"div", class:"tr participant", children:[
-      {tag:"div", text:"①"},
-      {tag:"div", variable:"①氏名"},
-      {tag:"div", children:[
-        {tag:"label", text:"入退場"},
-        {tag:"select", class:"status", name:"status01",
-          opt:"未入場,入場済,退場済,不参加,未登録", variable:"①状態"},
-      ]},
-      {tag:"div", children:[
-        {tag:"label", text:"参加費"},
-        {tag:"select", class:"fee", name:"fee01",
-          opt:"未収,既収,免除,無し", variable:"①参加費"},
-      ]},
-    ]},
-    {tag:"div", class:"tr participant", children:[
-      {tag:"div", text:"②"},
-      {tag:"div", variable:"②氏名"},
-      {tag:"div", children:[
-        {tag:"label", text:"入退場"},
-        {tag:"select", class:"status", name:"status02",
-          opt:"未入場,入場済,退場済,不参加,未登録", variable:"②状態"},
-      ]},
-      {tag:"div", children:[
-        {tag:"label", text:"参加費"},
-        {tag:"select", class:"fee", name:"fee02",
-          opt:"未収,既収,免除,無し", variable:"②参加費"},
-      ]},
-    ]},
-    {tag:"div", class:"tr participant", children:[
-      {tag:"div", text:"③"},
-      {tag:"div", variable:"③氏名"},
-      {tag:"div", children:[
-        {tag:"label", text:"入退場"},
-        {tag:"select", class:"status", name:"status03",
-          opt:"未入場,入場済,退場済,不参加,未登録", variable:"③状態"},
-      ]},
-      {tag:"div", children:[
-        {tag:"label", text:"参加費"},
-        {tag:"select", class:"fee", name:"fee03",
-          opt:"未収,既収,免除,無し", variable:"③参加費"},
-      ]},
-    ]},
-  ]},
-}
-
-const getEntryNo = () => {  // 受付番号入力時処理
-  console.log('getEntryNo start.');
-
-  // 受付番号のボタンを不活性化
-  document.querySelector('#entryNo .entryNo input[type="button"]').disabled = 'disabled';
-  // メッセージ設定
-  document.querySelector('#entryNo .entryNo .message').innerHTML = '<p>暫くお待ちください...</p>';
-
-  const inputValue = document.querySelector('#entryNo .entryNo input[type="text"]').value;
-  if( !inputValue.match(/^[0-9]{1,4}$/) ){
-    alert("不適切な受付番号です");
-    // 入力欄をクリア
-    document.querySelector('#entryNo .entryNo input[type="text"]').value = '';
-    // 受付番号のボタンを活性化
-    document.querySelector('#entryNo .entryNo input[type="button"]').disabled = null;
-    return;
+    url: 'https://script.google.com/macros/s/AKfycbz_dxbC3W0nbSOldTjxvy8jOoFbnbAG9IoMWNnm_MbO01ui0YZg0tdghQmmyW2yaeXW5w/exec',
   }
-  config.entryNo = Number(document.querySelector('#entryNo input').value);
-  const res = fetchGAS({
-    from     : 'getEntryNo',
-    to       : 'Auth',
-    func     : 'auth1A',
-    data     : config.entryNo,
-    callback : (response) => {
-      console.log('getEntryNo response = '+JSON.stringify(response));
-      if( response.isErr ){
-        document.querySelector('#entryNo .entryNo .message').innerHTML
-          = '<p class="error">' + response.message + '</p>';
-      } else {
-        // 受付番号入力欄を隠蔽
-        document.querySelector('#entryNo .entryNo').style.display = 'none';
-        // パスコード入力画面を開く
-        document.querySelector('#entryNo .passCode').style.display = 'block';
-      }
-    },
-  });
-}
+};
 
-const getPassCode = () => {
-  console.log('getPassCode start.');  
-
-  // パスコードのボタンを不活性化
-  document.querySelector('#entryNo .passCode input[type="button"]').disabled = 'disabled';
-
-  const inputValue = document.querySelector('#entryNo .passCode input[type="text"]').value;
-  if( !inputValue.match(/^[0-9]{6}$/) ){
-    alert("不適切なパスコードです");
-    // 入力欄をクリア
-    document.querySelector('#entryNo .passCode input[type="text"]').value = '';
-    // パスコードのボタンを活性化
-    document.querySelector('#entryNo .passCode input[type="button"]').disabled = null;
-    return;
-  }
-  const endpoint = config.AuthURL;
-  const passCode = document.querySelector('#entryNo .passCode input[type="text"]').value;
-  const sendData = {  // 認証局へ受付番号とパスコードをPOSTで送る
-    func: 'auth2A',
-    data: {
-      entryNo: config.entryNo,
-      passCode: passCode,
-    }
-  };
-  doPost(endpoint,sendData,(response) => {
-    console.log('getPassCode response = '+JSON.stringify(response));
-    if( response.isErr ){
-      document.querySelector('#entryNo .passCode .message').innerHTML
-        = '<p class="error">' + response.message + '</p>';
-    } else {
-      // 初期設定を呼び出す
-      initialize(response);
-    }
-  });
-  
-  console.log('getPassCode end.');  
-}  
-
-const initialize = (arg) => {  // 初期設定処理
-  console.log("initialize start.",arg);
-
-  // サーバから取得したconfig, menuFlagsを保存
-  for( let x in arg.config ){
-    config[x] = arg.config[x];
-  }
-  config.menuFlags = arg.menuFlags;
-  // 数値項目は数値化
-  config.BroadInterval = Number(arg.config.BroadInterval) || 30000;
-  console.log('initialize.config',config);
-
-  // 参加者の変更・取消　※Googleのサイトはiframe不可
-  document.querySelector('nav a.entryURL').href = config.entryURL;
-  // 受付番号表示(QRコード)
-  document.querySelector('#dispEntryNo h1').innerText
-  = 'No.' + ('000'+config.entryNo).slice(-4);
-  setQRcode('#dispEntryNo .qrcode',{
-    text:('000'+config.entryNo).slice(-4),
-    width: 400,
-    height: 400,
-  });
-  // 進行予定画面
-  document.querySelector("#schedule iframe").src = config.TableURL;
-  // 校内案内図
-  document.querySelector("#VenueMap iframe").src = config.MapURL;
-  // サイト案内　※Googleのサイトはiframe不可
-  document.querySelector('nav a.noticeSite').href = config.SiteURL;
-  // アンケート
-  document.querySelector('#enquete .button').innerHTML
-  = '<a href="' + config.EnqueteURL + '" class="button" target="_blank">参加者アンケート</a>';
-
-  // menuFlagsに基づくメニューの表示・非表示制御
-  [
-    {flag:1, selector:'.menu [name="entryURL"]'},
-    {flag:2, selector:'.menu [name="dispEntryNo"]'},
-    {flag:4, selector:'.menu [name="enquete"]'},
-    {flag:16, selector:'.menu [name="ReservationStatus"]'},
-    {flag:32, selector:'.menu [name="schedule"]'},
-    {flag:64, selector:'.menu [name="VenueMap"]'},
-    {flag:128, selector:'.menu [name="noticeSite"]'},
-    {flag:256, selector:'#home .PostArea'},
-    {flag:512, selector:'.menu [name="SearchPerticipant"]'},
-    {flag:1024, selector:'.menu [name="onThatDay"]'},
-    {flag:2048, selector:'.menu [name="ParticipationStatus"]'},
-    {flag:4096, selector:'.menu [name="CornerOperation"]'},
-  ].forEach(x => {
-    document.querySelector(x.selector).style.display
-    = ( config.menuFlags & x.flag ) > 0 ? 'block' : 'none';
-  });
-
-  changeScreen();// ホーム画面表示
-  console.log("initialize end.",config);
-}
-
-/** periodical: 定期的処理の開始/停止
- * 
- */
-const periodical = () => {
-  // 掲示板の巡回
-  // configの更新
-}
-
-const changeScreen = (scrId='home',titleStr='お知らせ') => {  // 表示画面の切り替え
-  console.log("changeScreen start. scrId="+scrId+', titleStr='+titleStr);
-
-  // screenクラスの画面を全部隠す
-  const scrList = document.querySelectorAll('.screen');
-  for( let i=0 ; i<scrList.length ; i++ ){
-    scrList[i].style.display = 'none';
-  }
-
-  // ローディング画面以外の場合、メニュー名を書き換え
-  if( scrId !== 'loading' ){
-    document.querySelector('header .title').innerText = titleStr;
-  }
-  // 指定IDの画面は再表示
-  document.querySelector('#'+scrId).style.display = 'flex';
-
-  // メニューを隠す
-  toggleMenu(false);
-
-  // 投稿欄に名前をセット
-  /* !! EventStaff Only !!
-  if( scrId === 'home' ){
-    document.querySelector('#home input[name="from"]').value = config.handleName;
-  }
-  console.log("changeScreen end.");*/
-}
-
-const onThatDay = (arg) => { // 参加フォームURLのQRコード表示
-  console.log("onThatDay start.",arg);
-
-  // 申請フォームのQRコードをセット
-  setQRcode('#onThatDay .qrcode',{
-    //text: "https://docs.google.com/forms/d/" + config.formId + "/edit",
-    text: config.FormURL,
-  });
-
-  // QRコード表示/非表示ボタンにイベント設定
-  const btn = document.querySelector('#onThatDay input[type="button"]');
-  const qr = document.querySelector('#onThatDay .qrcode');
-  btn.addEventListener('click',() => {
-    if( btn.value === 'QRコード表示' ){
-      btn.value = 'QRコード非表示';
-      qr.style.display = 'block';
-    } else {
-      btn.value = 'QRコード表示';
-      qr.style.display = 'none';
-    }
-  });
-
-  changeScreen('onThatDay','当日参加対応');
-  console.log("onThatDay end.");
-}
-
-const showSummary = () => {  // 集計表の表示
-  console.log("showSummary start.");
-  changeScreen('showSummary','参加状況');
-  console.log("showSummary end.");
-}
-
-/** toggleMenu: メニューの開閉
- * 
- * @param {boolean} arg - 無し(単純開閉切換)またはtrue(強制オープン)
- * @param {object} opt - オプション
- * @param {string} opt.openIcon - 「三」アイコンを置く場所(CSSセレクタ)
- * @param {string} opt.closeIcon - 「×」アイコンを置く場所(CSSセレクタ)
- * @param {string} opt.nav - メニューの場所(CSSセレクタ)
- * 
+/** initialize: 初期設定
+ * @param {void} - なし
  * @returns {void} なし
  */
- const toggleMenu = (arg=null,opt={}) => {
-  console.log('toggleMenu start.',arg);
-
-  // 操作対象要素を取得
-  const o = {
-    openIcon: opt.openIcon || 'header .openIcon',
-    closeIcon: opt.closeIcon || 'header .closeIcon',
-    nav: opt.nav || 'nav',
+const initialize = () => {
+  console.log('initialize start.');
+  config.menu = new Menu(dom);
+  config.broadcast = new Broadcast(dom);
+  console.log('initialize end.\n'+JSON.stringify(config));
+}
+/** messageBoard: お知らせ画面表示
+ * @param {void} - なし
+ * @returns {void} なし
+ */
+const messageBoard = () => {
+  console.log('messageBoard',config);
+  config.broadcast.display();
+}
+/** reception: 受付業務画面表示
+ * @param {void} - なし
+ * @returns {void} なし
+ */
+const reception = () => {
+  console.log('reception');
+  if( !config.reception ){
+    config.reception = new Participant(dom);
   }
-  const openIcon = document.querySelector(o.openIcon); // 「三」アイコン
-  const closeIcon = document.querySelector(o.closeIcon); // 「×」アイコン
-  const nav = document.querySelector(o.nav);
-
-  const v = {  // 現状をisActiveに取得
-    isActive: nav.style.display === 'grid',
-  }
-
-  // 行うべき動作を判定。引数無しなら現状の反対
-  v.action = arg === null ? !v.isActive : arg;
-
-  if( v.action ){  // 現在閉じているメニューを開く
-    openIcon.style.display = 'none';
-    closeIcon.style.display = 'flex';
-    nav.style.display = 'grid';
-  } else {       // 現在開いているメニューを閉じる
-    openIcon.style.display = 'flex';
-    closeIcon.style.display = 'none';
-    nav.style.display = 'none';
-  }
-
-  console.log('toggleMenu end.',v);
+  config.reception.display();
+}
+/** cornerOperation: コーナー運営画面表示
+ * @param {void} - なし
+ * @returns {void} なし
+ */
+const cornerOperation = () => {
+  console.log('cornerOperation');
+}
+/** entry: 参加受付画面表示
+ * @param {void} - なし
+ * @returns {void} なし
+ * <a href="https://davidshimjs.github.io/qrcodejs/">QRCode.js</a>
+ */
+const entry = () => {
+  console.log('entry');
+  dom.title.innerText = '参加受付';
+  dom.main.innerHTML = `
+    <button>参加者の追加・変更・取消</button>
+    <h1>受付番号：`+ config.entryStr + `</h1>
+    <div></div>
+  `;
+  let qrcode = new QRCode(dom.main.querySelector('div'),{
+    text: config.entryStr,
+    width: 300,
+    height: 300,
+    colorDark : "#000000",
+    colorLight : "#ffffff",
+    correctLevel : QRCode.CorrectLevel.H
+  })
 }
 
-/** 主処理
- * <br>
- * [DOMが構築されたときに初期化処理が行われるように設定]{@link https://pisuke-code.com/jquery-is-not-defined-solution/}
+/** referState: 予約状況参照画面表示
+ * @param {void} - なし
+ * @returns {void} なし
  */
-window.addEventListener('DOMContentLoaded', function(){ // 主処理
-  // 受付番号入力画面表示
-  // getPassCode正常終了時、そこからinitializeを呼び出す
-  changeScreen('entryNo','ログイン');
+const referState = () => {
+  console.log('referState');
+  dom.title.innerText = '予約状況参照';
+  dom.main.innerHTML = `
+    <h1 style="text-align:center">(未実装)</h1>
+  `;
+}
+
+/** information: お役立ち情報画面表示
+ * @param {void} - なし
+ * @returns {void} なし
+ */
+const information = () => {
+  dom.title.innerText = 'お役立ち情報';
+  dom.main.innerHTML = `
+    <button name="schedule">進行予定</button>
+    <button name="venueMap">校内案内図</button>
+    <button name="noticeSite">募集要項</button>
+  `;
+  dom.main.querySelector('button[name="schedule"]').onclick = () => {
+    window.open(config.public.TableURL,'_blank');
+  };
+  dom.main.querySelector('button[name="venueMap"]').onclick = () => {
+    window.open(config.public.MapURL,'_blank');
+  };
+  dom.main.querySelector('button[name="noticeSite"]').onclick = () => {
+    window.open(config.public.SiteURL,'_blank');
+  };
+}
+
+/** enquete: 参加者アンケート画面表示
+ * @param {void} - なし
+ * @returns {void} なし
+ */
+const enquete = () => {
+  dom.title.innerText = '参加者アンケート';
+  dom.main.innerHTML = `
+    <p>本日参加された感想を是非以下にお寄せください。</p>
+    <button>参加者アンケート</button>`;
+  dom.main.querySelector('button').onclick = () => {
+    window.open(config.public.EnqueteURL,'_blank');
+  };
+}
+
+/** system: システム設定画面表示
+ * @param {void} - なし
+ * @returns {void} なし
+ */
+const system = () => {
+  dom.title.innerText = 'システム設定';
+  initClass(dom.main,'system');
+  dom.main.innerHTML = '';
+
+  // 掲示板他の定期的処理停止・再開
+  if( (config.private.menuFlags & 16384) > 0 ){
+    const o = genChild({tag:'div', children:[
+      {tag:'h1', text:'定期的処理の停止・再開'},
+      {tag:'input', type:'button', value:'再開', name:'start'},
+      {tag:'input', type:'button', value:'停止', name:'stop'},
+    ]},{},'root');
+    if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
+      throw o.result;
+    } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
+      dom.main.appendChild(o.result);
+    }
+    
+  }
+
+  // ヘルプ
+  if( (config.private.menuFlags & 32768) > 0 ){
+    const o = document.createElement('div');
+    o.innerHTML = '<h1>ヘルプ</h1>'
+    + '<details><summary>[Android]カメラを使おうとすると「使用できません」と表示される</summary>'
+    +   '<p>ブラウザにカメラを使用する権限が付与されていない場合に表示されます。対応は以下の通りです(<a href="https://support.google.com/android/answer/9431959?hl=ja" target="_blank">出典</a>)。</p>'
+    +   '<ol>'
+    +     '<li>設定 > アプリ > 変更するアプリ(ブラウザ)を選択 > 権限 > カメラ</li>'
+    +     '<li>「許可しない」から「アプリの使用中のみ許可」または「毎回確認する」に変更</li>'
+    +   '</ol>'
+    + '</details>';
+    dom.main.appendChild(o);
+  }
+
+  // おまつり奉行について
+  const o = document.createElement('div');
+  o.innerHTML = '<h1>おまつり奉行について</h1>'
+  + '<p>about OMATSURI-Bugyo</p>'
+  + '<p>version: 1.1.0 (Dec.13,2022 released)</p>'
+  + '<p>author : <a mailto="nakaone.kunihiro@gmail.com"><ruby><rb>嶋津　邦浩</rb><rt>2-2ゆうなパパ</rt></ruby></a> (Shimazu Kunihiro)</p>'
+  + '<p>License: <a href="https://opensource.org/licenses/mit-license.php" target="_blank">MIT</a></p>';
+  dom.main.appendChild(o);
+}
+
+window.addEventListener('DOMContentLoaded', function(){
+  const debugMode = 1; // 0:通常, 1:スタッフ, 2:参加者
+  if( debugMode === 0 ){
+    // 受付番号入力画面表示
+    // getPassCode正常終了時、そこからinitializeを呼び出す
+    const auth = new Auth(dom);
+  } else {
+    config = debugMode === 1
+    ? {
+        "Auth":{"url":"https://script.google.com/macros/s/AKfycbzjsxwmNmR9TV2wswNuUVZDOUIOYVGNGiA02hh74_BwNTzArExR21wVPYFOSLdBNe67BQ/exec"},
+        "entryNo":1,
+        "entryStr":"0001",
+        "private":{"タイムスタンプ":"2022-10-09T04:34:42.211Z","メールアドレス":"shimokitasho.oyaji@gmail.com","申請者氏名":"奥田　美香","申請者氏名読み":"オクダ　ミカ","申請者はイベントに参加しますか？":"参加する","参加者①氏名":"太郎","参加者①氏名読み":"タロウ","参加者①所属":"未就学児","参加者②氏名":"二郎","参加者②氏名読み":"ジロウ","参加者②所属":"1年","参加者③氏名":"","参加者③氏名読み":"","参加者③所属":"","緊急連絡先":"","引取者氏名":"","備考":"","キャンセル":"","cancel":"1","participate00":"1","entryNo":"1","editURL":"https://docs.google.com/forms/d/e/1FAIpQLSfIJ4IFsBI5pPXsLz2jlTBczzIn8QZQL4r6QHqxZmSeDOhwUA/viewform?edit2=2_ABaOnufCYALGfSCCaKbN4LDLlq9n6oTS8MfbMXvMVGeqH9hcsqj47n1z3eUW-muVZIhFFjg","application":"","PIC":"","passCode":"27467","passTime":"2022-12-06T06:06:51.655Z","manualMF":"57119","menuFlags":"57119","manualAL":"14","AuthLevel":"14","name00":"奥田　美香","yomi00":"オクダ　ミカ","category00":"保護者","status00":"","fee00":"","name01":"太郎","yomi01":"タロウ","category01":"未就学児","status01":"","fee01":"","name02":"二郎","yomi02":"ジロウ","category02":"1年","status02":"","fee02":"","name03":"","yomi03":"","category03":"","status03":"","fee03":""},
+        "Broad":{"level":2,"key":"xGq8kdob7NQXvCG3Jbcil9K-q9HIgJgUO727BfptbUIZXvFX05uJB0CSZHVMb","url":"https://script.google.com/macros/s/AKfycbxpfiilYN0-yZ7o9GnbQUlc4nTT8k3qtTE2o-6AJY_818TJj0Vt42Vqmiv87003SXeT8w/exec"},
+        "Reserve":{"level":4},
+        "Master":{"level":8,"key":"_WGbHipKdOeuFydHpbz2yzjBmnFNqHYuhAvyMy1QcX5BQgyLl","url":"https://script.google.com/macros/s/AKfycbzlZduU6mgFfQa-J1EBHtOc6sUWJw0cDjVgLIgeEp8WigrGhDNKM7H_LWaHO97gNqfF5w/exec","validTime":3600000},
+        "public":{"level":65535,"interval":30000,"Administrator":"shimokitasho.oyaji@gmail.com","FormId":"1hnQLsY3lRh0gQMGfXoJJqAL_yBpKR6T0h2RFRc8tUEA","FormURL":"https://docs.google.com/forms/d/e/1FAIpQLSfIJ4IFsBI5pPXsLz2jlTBczzIn8QZQL4r6QHqxZmSeDOhwUA/viewform","SiteURL":"https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97","MapURL":"materials/map.html","TableURL":"materials/timetable/WBS.html","EnqueteURL":"https://docs.google.com/forms/d/16r3luYQRiLVmI9xqaD4FuaSlUqTRGvI8nAGrjGcg8lc/viewform"},
+        "Agent":{"key":"pSp2*ZR_S/GXr9C5","url":"https://script.google.com/macros/s/AKfycbwp2TuQPRhg9p-rbO-9iljdacPBZ_F6vNPoDEjckAuvEbSjeXLHKtLYA4YK4_P_Ped9/exec"}
+      }
+    : {
+        "Auth":{"url":"https://script.google.com/macros/s/AKfycbz_dxbC3W0nbSOldTjxvy8jOoFbnbAG9IoMWNnm_MbO01ui0YZg0tdghQmmyW2yaeXW5w/exec"},
+        "entryNo":2,
+        "entryStr":"0002",
+        "private":{"タイムスタンプ":"2022-10-09T04:39:20.911Z","メールアドレス":"shimokitasho.oyaji@gmail.com","申請者氏名":"榎田　道子","申請者氏名読み":"エノキダ　ミチコ","申請者はイベントに参加しますか？":"参加する","参加者①氏名":"","参加者①氏名読み":"","参加者①所属":"","参加者②氏名":"","参加者②氏名読み":"","参加者②所属":"","参加者③氏名":"","参加者③氏名読み":"","参加者③所属":"","緊急連絡先":"","引取者氏名":"","備考":"","キャンセル":"","cancel":"1","participate00":"1","entryNo":"2","editURL":"https://docs.google.com/forms/d/e/1FAIpQLSfIJ4IFsBI5pPXsLz2jlTBczzIn8QZQL4r6QHqxZmSeDOhwUA/viewform?edit2=2_ABaOnucIuwg3VQQ89wjGMjOrBzL9Ko6Yd_-VRLBvabY6pcLfvOC1MGlrA29XPym2rtomwwQ","application":"","PIC":"","passCode":"469555","passTime":"2022-12-06T06:09:22.880Z","manualMF":"","menuFlags":"32449","manualAL":"","AuthLevel":"4","name00":"榎田　道子","yomi00":"エノキダ　ミチコ","category00":"保護者","status00":"","fee00":"","name01":"","yomi01":"","category01":"","status01":"","fee01":"","name02":"","yomi02":"","category02":"","status02":"","fee02":"","name03":"","yomi03":"","category03":"","status03":"","fee03":""},
+        "Reserve":{"level":4},
+        "public":{"level":65535,"interval":30000,"Administrator":"shimokitasho.oyaji@gmail.com","FormId":"1hnQLsY3lRh0gQMGfXoJJqAL_yBpKR6T0h2RFRc8tUEA","FormURL":"https://docs.google.com/forms/d/e/1FAIpQLSfIJ4IFsBI5pPXsLz2jlTBczzIn8QZQL4r6QHqxZmSeDOhwUA/viewform","SiteURL":"https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97","MapURL":"materials/map.html","TableURL":"materials/timetable/WBS.html","EnqueteURL":"https://docs.google.com/forms/d/16r3luYQRiLVmI9xqaD4FuaSlUqTRGvI8nAGrjGcg8lc/viewform"},
+        "Agent":{"key":"pSp2*ZR_S/GXr9C5","url":"https://script.google.com/macros/s/AKfycbwp2TuQPRhg9p-rbO-9iljdacPBZ_F6vNPoDEjckAuvEbSjeXLHKtLYA4YK4_P_Ped9/exec"}
+      };
+    initialize();
+  }
 });
