@@ -8,9 +8,14 @@ class Broadcast {
     this.lastUpdate = getJPDateTime('1901/01/01');
     this.startTime = new Date();
     this.intervalId = null;
+    this.display();
     this.start();
   }
 
+  /** display: 掲示板の表示
+   * @param {void} - なし
+   * @returns {void} なし
+   */
   display(){
     this.dom.title.innerText = 'お知らせ';
     // 1.投稿権限がある場合は投稿エリアを表示
@@ -47,6 +52,7 @@ class Broadcast {
       `;
       // 動的要素なのでdocumentに対してイベントリスナを設定
       document.addEventListener('click',(e)=>{
+        console.log('Broad.display event: e.target.name='+JSON.stringify(e.target.name));
         const postArea = this.dom.main.querySelector('div.postArea');
         const postButton = this.dom.main.querySelector('input[name="postButton"]');
         switch( e.target.name ){
@@ -128,6 +134,10 @@ class Broadcast {
    */
   getMessages(){
     console.log('getMessages start.');
+    // 現在表示中の画面が「お知らせ」でなければ受信・表示とも行わない
+    if( this.dom.title.innerText !== 'お知らせ' ){
+      return;
+    }
 
     /* 配信局へ配信要求
     * @param {string}   arg.to       - 受信側のコード名(平文)
