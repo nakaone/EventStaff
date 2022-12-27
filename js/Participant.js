@@ -10,6 +10,7 @@ class Participant {
    */
   display(){
     this.dom.title.innerText = '受付業務';
+    initClass(this.dom.main,'Participant');
     this.dom.main.innerHTML = `
       <div>
         <button name="formQR">登録フォーム誘導</button>

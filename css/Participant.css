@@ -1,15 +1,15 @@
 /* 登録フォーム誘導・紙申請処理ボタン */
-#main > div {
+.Participant > div {
   margin: 1rem 0;
   -webkit-justify-content: space-around;
   justify-content: space-around;  
 }
-#main > div:first-child > button {
+.Participant > div:first-child > button {
   width: 40%;
 }
 
 /* 受付番号または氏名での検索窓 */
-#main input {
+.Participant input {
   width: 15rem;
 }
 

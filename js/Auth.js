@@ -9,11 +9,12 @@ class Auth {
   constructor(dom){
     this.dom = dom;
     this.dom.title.innerText = '参加者認証';
+    initClass(this.dom.main,'auth');
     this.dom.main.innerHTML
       = '<div class="entryNo">'
       +   '<p>受付番号を入力してください</p>'
-      +   '<input type="text" />'
-      +   '<input type="button" value="送信" />'
+      +   '<div><input type="text" />'
+      +   '<input type="button" value="送信" /></div>'
       +   '<div class="message"></div>'
       + '</div>'
       + '<div class="passCode">'

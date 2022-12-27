@@ -186,7 +186,7 @@ const system = () => {
 }
 
 window.addEventListener('DOMContentLoaded', function(){
-  const debugMode = 1; // 0:通常, 1:スタッフ, 2:参加者
+  const debugMode = 0; // 0:通常, 1:スタッフ, 2:参加者
   if( debugMode === 0 ){
     // 受付番号入力画面表示
     // getPassCode正常終了時、そこからinitializeを呼び出す
