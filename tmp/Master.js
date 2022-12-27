@@ -264,9 +264,10 @@ const auth2B = (arg) => {
       // (1) AuthLevelに応じたconfigを作成。管理局「AuthLevel」シートが原本
       //     認証局:1, 放送局:2, 予約局:4, 管理局:8, 郵便局:16, 資源局:32
       rv = {isErr:false, config:{
-        AuthLevel: Number(participant.AuthLevel),
-        menuFlags: Number(participant.menuFlags), // 表示するメニューのフラグ(menuFlags)
-        editURL: participant.editURL, // 参加申請フォームの編集用URL
+        //AuthLevel: Number(participant.AuthLevel),
+        //menuFlags: Number(participant.menuFlags), // 表示するメニューのフラグ(menuFlags)
+        //editURL: participant.editURL, // 参加申請フォームの編集用URL
+        private: participant
       }};
       for( let x in conf ){
         if( conf[x].level & rv.config.AuthLevel > 0 ){
@@ -308,14 +309,14 @@ const auth2B = (arg) => {
  * </ul>
  */
 const candidatesTest = () => {
-  const testData = [8,'007','ナ','な','嶋津'];
+  const testData = [8,'007','シマヅ','な','嶋津'];
   for( let i=0 ; i<testData.length ; i++ ){
     console.log(testData[i]+' -> '+JSON.stringify(candidates(testData[i])));
   }
 }
 const candidates = (data) => {
   console.log('管理局.candidates start. data='+data);
-  let rv = null;
+  let rv = {};
   try {
     const dObj = szLib.szSheet('マスタ');  // データをシートから取得
 
@@ -364,12 +365,18 @@ const candidates = (data) => {
  * 
  * @example <caption>戻り値の例</caption> 
  */
-const updateParticipant = (data) => {
-  console.log('管理局.updateParticipant start.',data);
+const updateParticipantTest = () => {
+  const rv = updateParticipant({
+    data: {status00:'fuga'},
+    opt: {key:'entryNo',value:1}
+  });
+}
+const updateParticipant = (arg) => {
+  console.log('管理局.updateParticipant start. arg='+JSON.stringify(arg));
 
-  const dObj = szLib.szSheet({sheetName:'マスタ'}); // データをシートから取得
-  const rv = dObj.update(data.target.key,data.target.value,revice);
+  const dObj = szLib.szSheet('マスタ'); // データをシートから取得
+  const rv = dObj.update(arg.data,arg.opt);
 
-  console.log('管理局.updateParticipant end.',rv);
+  console.log('管理局.updateParticipant end. rv='+JSON.stringify(rv));
   return rv;
 }
