@@ -51,7 +51,7 @@ class Broadcast {
         </div>
       `;
       // 動的要素なのでdocumentに対してイベントリスナを設定
-      document.addEventListener('click',(e)=>{
+      this.dom.main.addEventListener('click',(e)=>{
         console.log('Broad.display event: e.target.name='+JSON.stringify(e.target.name));
         const postArea = this.dom.main.querySelector('div.postArea');
         const postButton = this.dom.main.querySelector('input[name="postButton"]');
@@ -71,6 +71,7 @@ class Broadcast {
             this.postMessage();
             break;
         }
+        e.stopImmediatePropagation(); // バブリング抑止
       });
       // 二回目以降の投稿ではハンドルネームをセット
       if( config.handleName ){
