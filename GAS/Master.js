@@ -364,12 +364,18 @@ const candidates = (data) => {
  * 
  * @example <caption>戻り値の例</caption> 
  */
-const updateParticipant = (data) => {
-  console.log('管理局.updateParticipant start.',data);
+const updateParticipantTest = () => {
+  const rv = updateParticipant({
+    data: {status00:'fuga'},
+    opt: {key:'entryNo',value:1}
+  });
+}
+const updateParticipant = (arg) => {
+  console.log('管理局.updateParticipant start. arg='+JSON.stringify(arg));
 
-  const dObj = szLib.szSheet({sheetName:'マスタ'}); // データをシートから取得
-  const rv = dObj.update(data.target.key,data.target.value,revice);
+  const dObj = szLib.szSheet('マスタ'); // データをシートから取得
+  const rv = dObj.update(arg.data,arg.opt);
 
-  console.log('管理局.updateParticipant end.',rv);
+  console.log('管理局.updateParticipant end. rv='+JSON.stringify(rv));
   return rv;
 }
