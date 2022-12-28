@@ -241,7 +241,7 @@ const auth1B = (arg) => {
  * @example <caption>引数の例</caption>
  * 管理局.auth2B start. arg={"func":"auth2B","entryNo":"1.0","passCode":"478608","key":"GQD*4〜aQ8r"}
  */
-const auth2Btest = () => auth2B({entryNo:1,passCode:717630});
+const auth2Btest = () => auth2B({entryNo:1,passCode:960219});
 const auth2B = (arg) => {
   console.log('管理局.auth2B start. arg='+JSON.stringify(arg));
   let rv = null;
@@ -271,7 +271,7 @@ const auth2B = (arg) => {
       }};
       // (2) conf(config.jsonに記載された内容)を転記
       for( let x in conf ){
-        if( conf[x].level & rv.config.AuthLevel > 0 ){
+        if( (conf[x].level & rv.config.private.AuthLevel) > 0 ){
           rv.config[x] = conf[x];
         }
       }
