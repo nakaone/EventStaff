@@ -84,6 +84,14 @@ function doPost(e){
  * <li>result {object} - 配信局への配信結果(Agent.appendMessagesの戻り値)
  * </ul>
  */
+const postMessageTest = () => {
+  postMessage({
+    timestamp: szLib.getJPDateTime(),
+    from: 'システム',
+    to: 'テスタ',
+    message: szLib.getJPDateTime()
+  });
+}
 function postMessage(data){
   console.log('放送局.postMessage start. data='+JSON.stringify(data));
   let rv = null;
@@ -112,19 +120,17 @@ function postMessage(data){
     // 稼働中の配信局に投稿内容を配信
     rv.result = [];
     for( let i=0 ; i<list.result.length ; i++ ){
-      if( list.result[i].type === 'Agent' && list.result[i].status === '稼働中' ){
-        const res = szLib.fetchGAS({
-          from     : 'Broad',
-          to       : list.result[i].account,
-          func     : 'appendMessages',
-          endpoint : list.result[i].endpoint,
-          key      : list.result[i].key,
-          data     : sheet.data
-        });
-        rv.isErr = res.isErr ? true : rv.isErr;
-        rv.message = rv.message || res.message;
-        rv.result.push(res);
-      }
+      const res = szLib.fetchGAS({
+        from     : 'Broad',
+        to       : list.result[i].account,
+        func     : 'appendMessages',
+        endpoint : list.result[i].endpoint,
+        key      : list.result[i].key,
+        data     : sheet.data
+      });
+      rv.isErr = res.isErr ? true : rv.isErr;
+      rv.message = rv.message || res.message;
+      rv.result.push(res);
     }
 
   } catch(e) {
