@@ -75,11 +75,19 @@ const authorize = () => {
  *    message {string} : エラーの場合はメッセージ。正常終了ならundefined
  *    result {object} : szLib.szSheet().data
  */
+const listAgentsTest = () => {
+  listAgents();
+}
 const listAgents = () => {
   console.log('資源局.listAgents start.');
   let rv = null;
   try {
-    rv = {isErr: false, result: szLib.szSheet('局一覧').data};
+    rv = {isErr: false,
+      result: szLib.szSheet('局一覧').data
+      .filter(x => x.type === 'Agent')
+      .filter(x => x.status === '稼働中')
+      //.sort((a,b) => {return Number(a.elaps) < Number(b.elaps) ? -1 : 1})
+    };
   } catch(e) {
     // Errorオブジェクトをrvとするとmessageが欠落するので再作成
     rv = {isErr:true, message:e.name+': '+e.message};
