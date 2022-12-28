@@ -8,7 +8,6 @@ class Broadcast {
     this.lastUpdate = getJPDateTime('1901/01/01');
     this.startTime = new Date();
     this.intervalId = null;
-    this.display();
     this.start();
   }
 
