@@ -4,6 +4,7 @@ class Broadcast {
   /** constructor: お知らせ画面の設定 */
   constructor(dom){
     this.dom = dom;
+    this.dom.title.innerText = 'お知らせ';
     this.posts = [];
     this.lastUpdate = getJPDateTime('1901/01/01');
     this.startTime = new Date();
@@ -205,11 +206,7 @@ class Broadcast {
         this.startTime = Date.now();
       }
     },config.public.interval);
-    console.log('Broad.start'
-      + '\nurl=' + this.url
-      + '\nkey=' + this.key
-      + '\ninterval=' + config.public.interval
-    );
+    console.log('Broad.start. interval=' + config.public.interval);
   }
 
   /** stop: 定期的処理の停止
