@@ -79,13 +79,22 @@ function doPost(e){
  * @param {string} arg.template - メールのテンプレートが定義された郵便局のシート名
  * @param {object[]} arg.data - 個別メールの宛先、実引数
  * @param {string} arg.data.recipient - 宛先メールアドレス
- * @param {object} arg.variables - 「仮引数：実引数」形式のオブジェクト(仮引数は英字)
+ * @param {object} arg.data.variables - 「仮引数：実引数」形式のオブジェクト(仮引数は英字)
  * @return {object[]} 全件正常終了なら空配列、エラーは以下のオブジェクトを返す
  * <ul>
  * <li>recipient {string} - エラーとなった配信先
  * <li>message {string} - エラーメッセージ
  * </ul>
  */
+const postMailsTest = () => {
+  postMails({
+    template: '郵便局初期化',
+    data: [{
+      recipient: 'shimokitasho.oyaji@gmail.com',
+      variables: {delivery:'system',timestamp:szLib.getJPDateTime()}
+    }]
+  });
+}
 const postMails = (arg) => {
   console.log('郵便局.postMails start. arg='+JSON.stringify(arg));
   let rv = {isErr:false,faild:[]};   // 失敗の配列。[{recipient:(string),message:(string)}, {..}, ..]
@@ -154,16 +163,16 @@ const postMails = (arg) => {
       const ngList = szLib.szSheet('メール不能').data.map(x => x[0]);
       console.log('ngList='+JSON.stringify(ngList));
       
-      // b. 過去24時間の合計実行時間が最も多い
+      // b. 稼働中の配信局を取得
       let res = szLib.fetchGAS({
         from    : 'Post',
         to      : 'Agency',
         func    : 'listAgents',
       });
-      const activeList = res.result
-        .filter(x => x.type === 'Agent')
-        .sort((a,b) => {return Number(a.elaps) < Number(b.elaps) ? -1 : 1});
-      console.log('activeList='+JSON.stringify(activeList));
+      if( res.isErr ){
+        throw new Error(res.message);
+      }
+      const activeList = res.result;
       let agent = {};
       for( let i=0 ; i<activeList.length ; i++ ){
         if( ngList.findIndex(x => x === activeList[i].account) < 0 ){
