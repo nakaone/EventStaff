@@ -177,7 +177,7 @@ class webScanner {
   }
   
   drawFinder(){  // キャンバスに描画する
-    console.log('webScanner.drawFinder start.',this.video);
+    //console.log('webScanner.drawFinder start.',this.video);
 
     // スキャン実行フラグが立っていなかったら終了
     if( !this.onGoing )  return;
@@ -590,8 +590,10 @@ const genChild = (template,dObj={},pFP='root') => {
       }
     });
     if( sDef.onclick && dObj[sDef.onclick] ){
-      // ボタンクリックで遷移
-      rv.result.setAttribute('onclick',"location.href='_'".replace('_',dObj[sDef.onclick]));
+      // onclickの定義
+      rv.result.setAttribute('onclick',dObj[sDef.onclick]);
+      /* 旧：ボタンクリックで遷移
+      rv.result.setAttribute('onclick',"location.href='_'".replace('_',dObj[sDef.onclick]));*/
     }
     if( sDef.checked && dObj[sDef.checked] ){
       // dObj[sDef.checked]がtrueならcheckedを追加

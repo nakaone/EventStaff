@@ -7,38 +7,25 @@ class Participant {
   /** display: 受付業務画面の表示
    * @param {void} - なし
    * @returns {void} なし
+   * <h2>Tips: 動的要素へのイベント定義はonclickで</h2>
+   * 当初innerHTML書き換え後にaddEventListenerしていたが、Broad.displayで拾ってしまいParticipant.jsで定義している関数が呼び出されなかった。<br>
+   * これはBroad側でも動的要素を使用しているためdocumentに対してaddEventListenerを先に定義していたため。<br>
+   * 動的要素はタグ内でonclickを定義するようにすれば回避可能。
    */
   display(){
     this.dom.title.innerText = '受付業務';
     initClass(this.dom.main,'Participant');
     this.dom.main.innerHTML = `
       <div>
-        <button name="formQR">登録フォーム誘導</button>
-        <button name="scanDoc">紙申請処理</button>
+        <button onclick="config.reception.formQR()">登録フォーム誘導</button>
+        <button onclick="config.reception.paperForm1()">紙申請処理</button>
       </div>
       <div class="screen"><!-- 該当者検索 -->
         <input type="text" placeholder="&#x1F50D受付番号または氏名読み(最初の数文字)" />
-        <button name="search">検索</button>
+        <button onclick="config.reception.search()">検索</button>
       </div>    
       <div class="scanner"></div><!-- QRコードスキャナ -->
     `;
-    this.dom.formQRBtn = this.dom.main.querySelector('button[name="formQR"]');
-    this.dom.scanDocBtn = this.dom.main.querySelector('button[name="scanDoc"]');
-    this.dom.keyWordArea = this.dom.main.querySelector('input[type="text"]');
-    this.dom.searchBtn = this.dom.main.querySelector('input[type="button"]');
-    document.addEventListener('click',(e)=>{
-      switch( e.target.name ){
-        case 'formQR':
-          this.formQR();
-          break;
-        case 'scanDoc':
-          this.scanDoc();
-          break;
-        case 'search':
-          this.searchKey();
-          break;
-      }
-    });
 
     // スキャナのセットアップ
     this.scanner = new webScanner({
@@ -86,12 +73,53 @@ class Participant {
     });
   }
 
-  /** scanDoc: 紙媒体での申請処理
+  /** paperForm1: 紙媒体での申請処理
    * @param {void} - なし
    * @returns {void} なし
    */
-  scanDoc(){
-    console.log('scanDoc clicked.');
+  paperForm1(){
+    console.log('paperForm1 clicked.');
+    this.dom.title = '用紙による申請登録';
+    this.dom.main.innerHTML = '';
+    let o = genChild({class:'paperForm', children:[
+      {tag:'p', text:'申込者の属性を入力してください'},
+      {tag:'table', children:[
+        {tag:'tr', children:[
+          {tag:'th', text:'No'},
+          {tag:'th', text:'属性'}
+        ]},
+      ]},
+      {tag:'button', text:'次へ', onclick:'config.reception.paperForm2()'}
+    ]});
+    if( o.append ){
+      this.dom.main.appendChild(o.result);
+    }
+    ['①','②','③','④','⑤'].forEach(x => {
+      o = genChild({tag:'tr', children:[
+        {tag:'td', text:x},
+        {tag:'td', children:[
+          {tag:'select', opt:['未就学児','小1','小2','小3','小4','小5','小6','卒業生','保護者']}
+        ]}
+      ]});
+      console.log('l.104',o);
+      if( o.append ){
+        this.dom.main.querySelector('.paperForm table').appendChild(o.result);
+      }
+    });
+    /*
+      {tag:'p', text:'属性別人数を入力してください'},
+    ['未就学児','小1','小2','小3','小4','小5','小6','卒業生','保護者'].forEach(x => {
+      o = genChild({tag:'tr', children:[
+        {tag:'td', variable:x},
+        {tag:'td', children:[
+          {tag:'select', opt:['0人','1人','2人','3人','4人','5人']}
+        ]}
+      ]});
+      if( o.append ){
+        this.dom.main.querySelector('table'),appendChild(o.result);
+      }
+    });
+
     this.dom.main.innerHTML = `
     <h1>(未実装)</h1>
     <button name="display">受付業務に戻る</button>
@@ -103,6 +131,11 @@ class Participant {
           break;
       }
     });
+    */
+  }
+
+  paperForm2(){
+    console.log('Participant.paperForm2 start');
   }
 
   /** searchKey: 検索キー(受付番号または氏名の一部)で検索
