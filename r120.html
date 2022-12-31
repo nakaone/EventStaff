@@ -1,188 +1,134 @@
-const dom = {
-  title: document.querySelector('header .title'),
-  menuIcon: document.querySelector('header .menuIcon'),
-  nav  : document.querySelector('nav'),
-  main : document.querySelector('#main'),
-};
+<!DOCTYPE html><html lang="ja">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <meta http-equiv="Content-Script-Type" content="text/javascript">
+  <title>おまつり奉行</title>
+  <link rel="stylesheet" href="css/default.css">
+  <style type="text/css">
 
+    /* =========================================================
+      ヘッダ
+    ========================================================= */
+    header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2rem;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-direction: row;
+      flex-direction: row;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      background-color: #a0c238;
+    }
+    header .icon, .menuIcon {
+      margin: 0.2rem;
+      width: 1.6rem;
+      height: 1.6rem;
+    }
+    header img {
+      width: 100%;
+      height: 100%;
+    }
+    header .title {
+      margin: auto;
+      width: calc(100% - 4rem);
+      font-size: 1.2rem;
+    }
+
+    /* == メニュー =========================================== */
+    header .menu img {
+      margin: 0.3rem;
+      max-width: 1.4rem;
+      max-height: 1.4rem;
+    }
+
+    nav {
+      z-index: 1;
+      background-color: rgba(0,0,0,.5);
+      position: absolute;
+      top: 2rem;
+      right: 0;
+      width: 15rem;
+      height: calc(100% - 2rem);
+      display: none;
+    }
+    nav ol {
+      padding: 0;
+      margin: 0;
+    }
+    nav li {
+      list-style-type: none;
+      margin: 0.75rem;
+      padding-right: 0.8rem;
+      border: solid 3px #888;
+      width: calc(15rem - 2.5rem - 6px);
+      color: white;
+      text-align: right;
+      transition: .5s;
+    }
+
+    /* =========================================================
+      メイン　※掲示板関係はBroad.cssで定義
+    ========================================================= */
+    #main {
+      position: absolute;
+      margin: 0px;
+      top: 2.5rem;
+      left: 0px;
+      width: 100%;
+      height: calc(100% - 2.5rem);
+      border: none;
+      /*border: solid 1px red;
+      box-sizing: border-box;*/
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="icon"><img src="img/stamp.png" /></div>
+    <div class="title"></div>
+    <div class="menuIcon"></div>
+  </header>
+  <nav></nav>
+  <iframe id="main"></iframe>
+</body>
+<script src="js/menu.js" defer></script>
+
+<!-- script src="js/jsQR.js" defer></script><-- QRコード検出 -->
+<!-- script src="js/qrcode.min.js" defer></script><-- QRコード生成 -->
+<!--
+<script src="js/Auth.js" defer></script>
+<script src="js/library.js" defer></script>
+<script src="js/menu.js" defer></script>
+<script src="js/Broad.js" defer></script>
+<script src="js/Participant.js" defer></script>
+<script src="js/EventStaff.js" defer></script>
+-->
+<script type="text/javascript">
 let config = {
-  Auth:{
-    url: 'https://script.google.com/macros/s/AKfycbz_dxbC3W0nbSOldTjxvy8jOoFbnbAG9IoMWNnm_MbO01ui0YZg0tdghQmmyW2yaeXW5w/exec',
-  }
+  dom: {
+    title: document.querySelector('header .title'),
+    menuIcon: document.querySelector('header .menuIcon'),
+    nav  : document.querySelector('nav'),
+    main : document.querySelector('#main'),
+  },
 };
 
-/** initialize: 初期設定
- * @param {void} - なし
- * @returns {void} なし
- */
 const initialize = () => {
   console.log('initialize start.');
-  config.menu = new Menu(dom);
-  config.broadcast = new Broadcast(dom);
+  config.menu = new Menu(config.dom);
+  //config.broadcast = new Broadcast(dom);
   console.log('initialize end.\n'+JSON.stringify(config));
 }
-/** messageBoard: お知らせ画面表示
- * @param {void} - なし
- * @returns {void} なし
- */
-const messageBoard = () => {
-  console.log('messageBoard',config);
-  config.broadcast.display();
-}
-/** reception: 受付業務画面表示
- * @param {void} - なし
- * @returns {void} なし
- */
-const reception = () => {
-  console.log('reception');
-  if( !config.reception ){
-    config.reception = new Participant(dom);
-  }
-  config.reception.display();
-}
-/** cornerOperation: コーナー運営画面表示
- * @param {void} - なし
- * @returns {void} なし
- */
-const cornerOperation = () => {
-  console.log('cornerOperation');
-}
-/** entry: 参加受付画面表示
- * @param {void} - なし
- * @returns {void} なし
- * <a href="https://davidshimjs.github.io/qrcodejs/">QRCode.js</a>
- */
-const entry = () => {
-  console.log('entry');
-  dom.title.innerText = '参加受付';
-  dom.main.innerHTML = `
-    <button>参加者の追加・変更・取消</button>
-    <h1>受付番号：`+ config.entryStr + `</h1>
-    <div></div>
-  `;
-  let qrcode = new QRCode(dom.main.querySelector('div'),{
-    text: config.entryStr,
-    width: 300,
-    height: 300,
-    colorDark : "#000000",
-    colorLight : "#ffffff",
-    correctLevel : QRCode.CorrectLevel.H
-  })
-}
 
-/** referState: 予約状況参照画面表示
- * @param {void} - なし
- * @returns {void} なし
- */
-const referState = () => {
-  console.log('referState');
-  dom.title.innerText = '予約状況参照';
-  dom.main.innerHTML = `
-    <h1 style="text-align:center">(未実装)</h1>
-  `;
-}
-
-/** information: お役立ち情報画面表示
- * @param {void} - なし
- * @returns {void} なし
- */
-const information = () => {
-  dom.title.innerText = 'お役立ち情報';
-  const proto = '<div class="button"><a href="_href" target="_blank">_label</a></div>';
-  dom.main.innerHTML
-  = proto.replace('_href',config.public.TableURL).replace('_label','進行予定')
-  + proto.replace('_href',config.public.MapURL).replace('_label','校内案内図')
-  + proto.replace('_href',config.public.SiteURL).replace('_label','募集要項');
-
-  /*
-  dom.main.innerHTML = `
-    <button name="schedule">進行予定</button>
-    <button name="venueMap">校内案内図</button>
-    <button name="noticeSite">募集要項</button>
-  `;
-  dom.main.querySelector('button[name="schedule"]').onclick = () => {
-    window.open(config.public.TableURL,'_blank');
-  };
-  dom.main.querySelector('button[name="venueMap"]').onclick = () => {
-    window.open(config.public.MapURL,'_blank');
-  };
-  dom.main.querySelector('button[name="noticeSite"]').onclick = () => {
-    window.open(config.public.SiteURL,'_blank');
-  };
-  */
-}
-
-/** enquete: 参加者アンケート画面表示
- * @param {void} - なし
- * @returns {void} なし
- */
-const enquete = () => {
-  dom.title.innerText = '参加者アンケート';
-  dom.main.innerHTML = `
-    <p>本日参加された感想を是非以下にお寄せください。</p>
-    <button>参加者アンケート</button>`;
-  dom.main.querySelector('button').onclick = () => {
-    window.open(config.public.EnqueteURL,'_blank');
-  };
-}
-
-/** system: システム設定画面表示
- * @param {void} - なし
- * @returns {void} なし
- */
-const system = () => {
-  dom.title.innerText = 'システム設定';
-  initClass(dom.main,'system');
-  dom.main.innerHTML = '';
-
-  // 掲示板他の定期的処理停止・再開
-  if( (config.private.menuFlags & 16384) > 0 ){
-    const o = genChild({tag:'div', children:[
-      {tag:'h1', text:'定期的処理の停止・再開'},
-      {tag:'input', type:'button', value:'停止', name:'start_stop'},
-    ]},{},'root');
-    if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
-      throw o.result;
-    } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
-      dom.main.appendChild(o.result);
-      const btn = dom.main.querySelector('input[name="start_stop"]');
-      // ボタンクリック時の動作を定義
-      btn.addEventListener('click',() => {
-        if( !config.broadcast.intervalId || config.broadcast.intervalId === null ){
-          // 停止中の場合
-          config.broadcast.start();
-          btn.value = '停止';
-        } else {
-          // 稼働中の場合
-          config.broadcast.stop();
-          btn.value = '再開';
-        }
-      });
-    }
-  }
-
-  // ヘルプ
-  if( (config.private.menuFlags & 32768) > 0 ){
-    const o = document.createElement('div');
-    o.innerHTML = '<h1>ヘルプ</h1>'
-    + '<details><summary>[Android]カメラを使おうとすると「使用できません」と表示される</summary>'
-    +   '<p>ブラウザにカメラを使用する権限が付与されていない場合に表示されます。対応は以下の通りです(<a href="https://support.google.com/android/answer/9431959?hl=ja" target="_blank">出典</a>)。</p>'
-    +   '<ol>'
-    +     '<li>設定 > アプリ > 変更するアプリ(ブラウザ)を選択 > 権限 > カメラ</li>'
-    +     '<li>「許可しない」から「アプリの使用中のみ許可」または「毎回確認する」に変更</li>'
-    +   '</ol>'
-    + '</details>';
-    dom.main.appendChild(o);
-  }
-
-  // おまつり奉行について
-  const o = document.createElement('div');
-  o.innerHTML = '<h1>おまつり奉行について</h1>'
-  + '<p>about OMATSURI-Bugyo</p>'
-  + '<p>version: 1.1.0 (Dec.13,2022 released)</p>'
-  + '<p>author : <a mailto="nakaone.kunihiro@gmail.com"><ruby><rb>嶋津　邦浩</rb><rt>2-2ゆうなパパ</rt></ruby></a> (Shimazu Kunihiro)</p>'
-  + '<p>License: <a href="https://opensource.org/licenses/mit-license.php" target="_blank">MIT</a></p>';
-  dom.main.appendChild(o);
+const changeScreen = (scr,title) => {
+  document.querySelector('header .title').innerText = title;
+  document.getElementById('main').src = 'pages/_.html'.replace('_',scr);
 }
 
 window.addEventListener('DOMContentLoaded',() => {
@@ -271,3 +217,5 @@ window.addEventListener('DOMContentLoaded',() => {
     initialize();
   }
 });
+</script>
+</html>

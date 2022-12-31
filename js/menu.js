@@ -1,6 +1,7 @@
 /** class Menu: メニュー表示、制御 */
 class Menu {
   constructor(arg){
+    console.log('Menu.constructor start.');
     this.dom = {};
     arg.title.innerText = 'メニュー初期化';
     this.dom.icon = arg.menuIcon;
@@ -9,6 +10,9 @@ class Menu {
     this.closeMenu();
 
     this.menuObj = [
+      /*
+      {title:'お役立ち情報', scr:'information', flag:7168},
+      */
       {title:'お知らせ', func:messageBoard, flag:3},
       {title:'受付業務', func:reception, flag:28},
       {title:'コーナー運営', func:cornerOperation, flag:32},
@@ -24,11 +28,13 @@ class Menu {
       if( (x.flag & config.private.menuFlags) > 0 ){
         const li = document.createElement('li');
         li.appendChild(document.createTextNode(x.title));
+        //li.addEventListener('click',() => {this.closeMenu();changeScreen(x.scr,x.title);});
         li.addEventListener('click',() => {this.closeMenu();x.func();});
         this.dom.ol.appendChild(li);
       }
     });
     this.dom.nav.appendChild(this.dom.ol);
+    console.log('Menu.constructor end.');
   }
 
   /** closeMenu: 開いているメニューを閉じる
