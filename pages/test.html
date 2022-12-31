@@ -1,0 +1,79 @@
+<!DOCTYPE html><html lang="ja">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <meta http-equiv="Content-Script-Type" content="text/javascript">
+  <title>おまつり奉行</title>
+  <link rel="stylesheet" href="css/default.css">
+  <link rel="stylesheet" href="css/default2.css">
+  <style type="text/css">
+
+/* :: page "a" CSS section start. :::::::::::::::::::::::::::::::::::::: */
+
+    div {
+      border: solid 1px red;
+    }
+
+/* :: page "a" CSS section end. :::::::::::::::::::::::::::::::::::::::: */
+
+
+/* :: page "c" CSS section start. :::::::::::::::::::::::::::::::::::::: */
+
+html {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  font-size: 4vw;
+}
+
+/* :: page "c" CSS section end. :::::::::::::::::::::::::::::::::::::::: */
+
+  </style>
+</head>
+<body>
+
+<div class="screen a"><!-- :: page "	" HTML section start. ::::::::::: -->
+
+  <div class="button"><a href="../materials/timetable/WBS.html" target="_blank">進行予定</a></div>
+  <div class="button"><a href="../materials/map.html" target="_blank">校内案内図</a></div>
+  <div class="button"><a href="https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97" target="_blank">募集要項</a></div>  
+
+<!-- page "a" HTML section end. ::::::::::::::::::::::::::::::::: --></div>
+
+</body>
+<script src="js/Auth.js" defer></script>
+<script type="text/javascript">
+
+// :: page "a" Script section start. ::::::::::::::::::::::::::::::::::::::
+
+const fuga = () => {
+  console.log('hoge');
+}
+
+// :: page "a" Script section end. ::::::::::::::::::::::::::::::::::::::::
+
+
+// :: page "b" Script section start. ::::::::::::::::::::::::::::::::::::::
+
+/** sha256: テキストをsha256でハッシュ化
+ * 
+ * @param {string} text - 暗号化対象のテキスト
+ * @param {function} callback - 作成後の後続処理
+ * 
+ * @returns {void} なし
+ */
+function sha256(text,callback){
+  const sha = async (text) => {
+    const uint8  = new TextEncoder().encode(text)
+    const digest = await crypto.subtle.digest('SHA-256', uint8)
+    return Array.from(new Uint8Array(digest)).map(v => v.toString(16).padStart(2,'0')).join('')
+  }
+  sha(text).then((hash) => callback(hash));
+}
+
+// :: page "b" Script section end. ::::::::::::::::::::::::::::::::::::::::
+
+</script>
+</html>
+
