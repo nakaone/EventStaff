@@ -73,11 +73,11 @@ const specification = {  // 仕様
 
 /** rex:  ページごとの定義において、その開始/終了を定義した正規表現 */
 const rex = {
-  link: /^ *<link rel="stylesheet"/,
-  include : /^ *<script src="/,
-  css: [/^ *<style type="/,/^ *<\/style>/],
-  script: [/^ *<script type="/,/^ *<\/script>/],
-  html: [/^ *<body/,/^ *<\/body>/],
+  link: /^[ \t]*<link .*href=["'](.+)["']/,
+  include : /^[ \t]*<script .*src=["'](.+)["']/,
+  css: [/^[ \t]*<style type=["'](.+)["']/,/^ *<\/style>/],
+  script: [/^[ \t]*<script type=["'](.+)["']/,/^ *<\/script>/],
+  html: [/^[ \t]*<body/,/^ *<\/body>/],
 }
 
 /* dObj: 要素別に統合したオブジェクト
@@ -89,8 +89,7 @@ const rex = {
  * <li> body {string[]} - index.htmlに追加するhtml
  * </ul> */
 const dObj = (()=>{
-  console.log('l.83',rex);
-  const rv = {};
+  const rv = {list:{link:[],include:[]}};
   Object.keys(rex).forEach(x => {rv[x]=[]});
   return rv;
 })();
@@ -139,7 +138,7 @@ const analyzeArg = () => {
  */
 const extract = (filename) => {
   const lines = readfile(filename);
-  const m = filename.match(/^(.+)\.([a-zA-Z0-9]+)$/);
+  const m = filename.match(/^.*\/*(.+)\.([a-zA-Z0-9]+)$/);
   const on = { // 現在処理中の行が該当する属性
     css   : m && m[2].toLowerCase() === 'css', // 拡張子がcssなら最初からtrue
     script: m && m[2].toLowerCase() === 'js',  // 拡張子がjsなら最初からtrue
@@ -150,51 +149,37 @@ const extract = (filename) => {
 
   ['css','script'].forEach(x => {
     if(on[x]){
-      dObj[x].push(conf[x].header.replace('\t',basename));
+      dObj[x].push(conf[x].header.replaceAll('\t',basename));
     }
   });
 
   for( let i=0 ; i<lines.length ; i++ ){
-    const is = {
-      link : lines[i].match(/^ *<link rel="stylesheet"/),
-      include : lines[i].match(/^ *<script src="/),
-      cssStart: lines[i].match(/^ *<style type="/),
-      cssEnd: lines[i].match(/^ *<\/style>/),
-      scriptStart: lines[i].match(/^ *<script type="/),
-      scriptEnd: lines[i].match(/^ *<\/script>/),
-      htmlStart: lines[i].match(/^ *<body/),
-      htmlEnd: lines[i].match(/^ *<\/body>/),
-    }
-    //console.log(i+': '+lines[i]+'\n             -> is='+JSON.stringify(is));
-    if( is.link ){
-      dObj.link.push(lines[i]);
-    }
-    if( is.include ){
-      dObj.include.push(lines[i]);
-    }
+    ['link','include'].forEach(x => {
+      const m = lines[i].match(rex[x]);
+      if( m ){
+        // 既出の場合は登録しない
+        if( dObj.list[x].findIndex(y => y === m[1]) < 0 ){
+          dObj[x].push(lines[i]);
+          dObj.list[x].push(m[1]);
+        }
+      }
+    });
     ['css','script','html'].forEach(x => {
       if( on[x] ){
-        if( is[x+'End'] ){
+        if( lines[i].match(rex[x][1]) ){
           on[x] = false;
-          dObj[x].push(conf[x].footer.replace('\t',basename));
+          dObj[x].push(conf[x].footer.replaceAll('\t',basename));
         } else {
           dObj[x].push(lines[i]);
         }
       } else {
-        if( is[x+'Start'] ){
+        if( lines[i].match(rex[x][0]) ){
           on[x] = true;
-          dObj[x].push(conf[x].header.replace('\t',basename));
+          dObj[x].push(conf[x].header.replaceAll('\t',basename));
         }
       }
     });
   }
-
-  ['css','script'].forEach(x => {
-    if(on[x]){
-      dObj[x].push(conf[x].footer.replace('\t',basename));
-    }
-  });
-
 }
 
 /** readfile: 指定テキストファイルを読み込み、行毎に分割
