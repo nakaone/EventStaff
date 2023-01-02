@@ -1,5 +1,33 @@
-/** deploy.js: ページ毎に分割されたソースを統合
- * <caution>注意事項</caution>
+const specification = {  // 仕様
+/** deploy.js: ページ毎に分割されたページのソースを統合する
+ * <br>
+ * SPA開発において、ページごとに分割されたCSS/Script/HTMLを統合して index.html を作成する。<br>
+ * 
+ * <h2>処理概要</h2>
+ * 
+ * 01. 各ページファイルの以下の項目を抽出し、dObjに格納
+ * <ol>
+ * <li>link: 外部スタイルシート定義(<link rel="stylesheet" />)
+ * <li>include: 外部スクリプト定義(<script src="〜" />)
+ * <li>css: 内部スタイル定義(<style> 〜 </style>)
+ * <li>script: 内部スクリプト定義(<script> 〜 </script>)
+ * <li>html: 内部HTML(<body> 〜 </body>)
+ * </ol>
+ * 
+ * 02. index.htmlのテンプレートとなるhtmlファイルのプレースホルダ行を、dObjの内容で置換
+ * 
+ * <h2>useage</h2>
+ * <code>node [-h:xxxx.html] [-c:yyyy.css] [-j:zzzz.js] aaaa.html [bbbb.html ...]</code>
+ * 
+ * <h2>options</h2>
+ * <ul>
+ * <li>h: index.htmlのテンプレートとなるhtmlファイル。既定値`prototype.html`
+ * <li>c: 各ページのCSSを集めたファイル。既定値`css/style.css`
+ * <li>j: 各ページのスクリプトを集めたファイル。既定値`js/script.js`
+ * <li>その他のパラメータ: ページごとのhtml
+ * </ul>
+ * 
+ * <h2>注意事項</h2>
  * <ol>
  * <li>CSSセレクタに使用するので、必ずbodyタグにベースファイル名をクラスとして指定
  * </ol>
@@ -12,7 +40,78 @@
  * </ul>
  */
 
-/** analyzeArg: コマンドライン引数を分析
+// ===== proto.html sample ========================
+// <!DOCTYPE html><html lang="ja">
+// <head>
+//   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+//   <meta http-equiv="Content-Style-Type" content="text/css">
+//   <meta http-equiv="Content-Script-Type" content="text/javascript">
+//   <title></title>
+//   <link rel="stylesheet" href="css/default.css">
+//   <!-- ::deploy.link:: -->
+//   <style type="text/css">
+//     /* ::deploy.css:: */
+//   </style>
+//   </head>
+//   <body>
+//     <!-- ::deploy.html:: -->
+//   </body>
+//   <!-- ::deploy.include:: -->
+//   <script type="text/javascript">
+//   // ::deploy.script::
+//   </script>
+// </html>    
+
+// ===== deploy.sh sample =========================
+// echo '\n\n\n\n\n==============================================================='
+// echo `TZ='Asia/Tokyo' date`
+// echo '\n'
+// 
+// node deploy.js -h:proto.html a.html b.js c.css > test.html
+// #node deploy.js -h:proto.html -c:../css/style.css -j:../js/script.js information.html
+}
+
+/** rex:  ページごとの定義において、その開始/終了を定義した正規表現 */
+const rex = {
+  link: /^ *<link rel="stylesheet"/,
+  include : /^ *<script src="/,
+  css: [/^ *<style type="/,/^ *<\/style>/],
+  script: [/^ *<script type="/,/^ *<\/script>/],
+  html: [/^ *<body/,/^ *<\/body>/],
+}
+
+/* dObj: 要素別に統合したオブジェクト
+ * <ul>
+ * <li> link {string[]} - 外部スタイルシートへの参照
+ * <li> include {string[]} - 外部スクリプトへの参照
+ * <li> css {string[]} - index.htmlに追加するスタイルシート定義
+ * <li> script {string[]} - index.htmlに追加するスクリプト
+ * <li> body {string[]} - index.htmlに追加するhtml
+ * </ul> */
+const dObj = (()=>{
+  console.log('l.83',rex);
+  const rv = {};
+  Object.keys(rex).forEach(x => {rv[x]=[]});
+  return rv;
+})();
+
+/** conf: htmlのページセクション定義。'_'の部分にbasenameが入る */
+const conf = {
+  css: {
+    header: '\n/* :: page "\t" CSS section start. :::::::::::::::::::::::::::::::::::::: */\n',
+    footer: '\n/* :: page "\t" CSS section end. :::::::::::::::::::::::::::::::::::::::: */\n',
+  },
+  script: {
+    header: '\n// :: page "\t" Script section start. ::::::::::::::::::::::::::::::::::::::\n',
+    footer: '\n// :: page "\t" Script section end. ::::::::::::::::::::::::::::::::::::::::\n',
+  },
+  html: {
+    header: '\n<div class="screen \t"><!-- :: page "\t" HTML section start. ::::::::::: -->\n',
+    footer: '\n<!-- page "\t" HTML section end. ::::::::::::::::::::::::::::::::: --></div>\n',
+  },
+};
+ 
+ /** analyzeArg: コマンドライン引数を分析
  * @param {void} - なし(process.argv)
  * @returns {object} 以下のメンバを持つオブジェクト
  * <ul>
@@ -109,7 +208,8 @@ const readfile = (arg) => {
 }
 
 /** integrate: ファイルを統合
- * 
+ * @param {string} filename - index.html
+ * @returns {void} なし
  */
 const integrate = (filename) => {
   const rv = [];
@@ -138,31 +238,6 @@ const whichType = (arg = undefined) => {
   return arg === undefined ? 'undefined'
    : Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
 }
-
-/* dObj: 要素別に統合したオブジェクト
- * <ul>
- * <li> link {string[]} - 外部スタイルシートへの参照
- * <li> include {string[]} - 外部スクリプトへの参照
- * <li> css {string[]} - index.htmlに追加するスタイルシート定義
- * <li> script {string[]} - index.htmlに追加するスクリプト
- * <li> body {string[]} - index.htmlに追加するhtml
- * </ul> */
-const dObj = {link:[],include:[],css:[],script:[],html:[]};
-
-const conf = {  // htmlのページセクション定義。'_'の部分にbasenameが入る
-  css: {
-    header: '\n/* :: page "\t" CSS section start. :::::::::::::::::::::::::::::::::::::: */\n',
-    footer: '\n/* :: page "\t" CSS section end. :::::::::::::::::::::::::::::::::::::::: */\n',
-  },
-  script: {
-    header: '\n// :: page "\t" Script section start. ::::::::::::::::::::::::::::::::::::::\n',
-    footer: '\n// :: page "\t" Script section end. ::::::::::::::::::::::::::::::::::::::::\n',
-  },
-  html: {
-    header: '\n<div class="screen \t"><!-- :: page "\t" HTML section start. ::::::::::: -->\n',
-    footer: '\n<!-- page "\t" HTML section end. ::::::::::::::::::::::::::::::::: --></div>\n',
-  },
-};
 
 /** main: 主処理 */
 (()=>{
