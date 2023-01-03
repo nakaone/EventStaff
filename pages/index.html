@@ -1,103 +1,17 @@
 <!DOCTYPE html><html lang="ja">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <meta http-equiv="Content-Script-Type" content="text/javascript">
-  <title>おまつり奉行</title>
-  <link rel="stylesheet" href="css/default.css">
-  <style type="text/css">
-
-    /* =========================================================
-      ヘッダ
-    ========================================================= */
-    header {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 2rem;
-      display: -webkit-flex;
-      display: flex;
-      -webkit-flex-direction: row;
-      flex-direction: row;
-      -webkit-justify-content: space-between;
-      justify-content: space-between;
-      margin-bottom: 1rem;
-      background-color: #a0c238;
-    }
-    header .icon, .menuIcon {
-      margin: 0.2rem;
-      width: 1.6rem;
-      height: 1.6rem;
-    }
-    header img {
-      width: 100%;
-      height: 100%;
-    }
-    header .title {
-      margin: auto;
-      width: calc(100% - 4rem);
-      font-size: 1.2rem;
-    }
-
-    /* == メニュー =========================================== */
-    header .menu img {
-      margin: 0.3rem;
-      max-width: 1.4rem;
-      max-height: 1.4rem;
-    }
-
-    nav {
-      z-index: 1;
-      background-color: rgba(0,0,0,.5);
-      position: absolute;
-      top: 2rem;
-      right: 0;
-      width: 15rem;
-      height: calc(100% - 2rem);
-      display: none;
-    }
-    nav ol {
-      padding: 0;
-      margin: 0;
-    }
-    nav li {
-      list-style-type: none;
-      margin: 0.75rem;
-      padding-right: 0.8rem;
-      border: solid 3px #888;
-      width: calc(15rem - 2.5rem - 6px);
-      color: white;
-      text-align: right;
-      transition: .5s;
-    }
-
-    /* =========================================================
-      メイン　※掲示板関係はBroad.cssで定義
-    ========================================================= */
-    #main {
-      position: absolute;
-      margin: 0px;
-      top: 2.5rem;
-      left: 0px;
-      width: 100%;
-      height: calc(100% - 2.5rem);
-      border: none;
-      /*border: solid 1px red;
-      box-sizing: border-box;*/
-    }
-  </style>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<title>おまつり奉行</title>
+<!-- ::deploy.link:: -->
+<style type="text/css">
+/* ::deploy.css:: */
+</style>
 </head>
 <body>
-  <header>
-    <div class="icon"><img src="img/stamp.png" /></div>
-    <div class="title"></div>
-    <div class="menuIcon"></div>
-  </header>
-  <nav></nav>
-  <iframe id="main"></iframe>
+  <!-- ::deploy.html:: -->
 </body>
-<script src="js/menu.js" defer></script>
 
 <!-- script src="js/jsQR.js" defer></script><-- QRコード検出 -->
 <!-- script src="js/qrcode.min.js" defer></script><-- QRコード生成 -->
@@ -109,6 +23,7 @@
 <script src="js/Participant.js" defer></script>
 <script src="js/EventStaff.js" defer></script>
 -->
+<!-- ::deploy.include:: -->
 <script type="text/javascript">
 let config = {
   dom: {
@@ -121,7 +36,6 @@ let config = {
 
 const initialize = () => {
   console.log('initialize start.');
-  config.menu = new Menu(config.dom);
   //config.broadcast = new Broadcast(dom);
   console.log('initialize end.\n'+JSON.stringify(config));
 }
@@ -130,6 +44,8 @@ const changeScreen = (scr,title) => {
   document.querySelector('header .title').innerText = title;
   document.getElementById('main').src = 'pages/_.html'.replace('_',scr);
 }
+
+// ::deploy.script::
 
 window.addEventListener('DOMContentLoaded',() => {
   //document.querySelector('header .title').innerText = 'お役立ち情報';
