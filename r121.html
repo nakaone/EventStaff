@@ -241,16 +241,12 @@ class Menu {
       {title:'参加者アンケート', func:enquete, flag:8192},
       {title:'システム設定', func:system, flag:49152}
     ];
-    //console.log(this.menuObj);
     this.menuObj.forEach(x => {
-      console.log('l.130',x);
       // config.private.menuFlagsで指定されたメニューのみ追加
       const li = document.querySelector('.menu nav li[name="'+x.title+'"]');
-      console.log('l.133 li',li);
       if( (x.flag & config.private.menuFlags) === 0 ){
         li.style.display = 'none';
       } else {
-        console.log('l.136',x);
         li.innerText = x.title;
         li.addEventListener('click',() => {
           this.closeMenu();
