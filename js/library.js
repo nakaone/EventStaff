@@ -250,6 +250,38 @@ class webScanner {
   汎用ライブラリ(GAS,JavaScript共通)
 =================================================== */
 
+/** analyzePath: パス名文字列から構成要素を抽出
+ * @param {string} arg - パス文字列
+ * @returns {object} 以下のメンバを持つオブジェクト
+ * <ul>
+ * <li> full {string} - 引数の文字列(フルパス)
+ * <li> path {string} - ファイル名を除いたパス文字列
+ * <li> file {string} - ファイル名
+ * <li> base {string} - 拡張子を除いたベースファイル名
+ * <li> suffix {string} - 拡張子
+ * </ul>
+ */
+const analyzePath = (arg) => {
+  const rv = {full:arg};
+  const m1 = arg.match(/^(.*)\/([^\/]+)$/);
+  if( m1 ){
+    rv.path = m1[1] + '/';
+    rv.file = m1[2];
+  } else {
+    rv.path = '';
+    rv.file = arg;
+  }
+  const m2 = rv.file.match(/^(.+)\.([^\.]+?)$/);
+  if( m2 ){
+    rv.base = m2[1];
+    rv.suffix = m2[2];
+  } else {
+    rv.base = rv.file;
+    rv.suffix = '';
+  }
+  return rv;
+}
+
 /** convertCharacters: 文字種を変換
  * <br><br>
  * 全角英数字は半角に、半角片仮名は全角に強制的に変換。<br>

@@ -97,16 +97,16 @@ const dObj = (()=>{
 /** conf: htmlのページセクション定義。'_'の部分にbasenameが入る */
 const conf = {
   css: {
-    header: '\n/* :: page "\t" CSS section start. :::::::::::::::::::::::::::::::::::::: */\n',
-    footer: '\n/* :: page "\t" CSS section end. :::::::::::::::::::::::::::::::::::::::: */\n',
+    header: '\n/* :: page "\t" CSS section start. :::::::::::::::::::::::::::::::::::::: */',
+    footer: '/* :: page "\t" CSS section end. :::::::::::::::::::::::::::::::::::::::: */\n',
   },
   script: {
-    header: '\n// :: page "\t" Script section start. ::::::::::::::::::::::::::::::::::::::\n',
-    footer: '\n// :: page "\t" Script section end. ::::::::::::::::::::::::::::::::::::::::\n',
+    header: '\n// :: page "\t" Script section start. ::::::::::::::::::::::::::::::::::::::',
+    footer: '// :: page "\t" Script section end. ::::::::::::::::::::::::::::::::::::::::\n',
   },
   html: {
-    header: '\n<div class="screen \t"><!-- :: page "\t" HTML section start. ::::::::::: -->\n',
-    footer: '\n<!-- page "\t" HTML section end. ::::::::::::::::::::::::::::::::: --></div>\n',
+    header: '\n<div class="screen \t"><!-- :: page "\t" HTML section start. ::::::::::: -->',
+    footer: '<!-- page "\t" HTML section end. ::::::::::::::::::::::::::::::::: --></div>\n',
   },
 };
  
@@ -131,6 +131,38 @@ const analyzeArg = () => {
   return rv;
 }
 
+/** analyzePath: パス名文字列から構成要素を抽出
+ * @param {string} arg - パス文字列
+ * @returns {object} 以下のメンバを持つオブジェクト
+ * <ul>
+ * <li> full {string} - 引数の文字列(フルパス)
+ * <li> path {string} - ファイル名を除いたパス文字列
+ * <li> file {string} - ファイル名
+ * <li> base {string} - 拡張子を除いたベースファイル名
+ * <li> suffix {string} - 拡張子
+ * </ul>
+ */
+const analyzePath = (arg) => {
+  const rv = {full:arg};
+  const m1 = arg.match(/^(.*)\/([^\/]+)$/);
+  if( m1 ){
+    rv.path = m1[1] + '/';
+    rv.file = m1[2];
+  } else {
+    rv.path = '';
+    rv.file = arg;
+  }
+  const m2 = rv.file.match(/^(.+)\.([^\.]+?)$/);
+  if( m2 ){
+    rv.base = m2[1];
+    rv.suffix = m2[2];
+  } else {
+    rv.base = rv.file;
+    rv.suffix = '';
+  }
+  return rv;
+}
+
 /** extract: 個別ページ定義ファイルからCSS/SCRIPT/HTMLを抽出し、dObjに格納
  * <br>
  * @param {string[]} lines - 読み込んだファイルの内容
@@ -138,18 +170,16 @@ const analyzeArg = () => {
  */
 const extract = (filename) => {
   const lines = readfile(filename);
-  const m = filename.match(/^.*\/*(.+)\.([a-zA-Z0-9]+)$/);
+  const fn = analyzePath(filename);
   const on = { // 現在処理中の行が該当する属性
-    css   : m && m[2].toLowerCase() === 'css', // 拡張子がcssなら最初からtrue
-    script: m && m[2].toLowerCase() === 'js',  // 拡張子がjsなら最初からtrue
+    css   : fn.suffix.toLowerCase() === 'css', // 拡張子がcssなら最初からtrue
+    script: fn.suffix.toLowerCase() === 'js',  // 拡張子がjsなら最初からtrue
     html  : false
   };
-  const basename = m ? m[1] : null;
-  //console.log('base='+basename);
 
   ['css','script'].forEach(x => {
     if(on[x]){
-      dObj[x].push(conf[x].header.replaceAll('\t',basename));
+      dObj[x].push(conf[x].header.replaceAll('\t',fn.base));
     }
   });
 
@@ -168,14 +198,14 @@ const extract = (filename) => {
       if( on[x] ){
         if( lines[i].match(rex[x][1]) ){
           on[x] = false;
-          dObj[x].push(conf[x].footer.replaceAll('\t',basename));
+          dObj[x].push(conf[x].footer.replaceAll('\t',fn.base));
         } else {
           dObj[x].push(lines[i]);
         }
       } else {
         if( lines[i].match(rex[x][0]) ){
           on[x] = true;
-          dObj[x].push(conf[x].header.replaceAll('\t',basename));
+          dObj[x].push(conf[x].header.replaceAll('\t',fn.base));
         }
       }
     });

@@ -5,22 +5,22 @@ const dom = {
   main : document.querySelector('#main'),
 };
 
-let config = {
+/*let config = {
   Auth:{
     url: 'https://script.google.com/macros/s/AKfycbz_dxbC3W0nbSOldTjxvy8jOoFbnbAG9IoMWNnm_MbO01ui0YZg0tdghQmmyW2yaeXW5w/exec',
   }
-};
+};*/
 
 /** initialize: 初期設定
  * @param {void} - なし
  * @returns {void} なし
  */
-const initialize = () => {
+/*const initialize = () => {
   console.log('initialize start.');
   config.menu = new Menu(dom);
   config.broadcast = new Broadcast(dom);
   console.log('initialize end.\n'+JSON.stringify(config));
-}
+}*/
 /** messageBoard: お知らせ画面表示
  * @param {void} - なし
  * @returns {void} なし
