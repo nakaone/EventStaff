@@ -3,18 +3,257 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta http-equiv="Content-Style-Type" content="text/css">
 <meta http-equiv="Content-Script-Type" content="text/javascript">
-<title>proto</title>
+<title>EventStaff</title>
 <link rel="stylesheet" href="css/default.css">
-<!-- ::deploy.link:: -->
 <style type="text/css">
-/* ::deploy.css:: */
+/* =========================================================
+  参加者認証
+========================================================= */
+.entryNo {
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+.entryNo input {
+  font-size: 1rem;
+  width: 4rem;
+  margin-left: 2rem;
+}
+
+/* =========================================================
+  受付業務 -> Participant.css
+========================================================= */
+.paperForm {
+  flex-direction: column;
+}
+/* =========================================================
+  予約状況参照 -> 未実装
+========================================================= */
+
+/* =========================================================
+  お役立ち情報
+  https://pulpxstyle.com/css-button/
+========================================================= */
+div.button a {
+  text-decoration: none;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  /*margin: 0 auto;*/
+  margin: 1rem auto;
+  padding: 1em 2em;
+  width: 300px;
+  color: #333;
+  font-size: 18px;
+  font-weight: 700;
+  background-color: #ccc;
+  transition: 0.3s;
+}
+
+div.button a::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  width: calc(100% - 4px);
+  height: calc(100% - 4px);
+  border: 2px solid #3d9ec8;
+  transition: 0.2s;
+}
+
+div.button a::after {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-top: 3px solid #333333;
+  border-right: 3px solid #333333;
+  transform: rotate(45deg);
+}
+
+div.button a:hover::before {
+  top: 0;
+  left: 0;
+}
+
+div.button a:hover {
+  text-decoration: none;
+  background-color: #a0c4d3;
+}
+
+/* =========================================================
+  システム設定
+========================================================= */
+div.system div {
+  flex-direction: column;
+}
 </style>
 </head>
-<body class="proto">
-  <!-- ::deploy.html:: -->
+<body class="EventStaff">
 </body>
-<!-- ::deploy.include:: -->
 <script type="text/javascript">
-// ::deploy.script::
+/** messageBoard: お知らせ画面表示
+ * @param {void} - なし
+ * @returns {void} なし
+ */
+ const messageBoard = () => {
+  console.log('messageBoard',config);
+  config.broadcast.display();
+}
+/** reception: 受付業務画面表示
+ * @param {void} - なし
+ * @returns {void} なし
+ */
+const reception = () => {
+  console.log('reception');
+  if( !config.reception ){
+    config.reception = new Participant(dom);
+  }
+  config.reception.display();
+}
+/** cornerOperation: コーナー運営画面表示
+ * @param {void} - なし
+ * @returns {void} なし
+ */
+const cornerOperation = () => {
+  console.log('cornerOperation');
+}
+/** entry: 参加受付画面表示
+ * @param {void} - なし
+ * @returns {void} なし
+ * <a href="https://davidshimjs.github.io/qrcodejs/">QRCode.js</a>
+ */
+const entry = () => {
+  console.log('entry');
+  dom.title.innerText = '参加受付';
+  dom.main.innerHTML = `
+    <button>参加者の追加・変更・取消</button>
+    <h1>受付番号：`+ config.entryStr + `</h1>
+    <div></div>
+  `;
+  let qrcode = new QRCode(dom.main.querySelector('div'),{
+    text: config.entryStr,
+    width: 300,
+    height: 300,
+    colorDark : "#000000",
+    colorLight : "#ffffff",
+    correctLevel : QRCode.CorrectLevel.H
+  })
+}
+
+/** referState: 予約状況参照画面表示
+ * @param {void} - なし
+ * @returns {void} なし
+ */
+const referState = () => {
+  console.log('referState');
+  dom.title.innerText = '予約状況参照';
+  dom.main.innerHTML = `
+    <h1 style="text-align:center">(未実装)</h1>
+  `;
+}
+
+/** information: お役立ち情報画面表示
+ * @param {void} - なし
+ * @returns {void} なし
+ */
+const information = () => {
+  dom.title.innerText = 'お役立ち情報';
+  const proto = '<div class="button"><a href="_href" target="_blank">_label</a></div>';
+  dom.main.innerHTML
+  = proto.replace('_href',config.public.TableURL).replace('_label','進行予定')
+  + proto.replace('_href',config.public.MapURL).replace('_label','校内案内図')
+  + proto.replace('_href',config.public.SiteURL).replace('_label','募集要項');
+
+  /*
+  dom.main.innerHTML = `
+    <button name="schedule">進行予定</button>
+    <button name="venueMap">校内案内図</button>
+    <button name="noticeSite">募集要項</button>
+  `;
+  dom.main.querySelector('button[name="schedule"]').onclick = () => {
+    window.open(config.public.TableURL,'_blank');
+  };
+  dom.main.querySelector('button[name="venueMap"]').onclick = () => {
+    window.open(config.public.MapURL,'_blank');
+  };
+  dom.main.querySelector('button[name="noticeSite"]').onclick = () => {
+    window.open(config.public.SiteURL,'_blank');
+  };
+  */
+}
+
+/** enquete: 参加者アンケート画面表示
+ * @param {void} - なし
+ * @returns {void} なし
+ */
+const enquete = () => {
+  dom.title.innerText = '参加者アンケート';
+  dom.main.innerHTML = `
+    <p>本日参加された感想を是非以下にお寄せください。</p>
+    <button>参加者アンケート</button>`;
+  dom.main.querySelector('button').onclick = () => {
+    window.open(config.public.EnqueteURL,'_blank');
+  };
+}
+
+/** system: システム設定画面表示
+ * @param {void} - なし
+ * @returns {void} なし
+ */
+const system = () => {
+  dom.title.innerText = 'システム設定';
+  initClass(dom.main,'system');
+  dom.main.innerHTML = '';
+
+  // 掲示板他の定期的処理停止・再開
+  if( (config.private.menuFlags & 16384) > 0 ){
+    const o = genChild({tag:'div', children:[
+      {tag:'h1', text:'定期的処理の停止・再開'},
+      {tag:'input', type:'button', value:'停止', name:'start_stop'},
+    ]},{},'root');
+    if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
+      throw o.result;
+    } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
+      dom.main.appendChild(o.result);
+      const btn = dom.main.querySelector('input[name="start_stop"]');
+      // ボタンクリック時の動作を定義
+      btn.addEventListener('click',() => {
+        if( !config.broadcast.intervalId || config.broadcast.intervalId === null ){
+          // 停止中の場合
+          config.broadcast.start();
+          btn.value = '停止';
+        } else {
+          // 稼働中の場合
+          config.broadcast.stop();
+          btn.value = '再開';
+        }
+      });
+    }
+  }
+
+  // ヘルプ
+  if( (config.private.menuFlags & 32768) > 0 ){
+    const o = document.createElement('div');
+    o.innerHTML = '<h1>ヘルプ</h1>'
+    + '<details><summary>[Android]カメラを使おうとすると「使用できません」と表示される</summary>'
+    +   '<p>ブラウザにカメラを使用する権限が付与されていない場合に表示されます。対応は以下の通りです(<a href="https://support.google.com/android/answer/9431959?hl=ja" target="_blank">出典</a>)。</p>'
+    +   '<ol>'
+    +     '<li>設定 > アプリ > 変更するアプリ(ブラウザ)を選択 > 権限 > カメラ</li>'
+    +     '<li>「許可しない」から「アプリの使用中のみ許可」または「毎回確認する」に変更</li>'
+    +   '</ol>'
+    + '</details>';
+    dom.main.appendChild(o);
+  }
+
+  // おまつり奉行について
+  const o = document.createElement('div');
+  o.innerHTML = '<h1>おまつり奉行について</h1>'
+  + '<p>about OMATSURI-Bugyo</p>'
+  + '<p>version: 1.1.0 (Dec.13,2022 released)</p>'
+  + '<p>author : <a mailto="nakaone.kunihiro@gmail.com"><ruby><rb>嶋津　邦浩</rb><rt>2-2ゆうなパパ</rt></ruby></a> (Shimazu Kunihiro)</p>'
+  + '<p>License: <a href="https://opensource.org/licenses/mit-license.php" target="_blank">MIT</a></p>';
+  dom.main.appendChild(o);
+}
 </script>
 </html>
