@@ -125,6 +125,7 @@ class Menu {
         });
       }
     });
+    this.changeScreen();
     console.log('Menu.constructor end.');
   }
 
@@ -159,6 +160,15 @@ class Menu {
     this.status = true;
     console.log('Menu.openMenu end');
   }
+
+  /** changeScreen: 指定画面への変更
+   * 
+   */
+  changeScreen = (scr,title) => {
+    document.querySelector('header .title').innerText = title;
+    document.getElementById('main').src = 'pages/_.html'.replace('_',scr);
+  }
+
 }
 
 </script>
