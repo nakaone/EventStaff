@@ -36,9 +36,10 @@ const config = {};
 // ::deploy.script::
 window.addEventListener('DOMContentLoaded',() => {
   config.debugMode = 1; // 0:通常, 1:スタッフ, 2:参加者
-  config.auth = new Auth();
-  config.menu = new Menu();
-  config.broad = new Broad();
+  config.auth = new Auth(()=>{ // menu/broadの初期化はconfig設定後
+    config.menu = new Menu();
+    config.broad = new Broad();
+  });
 });
 </script>
 </html>

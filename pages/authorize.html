@@ -6,43 +6,50 @@
 <title>authorize</title>
 <link rel="stylesheet" href="css/default.css">
 <style type="text/css">
+.authorize .passCode {
+  display: none;
+}
 </style>
 </head>
 <body class="authorize">
+  <div class="entryNo">
+    <p>受付番号を入力してください</p>
+    <div>
+      <input type="text" />
+      <input type="button" value="送信" />,\n
+    </div>
+    <div class="message"></div>
+  </div>
+
+  <div class="passCode">
+    <p>確認のメールを送信しました。記載されているパスコード(数字6桁)を入力してください。<br>
+    ※まれに迷惑メールと判定される場合があります。メールが来ない場合、そちらもご確認ください。</p>
+    <input type="text" />
+    <input type="button" value="送信" />
+    <div class="message">※パスコードの有効期限は1時間です</div>
+  </div>
 </body>
 <script type="text/javascript">
 /** class Auth: クライアント側の認証 */
 class Auth {
   /** constructor: 認証画面の生成
-   * @param {object} dom - 生成先の要素
-   * @param {object} dom.title - タイトル
-   * @param {object} dom.main - 生成先の要素
-   * @returns {void} 戻り値は無し
+   * @param {function} callback - 認証成功後の処理。既定値：何もしない
+   * @returns {void} なし
    */
-  constructor(dom){
-    this.dom = dom;
-    this.dom.title.innerText = '参加者認証';
-    initClass(this.dom.main,'auth');
-    this.dom.main.innerHTML
-      = '<div class="entryNo">'
-      +   '<p>受付番号を入力してください</p>'
-      +   '<div><input type="text" />'
-      +   '<input type="button" value="送信" /></div>'
-      +   '<div class="message"></div>'
-      + '</div>'
-      + '<div class="passCode">'
-      +   '<p>確認のメールを送信しました。記載されているパスコード(数字6桁)を入力してください。<br>'
-      +   '※まれに迷惑メールと判定される場合があります。メールが来ない場合、そちらもご確認ください。</p>'
-      +   '<input type="text" />'
-      +   '<input type="button" value="送信" />'
-      +   '<div class="message">※パスコードの有効期限は1時間です</div>'
-      + '</div>';
-    this.dom.entryNo = this.dom.main.querySelector('.entryNo');
+  constructor(callback=()=>{}){
+    this.callback = callback; // getPassCode終了後に呼び出し
+    this.dom = {
+      entryNo: document.querySelector('.authorize .entryNo'),
+      passCode: document.querySelector('.authorize .passCode'),
+    }
     this.dom.entryNo.querySelector('input[type="button"]').onclick = this.getEntryNo;
-
-    this.dom.passCode = this.dom.main.querySelector('.passCode');
-    this.dom.passCode.style.display = 'none';
     this.dom.passCode.querySelector('input[type="button"]').onclick = this.getPassCode;
+
+    // デバッグ時はテスト用configセット後、後処理を実行
+    if( config.debugMode > 0 ){
+      this.setTestData(config.debugMode);
+      this.callback();
+    }
   }
 
   /** getEntryNo: 受付番号を入力、認証局に問合せ
@@ -50,7 +57,7 @@ class Auth {
    * @returns {void} - なし
    */
   getEntryNo = () => {
-    console.log('getEntryNo start.');
+    console.log('Auth.getEntryNo start.');
 
     // 受付番号のボタンを不活性化
     this.dom.entryNo.querySelector('input[type="button"]').disabled = 'disabled';
@@ -92,7 +99,7 @@ class Auth {
         }
       },
     });
-    console.log('getEntryNo end. res='+JSON.stringify(res));
+    console.log('Auth.getEntryNo end. res='+JSON.stringify(res));
   }
 
   /** getPassCode: パスコード入力
@@ -100,7 +107,7 @@ class Auth {
    * @returns {void} なし
    */
   getPassCode = () => {
-    console.log('getPassCode start');
+    console.log('Auth.getPassCode start');
 
     // パスコードのボタンを不活性化
     this.dom.passCode.querySelector('input[type="button"]').disabled = 'disabled';
@@ -141,95 +148,216 @@ class Auth {
           }
           this.dom.main.innerHTML = ''; // 主表示域をクリア
           console.log('config='+JSON.stringify(config));
-          // 初期設定を呼び出す
-          initialize(response);
+          // 後処理を呼び出す
+          this.callback(response);
         }
       }
     });
 
-    console.log('getPassCode end');
+    console.log('Auth.getPassCode end');
   }
 
-  /** setConfig: debugModeに従ってconfigに値を設定
-   * 
+  /** setTestData: debugModeに従ってconfigに値を設定
+   * @param {number} debugMode - 0:通常, 1:スタッフ, 2:参加者
+   * @returns {void} なし
    */
-  setConfig = (debugMode) => {
-  const conf = { // config.jsonのコピー。適宜最新のものに書き換えすること。
-    "Auth": {   // 認証局
-      "level": 1,
-      // 認証局は誰でもアクセス可なので、key は設定しない
-      "key": "",  // undefinedにならないよう設定するダミー
-      "url": "https://script.google.com/macros/s/AKfycbzjsxwmNmR9TV2wswNuUVZDOUIOYVGNGiA02hh74_BwNTzArExR21wVPYFOSLdBNe67BQ/exec"
-    },
-    "Broad": {  // 放送局
-      "level": 2,
-      "key": "xGq8kdob7NQXvCG3Jbcil9K-q9HIgJgUO727BfptbUIZXvFX05uJB0CSZHVMb",
-      "url": "https://script.google.com/macros/s/AKfycbwUDcopeh6yAFR9_EAb5uMPVMBUZGkROOOgcttKyhy_PS1jGMakxO4lRGUtPVDLfNLdZQ/exec"
-    },
-    "Reserve": { // 予約局
-      "level": 4
-    },
-    "Master": { // 管理局
-      "level": 8,
-      "key": "_WGbHipKdOeuFydHpbz2yzjBmnFNqHYuhAvyMy1QcX5BQgyLl",
-      "url": "https://script.google.com/macros/s/AKfycbzuKbQ053i_x6RrkkIqBwNcmvRg4tEQCOFvIPjDlVtajDy7i4LzkVS3YtyI2LhpjkJ32w/exec",
-      "validTime": 3600000  // パスコードの有効時間。ミリ秒
-    },
-    "Post": {   // 郵便局
-      "level": 16,
-      "key": "hZ8QEXviiBdU_PfGlZrnIuHODkb6-vY8wx4_azvBd2vbOEEAS3xxI",
-      "url": "https://script.google.com/macros/s/AKfycbw1BZqob_P6SnIW3dDQrzDTZtt0Z9de60wiHhw94k7gbLFYdThmHyUeS8ATmqd2z_etbw/exec"
-    },
-    "Agency": {  // 資源局
-      "level": 32,
-      "key": "IptLc8AbphZ8QEXviiBdU_PfGvCG3Jbcil9lZrnIuHO",
-      "url": "https://script.google.com/macros/s/AKfycbyNBetqxnZoHQee3vrApYJUXIyty2YdeuQfPpZVKgOko8IwJU8gKjCm0G4lu_qF-vo/exec",
-      "overhead": 140 // ログを書き込む際に発生する想定オーバーヘッド。ミリ秒
-    },
-    "public": {    // 公開情報
-      "level": 65535,
-      "interval": 30000, // 定期配信の間隔。ミリ秒
-      "Administrator":  // システム管理者のメールアドレス
-        "shimokitasho.oyaji@gmail.com",
-      "FormId":
-        "1hnQLsY3lRh0gQMGfXoJJqAL_yBpKR6T0h2RFRc8tUEA",
-      "FormURL":  // 参加申請受付フォーム。当日参加を誘導するのに使用
-        "https://docs.google.com/forms/d/e/1FAIpQLSfIJ4IFsBI5pPXsLz2jlTBczzIn8QZQL4r6QHqxZmSeDOhwUA/viewform",
-      "SiteURL": // イベント案内サイト。実施・募集要領他を掲載したサイト
-        "https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97",
-      "MapURL": // イベント会場マップ。GitHubのmaterialsディレクトリに保持
-        "materials/map.html",
-      "TableURL": // タイムテーブル(進行予定表)。GitHubのmaterialsに保持
-        "materials/timetable/WBS.html",
-      "EnqueteURL":  // 参加者アンケート
-        "https://docs.google.com/forms/d/16r3luYQRiLVmI9xqaD4FuaSlUqTRGvI8nAGrjGcg8lc/viewform"
+  setTestData = (debugMode) => {
+    console.log('Auth.setTestData start. debugMode='+debugMode);
+
+    const testdata = {
+
+      // config.jsonのコピー。適宜最新のものに書き換えすること。
+      "Auth": {   // 認証局
+        "level": 1,
+        // 認証局は誰でもアクセス可なので、key は設定しない
+        "key": "",  // undefinedにならないよう設定するダミー
+        "url": "https://script.google.com/macros/s/AKfycbzjsxwmNmR9TV2wswNuUVZDOUIOYVGNGiA02hh74_BwNTzArExR21wVPYFOSLdBNe67BQ/exec"
+      },
+      "Broad": {  // 放送局
+        "level": 2,
+        "key": "xGq8kdob7NQXvCG3Jbcil9K-q9HIgJgUO727BfptbUIZXvFX05uJB0CSZHVMb",
+        "url": "https://script.google.com/macros/s/AKfycbwUDcopeh6yAFR9_EAb5uMPVMBUZGkROOOgcttKyhy_PS1jGMakxO4lRGUtPVDLfNLdZQ/exec"
+      },
+      "Reserve": { // 予約局
+        "level": 4
+      },
+      "Master": { // 管理局
+        "level": 8,
+        "key": "_WGbHipKdOeuFydHpbz2yzjBmnFNqHYuhAvyMy1QcX5BQgyLl",
+        "url": "https://script.google.com/macros/s/AKfycbzuKbQ053i_x6RrkkIqBwNcmvRg4tEQCOFvIPjDlVtajDy7i4LzkVS3YtyI2LhpjkJ32w/exec",
+        "validTime": 3600000  // パスコードの有効時間。ミリ秒
+      },
+      "Post": {   // 郵便局
+        "level": 16,
+        "key": "hZ8QEXviiBdU_PfGlZrnIuHODkb6-vY8wx4_azvBd2vbOEEAS3xxI",
+        "url": "https://script.google.com/macros/s/AKfycbw1BZqob_P6SnIW3dDQrzDTZtt0Z9de60wiHhw94k7gbLFYdThmHyUeS8ATmqd2z_etbw/exec"
+      },
+      "Agency": {  // 資源局
+        "level": 32,
+        "key": "IptLc8AbphZ8QEXviiBdU_PfGvCG3Jbcil9lZrnIuHO",
+        "url": "https://script.google.com/macros/s/AKfycbyNBetqxnZoHQee3vrApYJUXIyty2YdeuQfPpZVKgOko8IwJU8gKjCm0G4lu_qF-vo/exec",
+        "overhead": 140 // ログを書き込む際に発生する想定オーバーヘッド。ミリ秒
+      },
+      "public": {    // 公開情報
+        "level": 65535,
+        "interval": 30000, // 定期配信の間隔。ミリ秒
+        "Administrator":  // システム管理者のメールアドレス
+          "shimokitasho.oyaji@gmail.com",
+        "FormId":
+          "1hnQLsY3lRh0gQMGfXoJJqAL_yBpKR6T0h2RFRc8tUEA",
+        "FormURL":  // 参加申請受付フォーム。当日参加を誘導するのに使用
+          "https://docs.google.com/forms/d/e/1FAIpQLSfIJ4IFsBI5pPXsLz2jlTBczzIn8QZQL4r6QHqxZmSeDOhwUA/viewform",
+        "SiteURL": // イベント案内サイト。実施・募集要領他を掲載したサイト
+          "https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97",
+        "MapURL": // イベント会場マップ。GitHubのmaterialsディレクトリに保持
+          "materials/map.html",
+        "TableURL": // タイムテーブル(進行予定表)。GitHubのmaterialsに保持
+          "materials/timetable/WBS.html",
+        "EnqueteURL":  // 参加者アンケート
+          "https://docs.google.com/forms/d/16r3luYQRiLVmI9xqaD4FuaSlUqTRGvI8nAGrjGcg8lc/viewform"
+      },
+
+      // Agentは資源局からコピー
+      "Agent": {
+        key:"pSp2*ZR_S/GXr9C5",
+        url:"https://script.google.com/macros/s/AKfycbyJDT4rTHPPY6BP2DW4LVZLR3ozzb13ROJ9zvuLrb7cM2V7AaYTLlDICYwKnWhSC-mD/exec"
+      },
+
+      // Privateは開発モード画面からコピー。または管理局のシートから。
+      "staff":{
+        "タイムスタンプ":"2022-10-09T04:34:42.211Z",
+        "メールアドレス":"shimokitasho.oyaji@gmail.com",
+        "申請者氏名":"奥田　美香",
+        "申請者氏名読み":"オクダ　ミカ",
+        "申請者はイベントに参加しますか？":"参加する",
+        "参加者①氏名":"太郎",
+        "参加者①氏名読み":"タロウ",
+        "参加者①所属":"未就学児",
+        "参加者②氏名":"二郎",
+        "参加者②氏名読み":"ジロウ",
+        "参加者②所属":"1年",
+        "参加者③氏名":"",
+        "参加者③氏名読み":"",
+        "参加者③所属":"",
+        "緊急連絡先":"",
+        "引取者氏名":"",
+        "備考":"",
+        "キャンセル":"",
+        "cancel":"1",
+        "participate00":"1",
+        "entryNo":"1",
+        "editURL":"https://docs.google.com/forms/d/e/1FAIpQLSfIJ4IFsBI5pPXsLz2jlTBczzIn8QZQL4r6QHqxZmSeDOhwUA/viewform?edit2=2_ABaOnufCYALGfSCCaKbN4LDLlq9n6oTS8MfbMXvMVGeqH9hcsqj47n1z3eUW-muVZIhFFjg",
+        "application":"",
+        "PIC":"",
+        "passCode":"27467",
+        "passTime":"2022-12-06T06:06:51.655Z",
+        "manualMF":"57119",
+        "menuFlags":"57119",
+        "manualAL":"14",
+        "AuthLevel":"14",
+        "name00":"奥田　美香",
+        "yomi00":"オクダ　ミカ",
+        "category00":"保護者",
+        "status00":"",
+        "fee00":"",
+        "name01":"太郎",
+        "yomi01":"タロウ",
+        "category01":"未就学児",
+        "status01":"",
+        "fee01":"",
+        "name02":"二郎",
+        "yomi02":"ジロウ",
+        "category02":"1年",
+        "status02":"",
+        "fee02":"",
+        "name03":"",
+        "yomi03":"",
+        "category03":"",
+        "status03":"",
+        "fee03":""
+      },
+      "participant":{
+        "タイムスタンプ":"2022-10-09T04:39:20.911Z",
+        "メールアドレス":"shimokitasho.oyaji@gmail.com",
+        "申請者氏名":"榎田　道子",
+        "申請者氏名読み":"エノキダ　ミチコ",
+        "申請者はイベントに参加しますか？":"参加する",
+        "参加者①氏名":"",
+        "参加者①氏名読み":"",
+        "参加者①所属":"",
+        "参加者②氏名":"",
+        "参加者②氏名読み":"",
+        "参加者②所属":"",
+        "参加者③氏名":"",
+        "参加者③氏名読み":"",
+        "参加者③所属":"",
+        "緊急連絡先":"",
+        "引取者氏名":"",
+        "備考":"",
+        "キャンセル":"",
+        "cancel":"1",
+        "participate00":"1",
+        "entryNo":"2",
+        "editURL":"https://docs.google.com/forms/d/e/1FAIpQLSfIJ4IFsBI5pPXsLz2jlTBczzIn8QZQL4r6QHqxZmSeDOhwUA/viewform?edit2=2_ABaOnucIuwg3VQQ89wjGMjOrBzL9Ko6Yd_-VRLBvabY6pcLfvOC1MGlrA29XPym2rtomwwQ",
+        "application":"",
+        "PIC":"",
+        "passCode":"469555",
+        "passTime":"2022-12-06T06:09:22.880Z",
+        "manualMF":"",
+        "menuFlags":"32449",
+        "manualAL":"",
+        "AuthLevel":"4",
+        "name00":"榎田　道子",
+        "yomi00":"エノキダ　ミチコ",
+        "category00":"保護者",
+        "status00":"",
+        "fee00":"",
+        "name01":"",
+        "yomi01":"",
+        "category01":"",
+        "status01":"",
+        "fee01":"",
+        "name02":"",
+        "yomi02":"",
+        "category02":"",
+        "status02":"",
+        "fee02":"",
+        "name03":"",
+        "yomi03":"",
+        "category03":"",
+        "status03":"",
+        "fee03":""
+      },
+
+    };
+
+    // スタッフ・参加者共通パラメータ
+    const common = {
+      "Auth":{"url":testdata.Auth.url},
+      "Reserve":{"level":4},
+      "public":testdata.public,
+      "Agent":testdata.Agent
     }
-  };
-  const Agent = {key:"pSp2*ZR_S/GXr9C5",url:"https://script.google.com/macros/s/AKfycbyJDT4rTHPPY6BP2DW4LVZLR3ozzb13ROJ9zvuLrb7cM2V7AaYTLlDICYwKnWhSC-mD/exec"};
-  const o = debugMode === 1
-  ? {
-      "Auth":{"url":conf.Auth.url},
+
+    // スタッフ・参加者それぞれの特有パラメータ
+    const peculiar = debugMode === 1 ? {
       "entryNo":1,
       "entryStr":"0001",
-      "private":{"タイムスタンプ":"2022-10-09T04:34:42.211Z","メールアドレス":"shimokitasho.oyaji@gmail.com","申請者氏名":"奥田　美香","申請者氏名読み":"オクダ　ミカ","申請者はイベントに参加しますか？":"参加する","参加者①氏名":"太郎","参加者①氏名読み":"タロウ","参加者①所属":"未就学児","参加者②氏名":"二郎","参加者②氏名読み":"ジロウ","参加者②所属":"1年","参加者③氏名":"","参加者③氏名読み":"","参加者③所属":"","緊急連絡先":"","引取者氏名":"","備考":"","キャンセル":"","cancel":"1","participate00":"1","entryNo":"1","editURL":"https://docs.google.com/forms/d/e/1FAIpQLSfIJ4IFsBI5pPXsLz2jlTBczzIn8QZQL4r6QHqxZmSeDOhwUA/viewform?edit2=2_ABaOnufCYALGfSCCaKbN4LDLlq9n6oTS8MfbMXvMVGeqH9hcsqj47n1z3eUW-muVZIhFFjg","application":"","PIC":"","passCode":"27467","passTime":"2022-12-06T06:06:51.655Z","manualMF":"57119","menuFlags":"57119","manualAL":"14","AuthLevel":"14","name00":"奥田　美香","yomi00":"オクダ　ミカ","category00":"保護者","status00":"","fee00":"","name01":"太郎","yomi01":"タロウ","category01":"未就学児","status01":"","fee01":"","name02":"二郎","yomi02":"ジロウ","category02":"1年","status02":"","fee02":"","name03":"","yomi03":"","category03":"","status03":"","fee03":""},
+      "private":testdata.staff,
       "Broad":{"level":2,"key":conf.Broad.key,"url":conf.Broad.url},
-      "Reserve":{"level":4},
       "Master":{"level":8,"key":conf.Master.key,"url":conf.Master.url,"validTime":3600000},
-      "public":conf.public,
-      "Agent":Agent
-    }
-  : {
-      "Auth":{"url":conf.Auth.url},
+    } : {
       "entryNo":2,
       "entryStr":"0002",
-      "private":{"タイムスタンプ":"2022-10-09T04:39:20.911Z","メールアドレス":"shimokitasho.oyaji@gmail.com","申請者氏名":"榎田　道子","申請者氏名読み":"エノキダ　ミチコ","申請者はイベントに参加しますか？":"参加する","参加者①氏名":"","参加者①氏名読み":"","参加者①所属":"","参加者②氏名":"","参加者②氏名読み":"","参加者②所属":"","参加者③氏名":"","参加者③氏名読み":"","参加者③所属":"","緊急連絡先":"","引取者氏名":"","備考":"","キャンセル":"","cancel":"1","participate00":"1","entryNo":"2","editURL":"https://docs.google.com/forms/d/e/1FAIpQLSfIJ4IFsBI5pPXsLz2jlTBczzIn8QZQL4r6QHqxZmSeDOhwUA/viewform?edit2=2_ABaOnucIuwg3VQQ89wjGMjOrBzL9Ko6Yd_-VRLBvabY6pcLfvOC1MGlrA29XPym2rtomwwQ","application":"","PIC":"","passCode":"469555","passTime":"2022-12-06T06:09:22.880Z","manualMF":"","menuFlags":"32449","manualAL":"","AuthLevel":"4","name00":"榎田　道子","yomi00":"エノキダ　ミチコ","category00":"保護者","status00":"","fee00":"","name01":"","yomi01":"","category01":"","status01":"","fee01":"","name02":"","yomi02":"","category02":"","status02":"","fee02":"","name03":"","yomi03":"","category03":"","status03":"","fee03":""},
-      "Reserve":{"level":4},
-      "public":conf.public,
-      "Agent":Agent
+      "private":testdata.participant,
     }
-  config = {...config, ...o};
-}
 
+    // configに値をセット
+    Object.keys(common).forEach(x => {config[x] = common[x];});
+    Object.keys(peculiar).forEach(x => {config[x] = peculiar[x];});
+
+    console.log('Auth.setTestData end.',config);
+  }
 
 }
 </script>
