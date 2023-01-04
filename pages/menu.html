@@ -102,17 +102,17 @@ class Menu {
     this.status = true; // メニューが開いている状態ならtrue
     this.closeMenu();
 
-    this.menuObj = [
-      {title:'お知らせ', func:messageBoard, flag:3},
-      {title:'受付業務', func:reception, flag:28},
-      {title:'コーナー運営', func:cornerOperation, flag:32},
-      {title:'参加受付', func:entry, flag:192},
-      {title:'予約状況参照', func:referState, flag:768},
-      {title:'お役立ち情報', func:information, flag:7168},
-      {title:'参加者アンケート', func:enquete, flag:8192},
-      {title:'システム設定', func:system, flag:49152}
-    ];
-    this.menuObj.forEach(x => {
+    this.menuObj = {
+      broad: {title:'お知らせ', func:config.broadcast.display, flag:3},
+      reception: {title:'受付業務', func:reception, flag:28},
+      cornerOperation: {title:'コーナー運営', func:cornerOperation, flag:32},
+      entry: {title:'参加受付', func:entry, flag:192},
+      referState: {title:'予約状況参照', func:referState, flag:768},
+      information: {title:'お役立ち情報', func:information, flag:7168},
+      enquete: {title:'参加者アンケート', func:enquete, flag:8192},
+      system: {title:'システム設定', func:system, flag:49152}
+    }
+    Object.keys(this.menuObj).forEach(x => {
       // config.private.menuFlagsで指定されたメニューのみ追加
       const li = document.querySelector('.menu nav li[name="'+x.title+'"]');
       if( (x.flag & config.private.menuFlags) === 0 ){
@@ -162,11 +162,19 @@ class Menu {
   }
 
   /** changeScreen: 指定画面への変更
-   * 
+   * @param {string} screenId - this.menuObjのメンバ名
+   * @returns {void} なし
    */
-  changeScreen = (scr,title) => {
-    document.querySelector('header .title').innerText = title;
-    document.getElementById('main').src = 'pages/_.html'.replace('_',scr);
+  changeScreen = (screenId='broad') => {
+    document.querySelector('header .title').innerText = this.menuObj[screenId].title;
+    // main直下の全DIVに対して、指定screenIdなら表示・それ以外は非表示
+    document.querySelectorAll('#main > div').forEach(x => {
+      if( x.classList.findIndex(y => y === screenId) > 0 ){
+        x.classList.remove('hide');
+      } else {
+        x.classList.add('hide');
+      }
+    });
   }
 
 }
