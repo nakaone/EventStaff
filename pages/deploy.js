@@ -47,7 +47,6 @@ const specification = {  // 仕様
 //   <meta http-equiv="Content-Style-Type" content="text/css">
 //   <meta http-equiv="Content-Script-Type" content="text/javascript">
 //   <title></title>
-//   <link rel="stylesheet" href="css/default.css">
 //   <!-- ::deploy.link:: -->
 //   <style type="text/css">
 //     /* ::deploy.css:: */
@@ -106,7 +105,7 @@ const conf = {
   },
   html: {
     header: '\n<div class="screen \t"><!-- :: page "\t" HTML section start. ::::::::::: -->',
-    footer: '<!-- page "\t" HTML section end. ::::::::::::::::::::::::::::::::: --></div>\n',
+    footer: '</div><!-- page "\t" HTML section end. ::::::::::::::::::::::::::::::::: -->\n',
   },
 };
  

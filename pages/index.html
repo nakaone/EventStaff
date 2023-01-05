@@ -6,6 +6,118 @@
 <title>おまつり奉行</title>
 <!-- ::deploy.link:: -->
 <style type="text/css">
+html {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  font-size: 4vw;
+}
+
+body {
+  font-size: 1rem;
+}
+
+div {
+  font-size: 1rem;
+  margin: 0px;
+  padding: 0px;
+  box-sizing: border-box;
+  display: flex;
+  display: -webkit-flex;
+}
+
+div.table {
+  width: 100%;
+  flex-direction: column;
+}
+div.tr {
+  width: 100%;
+  padding: 0.25rem;
+  flex-direction: row;
+}
+
+h1 {
+  font-size: 1.6rem;
+}
+
+.error {
+  color: red;
+}
+.flex {
+  display: flex;
+  display: -webkit-flex;
+}
+.hide {
+  display: none;
+}
+
+button, input[type="button"] {
+  font-size: 1rem;
+}
+
+/* == ヘッダ ============================================= */
+header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2rem;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: row;
+  flex-direction: row;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  background-color: #a0c238;
+}
+header .icon, .menuIcon {
+  margin: 0.2rem;
+  width: 1.6rem;
+  height: 1.6rem;
+}
+header img {
+  width: 100%;
+  height: 100%;
+}
+header .title {
+  margin: auto;
+  width: calc(100% - 4rem);
+  font-size: 1.2rem;
+}
+
+/* == メニュー =========================================== */
+header .menu img {
+  margin: 0.3rem;
+  max-width: 1.4rem;
+  max-height: 1.4rem;
+}
+
+nav {
+  z-index: 10;
+  background-color: rgba(0,0,0,.5);
+  position: absolute;
+  top: 2rem;
+  right: 0;
+  width: 15rem;
+  height: calc(100% - 2rem);
+}
+nav ol {
+  padding: 0;
+  margin: 0;
+}
+nav li {
+  list-style-type: none;
+  margin: 0.75rem;
+  padding-right: 0.8rem;
+  border: solid 3px #888;
+  width: calc(15rem - 2.5rem - 6px);
+  color: white;
+  text-align: right;
+  transition: .5s;
+}
+
 /* == メイン ============================================= */
 #main {
   position: absolute;
@@ -15,6 +127,11 @@
   width: 100%;
   height: calc(100% - 2.5rem);
   border: none;
+}
+
+div.screen {
+  width: 100%;
+  flex-direction: column;
 }
 /* ::deploy.css:: */
 </style>
@@ -41,24 +158,20 @@
   <!-- ::deploy.html:: -->
   </div>
 </body>
-
 <script src="js/jsQR.js" defer></script><!-- QRコード検出 -->
 <script src="js/qrcode.min.js" defer></script><!-- QRコード生成 -->
 <script src="js/library.js"></script>
-<script src="js/Broad.js"></script>
-<script src="js/Participant.js"></script>
 <!-- ::deploy.include:: -->
 <script type="text/javascript">
 const config = {};
 // ::deploy.script::
 window.addEventListener('DOMContentLoaded',() => {
   config.debugMode = 1; // 0:通常, 1:スタッフ, 2:参加者
-  config.auth = new Auth(()=>{ // menu/broadの初期化はconfig設定後
+  config.authorize = new Auth(()=>{ // menu/broadの初期化はconfig設定後
+    // 以下、config設定が前提となる項目・画面を設定
     config.menu = new Menu();
-    config.broad = new Broadcast();
-    config.reception = new Participant();
-
-    // ※ 以下、config設定が前提となる項目
+    config.messageBoard = new messageBoard();
+    config.reception = new Reception();
 
     // entry.html : 参加受付画面
     // 受付番号表示

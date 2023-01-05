@@ -4,50 +4,61 @@
 <meta http-equiv="Content-Style-Type" content="text/css">
 <meta http-equiv="Content-Script-Type" content="text/javascript">
 <title>messageBoard</title>
-<link rel="stylesheet" href="css/default.css">
 <style type="text/css">
-input[type="button"][name="postButton"] {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
+.messageBoard div {
+  flex-direction: column;
+  width: 100%;
 }
 
-.postArea {
-  display: none;
-  width: 100%;
-  margin-bottom: 1rem;
+.messageBoard .postButton {
+  margin: 0px 1rem;
+  width: calc(100% - 2rem);
+}
+
+.messageBoard .postArea {
+  margin: 1rem;
   padding: 0.5rem;
+  width: calc(100% - 2rem);
   background-color: #deecc6;
 }
-.postArea .fromto label {
+.messageBoard .postArea div {
+  margin-bottom: 0.5rem;
+}
+.messageBoard .postArea .fromto {
+  flex-direction: row;
+  padding-right: 1rem;
+}
+.messageBoard .postArea .fromto label {
   display: block;
   float: left;
   width: 4rem;
 }
-.postArea .fromto input, select {
+.messageBoard .postArea .fromto input, select {
   width: 8rem;
 }
-.postArea textarea {
-  width: 90%;
+.messageBoard .postArea textarea {
+  width: auto;
   height: 4rem;
 }
-.broadArea {
-  width: 100%;
-  height: calc(100% - 2rem);
-  flex-direction: column;
+
+.messageBoard .broadArea {
+  padding: 0 1rem;
+  margin-top: 1rem;
+  height: 100%;
   overflow: auto;
 }
-.broadArea p {
+.messageBoard .broadArea p {
   width: 100%;
   margin-top: 0;
   margin-bottom: 0.5rem;
 }
-.broadArea p.date {
+.messageBoard .broadArea p.date {
   width: calc(100% - 1rem);
   padding-left: 1rem;
   background-color: forestgreen;
   color: white;  
 }
-.broadArea p.title {
+.messageBoard .broadArea p.title {
   margin-bottom: 0.2rem;
   background-color: #a0c238;
   font-size: 0.8rem;
@@ -55,23 +66,74 @@ input[type="button"][name="postButton"] {
 </style>
 </head>
 <body class="messageBoard">
+  <div class="postButton">
+    <input type="button" value="投稿する" />
+  </div>
+  <div class="postArea hide">
+    <div class="fromto">
+      <div>
+        <label>From</label>
+        <input type="text" name="from" width="100%"
+          placeholder="ハンドルネームを入力"
+          onchange="config.handleName=this.value"
+        />
+      </div>
+      <div>
+        <label>To</label>
+        <select name="to">
+          <option value="スタッフ全員">スタッフ全員</option>
+          <option value="本部">本部</option>
+          <option value="カレー担当">カレー担当</option>
+          <option value="校内探検担当">校内探検担当</option>
+          <option value="受付担当">受付担当</option>
+          <option value="金魚すくい担当">金魚すくい担当</option>
+          <option value="射的担当">射的担当</option>
+        </select>
+      </div>
+    </div>
+    <div class="message">
+      <textarea></textarea>
+    </div>
+    <div class="submit">
+      <input type="button" name="sendMessage" value="送信" />
+    </div>
+  </div>
+
+  <div class="broadArea"></div>
 </body>
 <script type="text/javascript">
-/** Broadcast: お知らせへの投稿、配信 */
-class Broadcast {
+/** messageBoard: お知らせへの投稿、配信 */
+class messageBoard {
   
   /** constructor: お知らせ画面の設定 */
   constructor(){
     this.dom = {
-      main: document.getElementById('main'),
       title: document.querySelector('header .title'),
+      main: document.querySelector('.messageBoard'),
+      postArea: document.querySelector('.messageBoard .postArea'),
+      postButton: document.querySelector('.messageBoard .postButton input'),
+      broadArea: document.querySelector('.messageBoard .broadArea'),
     };
-    this.dom.title.innerText = 'お知らせ';
     this.posts = [];
     this.lastUpdate = getJPDateTime('1901/01/01');
     this.startTime = new Date();
     this.intervalId = null;
-    this.start();
+
+    // 1. 投稿権限がある場合は投稿エリアを表示
+    if( (config.private.menuFlags & 2) > 0 ){
+      this.dom.postButton.addEventListener('click',() => {
+        if( this.dom.postButton.value === '投稿する' ){
+          this.dom.postButton.value = '閉じる';
+          this.dom.postArea.classList.remove('hide');
+        } else {
+          this.dom.postButton.value = '投稿する'
+          this.dom.postArea.classList.add('hide');
+        }
+      });
+    }
+
+    this.display(); // 掲示板を表示
+    this.start();   // 定期更新を開始
   }
 
   /** display: 掲示板の表示
@@ -82,59 +144,6 @@ class Broadcast {
     this.dom.title.innerText = 'お知らせ';
     // 1.投稿権限がある場合は投稿エリアを表示
     if( (config.private.menuFlags & 2) > 0 ){
-      this.dom.main.innerHTML = `
-        <input type="button" name="postButton" value="投稿する" />
-        <div class="postArea" style="display:none">
-          <div class="fromto">
-            <label>From</label>
-            <input type="text" name="from" width="100%"
-              placeholder="ハンドルネームを入力"
-              onchange="config.handleName=this.value"
-            />
-          </div>
-          <div class="fromto">
-            <label>To</label>
-            <select name="to">
-              <option value="スタッフ全員">スタッフ全員</option>
-              <option value="本部">本部</option>
-              <option value="カレー担当">カレー担当</option>
-              <option value="校内探検担当">校内探検担当</option>
-              <option value="受付担当">受付担当</option>
-              <option value="金魚すくい担当">金魚すくい担当</option>
-              <option value="射的担当">射的担当</option>
-            </select>
-          </div>
-          <div>
-            <textarea name="message"></textarea>
-          </div>
-          <div class="submit">
-            <input type="button" name="sendMessage" value="送信" />
-          </div>
-        </div>
-      `;
-      // 動的要素なのでdocumentに対してイベントリスナを設定
-      this.dom.main.addEventListener('click',(e)=>{
-        console.log('Broad.display event: e.target.name='+JSON.stringify(e.target.name));
-        const postArea = this.dom.main.querySelector('div.postArea');
-        const postButton = this.dom.main.querySelector('input[name="postButton"]');
-        switch( e.target.name ){
-          case 'postButton':
-            if( postButton.value === '投稿する' ){
-              postButton.value = '閉じる'
-              postArea.style.display = 'block';
-            } else {
-              postButton.value = '投稿する'
-              postArea.style.display = 'none';
-            }
-            break;
-          case 'sendMessage':
-            postButton.value = '投稿する'
-            postArea.style.display = 'none';
-            this.postMessage();
-            break;
-        }
-        e.stopImmediatePropagation(); // バブリング抑止
-      });
       // 二回目以降の投稿ではハンドルネームをセット
       if( config.handleName ){
         this.dom.main.querySelector('input[name="from"]').value = config.handleName;
@@ -142,9 +151,6 @@ class Broadcast {
     }
 
     // 2.投稿内容の表示
-    this.dom.main.innerHTML = this.dom.main.innerHTML + '<div class="broadArea"></div>';
-    this.dom.broadArea =this.dom.main.querySelector('.broadArea');
-
     // 2.1.新規のお知らせが来たら末尾を表示するよう設定
     // https://at.sachi-web.com/blog-entry-1516.html
     const mo = new MutationObserver(() => {
@@ -268,7 +274,7 @@ class Broadcast {
         this.startTime = Date.now();
       }
     },config.public.interval);
-    console.log('Broad.start. interval=' + config.public.interval);
+    console.log('messageBoard.start. interval=' + config.public.interval);
   }
 
   /** stop: 定期的処理の停止
@@ -278,7 +284,7 @@ class Broadcast {
   stop(){
     clearInterval(this.intervalId);
     this.intervalId = null;
-    console.log('Broad.end');
+    console.log('messageBoard.end');
   }
 }
 </script>
