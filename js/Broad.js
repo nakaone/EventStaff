@@ -2,8 +2,11 @@
 class Broadcast {
   
   /** constructor: お知らせ画面の設定 */
-  constructor(dom){
-    this.dom = dom;
+  constructor(){
+    this.dom = {
+      main: document.getElementById('main'),
+      title: document.querySelector('header .title'),
+    };
     this.dom.title.innerText = 'お知らせ';
     this.posts = [];
     this.lastUpdate = getJPDateTime('1901/01/01');

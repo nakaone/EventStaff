@@ -52,7 +52,6 @@ nav {
   right: 0;
   width: 15rem;
   height: calc(100% - 2rem);
-  display: none;
 }
 nav ol {
   padding: 0;
@@ -71,34 +70,16 @@ nav li {
 </style>
 </head>
 <body class="menu">
-  <header>
-    <div class="icon"><img src="img/stamp.png" /></div>
-    <div class="title"></div>
-    <div class="menuIcon"></div>
-  </header>
-  <nav>
-    <ol>
-      <li name="messageBoard">お知らせ</li>
-      <li name="reception">受付業務</li>
-      <li name="cornerOperation">コーナー運営</li>
-      <li name="entry">参加受付</li>
-      <li name="referState">予約状況参照</li>
-      <li name="information">お役立ち情報</li>
-      <li name="enquete">参加者アンケート</li>
-      <li name="system">システム設定</li>
-    </ol>
-  </nav>
-  <iframe id="main"></iframe>
 </body>
 <script type="text/javascript">
 /** class Menu: メニュー表示、制御 */
 class Menu {
-  constructor(arg){
+  constructor(){
     console.log('Menu.constructor start.');
-    this.dom = {};
-    arg.title.innerText = 'メニュー初期化';
-    this.dom.icon = arg.menuIcon;
-    this.dom.nav = arg.nav;
+    this.dom = {
+      icon: document.querySelector('header .menuIcon'),
+      nav: document.querySelector('nav'),
+    };
     this.status = true; // メニューが開いている状態ならtrue
     this.closeMenu();
 
@@ -113,20 +94,22 @@ class Menu {
       enquete: {title:'参加者アンケート', flag:8192},
       system: {title:'システム設定', flag:49152}
     }
+    console.log('l.97 config.private.menuFlags='+config.private.menuFlags);
     Object.keys(this.menuObj).forEach(x => {
       // config.private.menuFlagsで指定されたメニューのみ追加
-      const li = document.querySelector('.menu nav li[name="'+x.title+'"]');
-      if( (x.flag & config.private.menuFlags) === 0 ){
-        li.style.display = 'none';
+      const li = this.dom.nav.querySelector('li[name="'+x+'"]');
+      console.log('l.101 x='+JSON.stringify(x));
+      if( (this.menuObj[x].flag & config.private.menuFlags) === 0 ){
+        li.classList.add('hide');
       } else {
-        li.innerText = x.title;
+        li.classList.remove('hide');
         li.addEventListener('click',() => {
           this.closeMenu();
           this.changeScreen();
         });
       }
     });
-    this.changeScreen();
+    this.changeScreen('messageBoard');
     console.log('Menu.constructor end.');
   }
 
@@ -141,7 +124,7 @@ class Menu {
     }
     this.dom.icon.innerHTML = '<img src="img/menu1.svg" />';
     this.dom.icon.querySelector('img').onclick = this.openMenu;
-    this.dom.nav.style.display = 'none';
+    this.dom.nav.classList.add('hide');
     this.status = false;
     console.log('Menu.closeMenu end');
   }
@@ -157,7 +140,7 @@ class Menu {
     }
     this.dom.icon.innerHTML = '<img src="img/menu2.svg" />';
     this.dom.icon.querySelector('img').onclick = this.closeMenu;
-    this.dom.nav.style.display = 'block';
+    this.dom.nav.classList.remove('hide');
     this.status = true;
     console.log('Menu.openMenu end');
   }
@@ -171,13 +154,14 @@ class Menu {
     if( !screenId ){
       screenId = window.event.target.attributes.name.value;
     }
+    console.log('Menu.changeScreen screenId='+screenId);
 
     // タイトルの表示
     document.querySelector('header .title').innerText = this.menuObj[screenId].title;
 
     // main直下の全DIVに対して、指定screenIdなら表示・それ以外は非表示
-    document.querySelectorAll('#main > div').forEach(x => {
-      if( x.classList.findIndex(y => y === screenId) > 0 ){
+    document.querySelectorAll('#main .screen').forEach(x => {
+      if( x.classList.contains(screenId) ){
         x.classList.remove('hide');
       } else {
         x.classList.add('hide');

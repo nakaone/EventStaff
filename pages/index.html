@@ -20,6 +20,23 @@
 </style>
 </head>
 <body>
+  <header>
+    <div class="icon"><img src="img/stamp.png" /></div>
+    <div class="title"></div>
+    <div class="menuIcon"></div>
+  </header>
+  <nav>
+    <ol>
+      <li name="messageBoard">お知らせ</li>
+      <li name="reception">受付業務</li>
+      <li name="cornerOperation">コーナー運営</li>
+      <li name="entry">参加受付</li>
+      <li name="referState">予約状況参照</li>
+      <li name="information">お役立ち情報</li>
+      <li name="enquete">参加者アンケート</li>
+      <li name="system">システム設定</li>
+    </ol>
+  </nav>
   <div id="main">
   <!-- ::deploy.html:: -->
   </div>
@@ -38,7 +55,7 @@ window.addEventListener('DOMContentLoaded',() => {
   config.debugMode = 1; // 0:通常, 1:スタッフ, 2:参加者
   config.auth = new Auth(()=>{ // menu/broadの初期化はconfig設定後
     config.menu = new Menu();
-    config.broad = new Broad();
+    config.broad = new Broadcast();
     config.reception = new Participant();
 
     // ※ 以下、config設定が前提となる項目

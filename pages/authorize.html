@@ -6,9 +6,6 @@
 <title>authorize</title>
 <link rel="stylesheet" href="css/default.css">
 <style type="text/css">
-.authorize .passCode {
-  display: none;
-}
 </style>
 </head>
 <body class="authorize">
@@ -21,7 +18,7 @@
     <div class="message"></div>
   </div>
 
-  <div class="passCode">
+  <div class="passCode hide">
     <p>確認のメールを送信しました。記載されているパスコード(数字6桁)を入力してください。<br>
     ※まれに迷惑メールと判定される場合があります。メールが来ない場合、そちらもご確認ください。</p>
     <input type="text" />
@@ -93,9 +90,9 @@ class Auth {
           }
         } else {
           // 受付番号入力欄を隠蔽
-          this.dom.entryNo.style.display = 'none';
+          this.dom.entryNo.classList.add('hide');
           // パスコード入力画面を開く
-          this.dom.passCode.style.display = 'block';
+          this.dom.passCode.classList.remove('hide');
         }
       },
     });
@@ -344,8 +341,8 @@ class Auth {
       "entryNo":1,
       "entryStr":"0001",
       "private":testdata.staff,
-      "Broad":{"level":2,"key":conf.Broad.key,"url":conf.Broad.url},
-      "Master":{"level":8,"key":conf.Master.key,"url":conf.Master.url,"validTime":3600000},
+      "Broad":{"level":2,"key":testdata.Broad.key,"url":testdata.Broad.url},
+      "Master":{"level":8,"key":testdata.Master.key,"url":testdata.Master.url,"validTime":3600000},
     } : {
       "entryNo":2,
       "entryStr":"0002",
