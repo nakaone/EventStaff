@@ -1,0 +1,66 @@
+<!DOCTYPE html><html lang="ja">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<title>system</title>
+<link rel="stylesheet" href="css/default.css">
+<style type="text/css">
+div.system div {
+  flex-direction: column;
+}
+</style>
+</head>
+<body class="system">
+  <div>
+    <h1>定期的処理の停止・再開</h1>
+    <input type="button" name="start_stop" value="停止" />
+  </div>
+
+  <div>
+    <h1>ヘルプ</h1>
+    <details><summary>[Android]カメラを使おうとすると「使用できません」と表示される</summary>
+      <p>ブラウザにカメラを使用する権限が付与されていない場合に表示されます。対応は以下の通りです(<a href="https://support.google.com/android/answer/9431959?hl=ja" target="_blank">出典</a>)。</p>
+      <ol>
+        <li>設定 > アプリ > 変更するアプリ(ブラウザ)を選択 > 権限 > カメラ</li>
+        <li>「許可しない」から「アプリの使用中のみ許可」または「毎回確認する」に変更</li>
+      </ol>
+    </details>
+  </div>
+
+  <div>
+    <h1>おまつり奉行について</h1>
+    <p>about OMATSURI-Bugyo</p>
+    <p>version: 1.1.0 (Dec.13,2022 released)</p>
+    <p>
+      author : 
+      <a mailto="nakaone.kunihiro@gmail.com">
+        <ruby>
+          <rb>嶋津　邦浩</rb>
+          <rt>2-2ゆうなパパ</rt>
+        </ruby>
+      </a>
+      (Shimazu Kunihiro)
+    </p>
+    <p>
+      License: 
+      <a href="https://opensource.org/licenses/mit-license.php" target="_blank">MIT</a>
+    </p>
+  </div>
+</body>
+<script type="text/javascript">
+  // 定期的処理の停止・再開
+  // ボタンクリック時の動作を定義
+  document.querySelector('.system input[name="start_stop"]').addEventListener('click',() => {
+    if( !config.broadcast.intervalId || config.broadcast.intervalId === null ){
+      // 停止中の場合
+      config.broadcast.start();
+      btn.value = '停止';
+    } else {
+      // 稼働中の場合
+      config.broadcast.stop();
+      btn.value = '再開';
+    }
+  });
+</script>
+</html>

@@ -78,14 +78,14 @@ nav li {
   </header>
   <nav>
     <ol>
-      <li name="お知らせ"></li>
-      <li name="受付業務"></li>
-      <li name="コーナー運営"></li>
-      <li name="参加受付"></li>
-      <li name="予約状況参照"></li>
-      <li name="お役立ち情報"></li>
-      <li name="参加者アンケート"></li>
-      <li name="システム設定"></li>
+      <li name="messageBoard">お知らせ</li>
+      <li name="reception">受付業務</li>
+      <li name="cornerOperation">コーナー運営</li>
+      <li name="entry">参加受付</li>
+      <li name="referState">予約状況参照</li>
+      <li name="information">お役立ち情報</li>
+      <li name="enquete">参加者アンケート</li>
+      <li name="system">システム設定</li>
     </ol>
   </nav>
   <iframe id="main"></iframe>
@@ -102,15 +102,16 @@ class Menu {
     this.status = true; // メニューが開いている状態ならtrue
     this.closeMenu();
 
+    // メニューの定義
     this.menuObj = {
-      broad: {title:'お知らせ', func:config.broadcast.display, flag:3},
-      reception: {title:'受付業務', func:reception, flag:28},
-      cornerOperation: {title:'コーナー運営', func:cornerOperation, flag:32},
-      entry: {title:'参加受付', func:entry, flag:192},
-      referState: {title:'予約状況参照', func:referState, flag:768},
-      information: {title:'お役立ち情報', func:information, flag:7168},
-      enquete: {title:'参加者アンケート', func:enquete, flag:8192},
-      system: {title:'システム設定', func:system, flag:49152}
+      messageBoard: {title:'お知らせ', flag:3},
+      reception: {title:'受付業務', flag:28},
+      cornerOperation: {title:'コーナー運営', flag:32},
+      entry: {title:'参加受付', flag:192},
+      referState: {title:'予約状況参照', flag:768},
+      information: {title:'お役立ち情報', flag:7168},
+      enquete: {title:'参加者アンケート', flag:8192},
+      system: {title:'システム設定', flag:49152}
     }
     Object.keys(this.menuObj).forEach(x => {
       // config.private.menuFlagsで指定されたメニューのみ追加
@@ -121,7 +122,7 @@ class Menu {
         li.innerText = x.title;
         li.addEventListener('click',() => {
           this.closeMenu();
-          x.func();
+          this.changeScreen();
         });
       }
     });
@@ -165,8 +166,15 @@ class Menu {
    * @param {string} screenId - this.menuObjのメンバ名
    * @returns {void} なし
    */
-  changeScreen = (screenId='broad') => {
+  changeScreen = (screenId) => {
+    // メニューからクリックされた場合、name属性をscreenIdとする
+    if( !screenId ){
+      screenId = window.event.target.attributes.name.value;
+    }
+
+    // タイトルの表示
     document.querySelector('header .title').innerText = this.menuObj[screenId].title;
+
     // main直下の全DIVに対して、指定screenIdなら表示・それ以外は非表示
     document.querySelectorAll('#main > div').forEach(x => {
       if( x.classList.findIndex(y => y === screenId) > 0 ){
