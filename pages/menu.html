@@ -92,23 +92,27 @@ class Menu {
     if( !screenId ){
       screenId = window.event.target.attributes.name.value;
     }
-    console.log('Menu.changeScreen screenId='+screenId);
+    console.log('Menu.changeScreen start. screenId='+screenId);
 
     // タイトルの表示
     document.querySelector('header .title').innerText = this.menuObj[screenId].title;
 
     // main直下の全DIVに対して、指定screenIdなら表示・それ以外は非表示
-    document.querySelectorAll('#main .screen').forEach(x => {
+    document.querySelectorAll('.screen').forEach(x => {
       if( x.classList.contains(screenId) ){
+        console.log('l.103',screenId);
         x.classList.remove('hide');
         // 表示の際、何らかの処理が必要な場合は実行
-        if( config[x] && config[x].display ){
-          config[x].display();
+        if( config[screenId] && config[screenId].display ){
+          console.log('l.106',config[screenId].display);
+          config[screenId].display();
         }
       } else {
         x.classList.add('hide');
       }
     });
+
+    console.log('Menu.changeScreen end.');
   }
 
 }

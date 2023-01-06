@@ -612,23 +612,27 @@ class Menu {
     if( !screenId ){
       screenId = window.event.target.attributes.name.value;
     }
-    console.log('Menu.changeScreen screenId='+screenId);
+    console.log('Menu.changeScreen start. screenId='+screenId);
 
     // タイトルの表示
     document.querySelector('header .title').innerText = this.menuObj[screenId].title;
 
     // main直下の全DIVに対して、指定screenIdなら表示・それ以外は非表示
-    document.querySelectorAll('#main .screen').forEach(x => {
+    document.querySelectorAll('.screen').forEach(x => {
       if( x.classList.contains(screenId) ){
+        console.log('l.103',screenId);
         x.classList.remove('hide');
         // 表示の際、何らかの処理が必要な場合は実行
-        if( config[x] && config[x].display ){
-          config[x].display();
+        if( config[screenId] && config[screenId].display ){
+          console.log('l.106',config[screenId].display);
+          config[screenId].display();
         }
       } else {
         x.classList.add('hide');
       }
     });
+
+    console.log('Menu.changeScreen end.');
   }
 
 }
@@ -1602,6 +1606,11 @@ class Reception {
 // :: page "entry" Script section start. ::::::::::::::::::::::::::::::::::::::
 class Entry {
   display(){
+    console.log('Entry.display start.');
+
+    // 申込フォームへの遷移
+    document.querySelector('.entry button').onclick = () => window.open(config.private.editURL, '_blank');
+
     // 受付番号表示
     document.querySelector('.entry h1').innerText = '受付番号：' + config.entryStr;
 
@@ -1614,6 +1623,7 @@ class Entry {
       colorLight : "#ffffff",
       correctLevel : QRCode.CorrectLevel.H
     });
+    console.log('Entry.display end.');
   }
 }
 // :: page "entry" Script section end. ::::::::::::::::::::::::::::::::::::::::
@@ -1648,13 +1658,14 @@ class Entry {
 // :: page "system" Script section end. ::::::::::::::::::::::::::::::::::::::::
 
 window.addEventListener('DOMContentLoaded',() => {
-  config.debugMode = 1; // 0:通常, 1:スタッフ, 2:参加者
+  config.debugMode = 2; // 0:通常, 1:スタッフ, 2:参加者
   config.authorize = new Auth(()=>{ // menu/broadの初期化はconfig設定後
     // 以下、config設定が前提となる項目・画面を設定
     config.menu = new Menu();
     config.messageBoard = new messageBoard();
     config.reception = new Reception();
     config.entry = new Entry();
+    console.log('DOMContentLoaded end\n',config);
   });
 });
 </script>

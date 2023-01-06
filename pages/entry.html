@@ -15,6 +15,11 @@
 <script type="text/javascript">
 class Entry {
   display(){
+    console.log('Entry.display start.');
+
+    // 申込フォームへの遷移
+    document.querySelector('.entry button').onclick = () => window.open(config.private.editURL, '_blank');
+
     // 受付番号表示
     document.querySelector('.entry h1').innerText = '受付番号：' + config.entryStr;
 
@@ -27,6 +32,7 @@ class Entry {
       colorLight : "#ffffff",
       correctLevel : QRCode.CorrectLevel.H
     });
+    console.log('Entry.display end.');
   }
 }
 </script>

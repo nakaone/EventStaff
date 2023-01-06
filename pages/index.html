@@ -166,13 +166,14 @@ div.screen {
 const config = {};
 // ::deploy.script::
 window.addEventListener('DOMContentLoaded',() => {
-  config.debugMode = 1; // 0:通常, 1:スタッフ, 2:参加者
+  config.debugMode = 2; // 0:通常, 1:スタッフ, 2:参加者
   config.authorize = new Auth(()=>{ // menu/broadの初期化はconfig設定後
     // 以下、config設定が前提となる項目・画面を設定
     config.menu = new Menu();
     config.messageBoard = new messageBoard();
     config.reception = new Reception();
     config.entry = new Entry();
+    console.log('DOMContentLoaded end\n',config);
   });
 });
 </script>
