@@ -621,6 +621,10 @@ class Menu {
     document.querySelectorAll('#main .screen').forEach(x => {
       if( x.classList.contains(screenId) ){
         x.classList.remove('hide');
+        // 表示の際、何らかの処理が必要な場合は実行
+        if( config[x] && config[x].display ){
+          config[x].display();
+        }
       } else {
         x.classList.add('hide');
       }
@@ -997,10 +1001,8 @@ class messageBoard {
       });
     }
 
-    this.display();
-
-    // 定期更新を開始
-    this.start();
+    this.display(); // 掲示板を表示
+    this.start();   // 定期更新を開始
   }
 
   /** display: 掲示板の表示
@@ -1141,7 +1143,7 @@ class messageBoard {
         this.startTime = Date.now();
       }
     },config.public.interval);
-    console.log('Broad.start. interval=' + config.public.interval);
+    console.log('messageBoard.start. interval=' + config.public.interval);
   }
 
   /** stop: 定期的処理の停止
@@ -1151,7 +1153,7 @@ class messageBoard {
   stop(){
     clearInterval(this.intervalId);
     this.intervalId = null;
-    console.log('Broad.end');
+    console.log('messageBoard.end');
   }
 }
 // :: page "messageBoard" Script section end. ::::::::::::::::::::::::::::::::::::::::
@@ -1598,6 +1600,22 @@ class Reception {
 
 
 // :: page "entry" Script section start. ::::::::::::::::::::::::::::::::::::::
+class Entry {
+  display(){
+    // 受付番号表示
+    document.querySelector('.entry h1').innerText = '受付番号：' + config.entryStr;
+
+    // 参加申込フォーム誘導用QRコードのセット
+    let qrcode = new QRCode(document.querySelector('.entry div'),{
+      text: config.entryStr,
+      width: 300,
+      height: 300,
+      colorDark : "#000000",
+      colorLight : "#ffffff",
+      correctLevel : QRCode.CorrectLevel.H
+    });
+  }
+}
 // :: page "entry" Script section end. ::::::::::::::::::::::::::::::::::::::::
 
 
@@ -1636,19 +1654,7 @@ window.addEventListener('DOMContentLoaded',() => {
     config.menu = new Menu();
     config.messageBoard = new messageBoard();
     config.reception = new Reception();
-
-    // entry.html : 参加受付画面
-    // 受付番号表示
-    document.querySelector('.entry h1').innerText = '受付番号：' + config.entryStr;
-    // 参加申込フォーム誘導用QRコードのセット
-    let qrcode = new QRCode(document.querySelector('.entry div'),{
-      text: config.entryStr,
-      width: 300,
-      height: 300,
-      colorDark : "#000000",
-      colorLight : "#ffffff",
-      correctLevel : QRCode.CorrectLevel.H
-    });
+    config.entry = new Entry();
   });
 });
 </script>

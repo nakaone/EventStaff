@@ -101,6 +101,10 @@ class Menu {
     document.querySelectorAll('#main .screen').forEach(x => {
       if( x.classList.contains(screenId) ){
         x.classList.remove('hide');
+        // 表示の際、何らかの処理が必要な場合は実行
+        if( config[x] && config[x].display ){
+          config[x].display();
+        }
       } else {
         x.classList.add('hide');
       }

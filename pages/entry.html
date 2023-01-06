@@ -13,5 +13,21 @@
   <div></div>
 </body>
 <script type="text/javascript">
+class Entry {
+  display(){
+    // 受付番号表示
+    document.querySelector('.entry h1').innerText = '受付番号：' + config.entryStr;
+
+    // 参加申込フォーム誘導用QRコードのセット
+    let qrcode = new QRCode(document.querySelector('.entry div'),{
+      text: config.entryStr,
+      width: 300,
+      height: 300,
+      colorDark : "#000000",
+      colorLight : "#ffffff",
+      correctLevel : QRCode.CorrectLevel.H
+    });
+  }
+}
 </script>
 </html>
