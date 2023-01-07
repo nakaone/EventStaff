@@ -69,7 +69,7 @@ button, input[type="button"] {
  */
  class webScanner {
   /** constructor
-   * @param {object} arg 
+   * @param {object} arg
    * @param {object} arg.parent - 親要素(DOM object)
    * @param {number} arg.interval - 動画状態で撮像、読み込めなかった場合の時間間隔
    * @param {object} arg.RegExp - QRコードスキャン時、内容が適切か判断
@@ -86,7 +86,7 @@ button, input[type="button"] {
       alert(msg);
       return;
     }
-  
+
     this.parent = arg.parent;
     this.interval = arg.interval || 0.25;
     this.RegExp = arg.RegExp || /.+/;
@@ -238,7 +238,7 @@ button, input[type="button"] {
     // 動画撮影用Webカメラを起動
     this.start();
   }
-  
+
   drawFinder(){  // キャンバスに描画する
     //console.log('webScanner.drawFinder start.',this.video);
 
@@ -488,14 +488,14 @@ const whichType = (arg = undefined) => {
 /** fetchGAS: GASのdoPostを呼び出し、後続処理を行う
  * <br>
  * 処理内部で使用する公開鍵・秘密鍵はszLib.getUrlKey()で取得。
- * 
+ *
  * @param {object}   arg          - 引数
  * @param {string}   arg.to       - 受信側のコード名(平文)
  * @param {string}   arg.func     - GAS側で処理分岐の際のキー文字列
  * @param {any}      arg.data     - 処理対象データ
  * @param {function} arg.callback - GAS処理結果を受けた後続処理
  * @returns {void} なし
- * 
+ *
  * @example <caption>使用例</caption>
       const res = fetchGAS({
         from     : 'inputSearchKey',
@@ -528,7 +528,7 @@ const fetchGAS = (arg) => {
 }
 
 /** genChild: テンプレートに差込データをセットした要素を生成
- * 
+ *
  * @param {object} template - 生成対象となる要素のテンプレート
  * @param {string} template.tag      - タグ。既定値'div'
  * @param {string} template.children - 子要素。templateを再帰的に定義
@@ -551,7 +551,7 @@ const fetchGAS = (arg) => {
  * @param {string[]} template.opt - tag="select"の場合に作成されるoptions。variableの値が選択された状態になる
  * @param {object} dObj - 実データのオブジェクト
  * @param {string} pFP - パン屑リストの表示名
- * 
+ *
  * @returns {object} 処理結果と生成されたノード
  * <ul>
  * <li>append {boolean} - 追加対象となる子要素ならtrue
@@ -565,7 +565,7 @@ const fetchGAS = (arg) => {
  * </ul>
  * <li>result: 子要素のオブジェクト。エラー時はエラーオブジェクト
  * </ul>
- * 
+ *
  * @example <caption>利用例</caption>
  * const template = [
  *   {tag:'div', class:'video', style:opt.video, children:[
@@ -735,10 +735,10 @@ const genChild = (template,dObj={},pFP='root') => {
 };
 
 /** sha256: テキストをsha256でハッシュ化
- * 
+ *
  * @param {string} text - 暗号化対象のテキスト
  * @param {function} callback - 作成後の後続処理
- * 
+ *
  * @returns {void} なし
  */
 function sha256(text,callback){

@@ -8,6 +8,8 @@ node deploy.js -h:index.html \
   authorize.html \
   messageBoard.html \
   reception.html \
+  paperForm.html \
+  applicationQR.html \
   cornerOperation.html \
   entry.html \
   referState.html \

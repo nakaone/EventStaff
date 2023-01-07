@@ -1,0 +1,29 @@
+<!DOCTYPE html><html lang="ja">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<title>applicationQR</title>
+<style type="text/css">
+</style>
+</head>
+<body class="applicationQR">
+  <p>スマホをお持ちの場合、以下のフォームから申請をお願いします。</p>
+  <div class="qrcode"></div>
+  <button onclick="config.menu.changeScreen('reception')">受付業務に戻る</button>
+</body>
+<script type="text/javascript">
+class ApplicationQR {
+  constructor(){
+    let qrcode = new QRCode(document.querySelector('.applicationQR .qrcode'),{
+      text: config.public.FormURL,
+      width: 300,
+      height: 300,
+      colorDark : "#000000",
+      colorLight : "#ffffff",
+      correctLevel : QRCode.CorrectLevel.H
+    })
+  }
+}
+</script>
+</html>

@@ -83,6 +83,10 @@ div.screen {
   width: 100%;
   flex-direction: column;
 }
+div.area {
+  width: 100%;
+  flex-direction: column;
+}
 /* ::deploy.css:: */
 </style>
 </head>
@@ -119,6 +123,8 @@ window.addEventListener('DOMContentLoaded',() => {
     config.menu = new Menu();
     config.messageBoard = new messageBoard();
     config.reception = new Reception();
+    config.paperForm = new PaperForm();
+    config.applicationQR = new ApplicationQR();
     config.entry = new Entry();
     console.log('DOMContentLoaded end\n',config);
   });

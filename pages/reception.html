@@ -5,17 +5,17 @@
 <meta http-equiv="Content-Script-Type" content="text/javascript">
 <title>reception</title>
 <style type="text/css">
-.entryNo {
+.reception .entryNo {
   flex-direction: column;
   flex-wrap: nowrap;
 }
-.entryNo input {
+.reception .entryNo input {
   font-size: 1rem;
   width: 4rem;
   margin-left: 2rem;
 }
 
-.paperForm {
+.reception .paperForm {
   flex-direction: column;
 }
 
@@ -23,7 +23,7 @@
 .reception > div {
   margin: 1rem 0;
   -webkit-justify-content: space-around;
-  justify-content: space-around;  
+  justify-content: space-around;
 }
 .reception > div:first-child > button {
   width: 40%;
@@ -35,74 +35,204 @@
 }
 
 /* 該当者検索後の編集画面 */
-.wrapper {
+.reception .wrapper {
   flex-direction: column;
 }
-.applicant {
+.reception .applicant {
   font-size: 1.5rem;
 }
-.applicant button {
+.reception .applicant button {
   height: 1.8rem;
   margin-left: auto;
 }
-.details {
+.reception .details {
   margin: 1rem 0;
 }
-.details .th {
+.reception .details .th {
   width: 8rem;
 }
-.details div.tr:nth-child(odd) {
+.reception .details div.tr:nth-child(odd) {
   background-color: #aff;
 }
-.members .no {
+.reception .members .no {
   width: 10%;
 }
-.members .name {
+.reception .members .name {
   width: 40%;
 }
-.members .status,.fee {
+.reception .members .status,.fee {
   width: 25%;
 }
-.members div.tr:nth-child(odd) {
+.reception .members div.tr:nth-child(odd) {
   background-color: #bfb;
 }
-.members div.tr:last-child {
+.reception .members div.tr:last-child {
   -webkit-justify-content: space-between;
   justify-content: space-between;
   margin-top: 1rem;
 }
-.result {
+.reception .result {
   flex-direction: column;
 }
 
 </style>
 </head>
 <body class="reception">
-  <!-- サブメニュー -->
-  <div>
-    <button onclick="config.reception.formQR()">登録フォーム誘導</button>
-    <button onclick="config.reception.paperForm()">紙申請処理</button>
+  <div class="area receptionMain">
+    <!-- サブメニュー -->
+    <div>
+      <button onclick="config.menu.changeScreen('applicationQR')">登録フォーム誘導</button>
+      <button onclick="config.menu.changeScreen('paperForm')">紙申請処理</button>
+    </div>
+
+    <!-- 該当者検索 -->
+    <div class="inputKey">
+      <input type="text" placeholder="&#x1F50D受付番号または氏名読み(最初の数文字)" />
+      <button onclick="config.reception.search()">検索</button>
+    </div>
+    <div class="scanner"></div><!-- QRコードスキャナ -->
   </div>
 
-  <!-- 該当者検索 -->
-  <div class="inputKey">
-    <input type="text" placeholder="&#x1F50D受付番号または氏名読み(最初の数文字)" />
-    <button onclick="config.reception.search()">検索</button>
+  <!-- 返信待ち -->
+  <div class="area searching">
+    <img src="img/loading.gif" />
   </div>
-  <div class="scanner"></div><!-- QRコードスキャナ -->
 
+  <!-- エラーメッセージ表示領域 -->
+  <div class="area error">
+    <h1 class="error">Error</h1>
+    <p></p>
+  </div>
 
+  <!-- 複数検索結果からの選択 -->
+  <div class="area select"></div>
 
-
+  <!-- 検索結果の内容編集 -->
+  <div class="area edit">
+    <div class="applicant"><!-- 申込概要 -->
+      <div class="entryNo"></div>
+      <ruby><rb></rb><rt></rt></ruby>
+      <button name="details">詳細</button>
+    </div>
+    <div class="details hide table"><!-- 申込詳細 -->
+      <div class="tr">
+        <div class="th">受付日時</div><div class="td timestamp"></div>
+      </div>
+      <div class="tr">
+        <div class="th">e-mail</div><div class="td email"></div>
+      </div>
+      <div class="tr">
+        <div class="th">緊急連絡先</div><div class="td tel"></div>
+      </div>
+      <div class="tr">
+        <div class="th">引取者</div><div class="td pickup"></div>
+      </div>
+      <div class="tr">
+        <div class="th">備考</div><div class="td note"></div>
+      </div>
+      <div class="tr">
+        <div class="th">キャンセル</div><div class="td cancel"></div>
+      </div>
+      <div class="tr">
+        <div class="th">申込フォーム</div><div class="td qrcode"></div>
+      </div>
+    </div>
+    <div class="members table"><!-- 参加者リスト -->
+      <div class="tr">
+        <div class="th">No</div>
+        <div class="th">氏名</div>
+        <div class="th">入退場</div>
+        <div class="th">参加費</div>
+      </div>
+      <div class="tr n00">
+        <div class="td no"></div>
+        <div class="td name"></div>
+        <div class="td status"><select name="status00">
+          <option value="未入場">未入場</option>
+          <option value="入場済">入場済</option>
+          <option value="退場済">退場済</option>
+          <option value="不参加">不参加</option>
+          <option value="未登録">未登録</option>
+        </select></div>
+        <div class="td fee"><select name="fee00">
+          <option value="未収">未収</option>
+          <option value="既収">既収</option>
+          <option value="免除">免除</option>
+          <option value="無し">無し</option>
+        </select></div>
+      </div>
+      <div class="tr n01">
+        <div class="td no">①</div>
+        <div class="td name"></div>
+        <div class="td status"><select name="status01">
+          <option value="未入場">未入場</option>
+          <option value="入場済">入場済</option>
+          <option value="退場済">退場済</option>
+          <option value="不参加">不参加</option>
+          <option value="未登録">未登録</option>
+        </select></div>
+        <div class="td fee"><select name="fee01">
+          <option value="未収">未収</option>
+          <option value="既収">既収</option>
+          <option value="免除">免除</option>
+          <option value="無し">無し</option>
+        </select></div>
+      </div>
+      <div class="tr n02">
+        <div class="td no">②</div>
+        <div class="td name"></div>
+        <div class="td status"><select name="status02">
+          <option value="未入場">未入場</option>
+          <option value="入場済">入場済</option>
+          <option value="退場済">退場済</option>
+          <option value="不参加">不参加</option>
+          <option value="未登録">未登録</option>
+        </select></div>
+        <div class="td fee"><select name="fee02">
+          <option value="未収">未収</option>
+          <option value="既収">既収</option>
+          <option value="免除">免除</option>
+          <option value="無し">無し</option>
+        </select></div>
+      </div>
+      <div class="tr n03">
+        <div class="td no">③</div>
+        <div class="td name"></div>
+        <div class="td status"><select name="status03">
+          <option value="未入場">未入場</option>
+          <option value="入場済">入場済</option>
+          <option value="退場済">退場済</option>
+          <option value="不参加">不参加</option>
+          <option value="未登録">未登録</option>
+        </select></div>
+        <div class="td fee"><select name="fee03">
+          <option value="未収">未収</option>
+          <option value="既収">既収</option>
+          <option value="免除">免除</option>
+          <option value="無し">無し</option>
+        </select></div>
+      </div>
+      <div class="tr">
+        <button name="cancel">取消</button>
+        <button name="update">更新</button>
+      </div>
+    </div>
+    <div class="result hide"><!-- 更新結果表示 -->
+      <p></p>
+      <button>確認</button>
+    </div>
+  </div>
 </body>
 <script type="text/javascript">
 class Reception {
 
   constructor(){
+    config.menu.changeArea('reception','receptionMain');
     this.dom = {
       main: document.querySelector('.reception'),
       title: document.querySelector('header .title'),
       scanner: document.querySelector('.reception .scanner'),
+      edit: document.querySelector('.reception .edit'),
     };
     // スキャナのセットアップ
     this.scanner = new webScanner({
@@ -118,12 +248,11 @@ class Reception {
   /** display: 受付業務画面の表示
    * @param {void} - なし
    * @returns {void} なし
-   * <h2>Tips: 動的要素へのイベント定義はonclickで</h2>
-   * 当初innerHTML書き換え後にaddEventListenerしていたが、Broad.displayで拾ってしまいreception.jsで定義している関数が呼び出されなかった。<br>
-   * これはBroad側でも動的要素を使用しているためdocumentに対してaddEventListenerを先に定義していたため。<br>
-   * 動的要素はタグ内でonclickを定義するようにすれば回避可能。
+   * 本処理は読込直後のみならず、受付業務画面表示の都度行う必要があるため、
+   * constructorではなくdisplayで定義する。
    */
   display(){
+    config.menu.changeArea('reception','receptionMain');
     this.scanner.scanQR((code)=>{  // QRコード読込後の処理
       console.log('scanned => '+code);
       this.searchKey(code);
@@ -131,95 +260,6 @@ class Reception {
       RegExp: /^[0-9]+$/,
       alert: true
     });
-  }
-
-  /** formQR: 未申請者へ申請フォームのURLをQRコードで表示
-   * @param {void} - なし
-   * @returns {void} なし
-   */
-  formQR(){
-    console.log('formQR clicked.');
-    this.dom.main.innerHTML = `
-    <p>スマホをお持ちの場合、以下のフォームから申請をお願いします。</p>
-    <div class="qrcode"></div>
-    <button name="display">受付業務に戻る</button>
-    `;
-    let qrcode = new QRCode(this.dom.main.querySelector('div.qrcode'),{
-      text: config.public.FormURL,
-      width: 300,
-      height: 300,
-      colorDark : "#000000",
-      colorLight : "#ffffff",
-      correctLevel : QRCode.CorrectLevel.H
-    })
-    document.addEventListener('click',(e)=>{
-      switch( e.target.name ){
-        case 'display':
-          this.display();
-          break;
-      }
-    });
-  }
-
-  /** paperForm: 紙媒体での申請処理
-   * @param {void} - なし
-   * @returns {void} なし
-   */
-  paperForm(){
-    console.log('paperForm clicked.');
-    this.dom.title = '用紙による申請登録';
-    this.dom.main.innerHTML = '';
-    let o = genChild({class:'paperForm', children:[
-      {tag:'p', text:'申込者の属性を入力してください'},
-      {tag:'table', children:[
-        {tag:'tr', children:[
-          {tag:'th', text:'No'},
-          {tag:'th', text:'属性'}
-        ]},
-      ]},
-      {tag:'button', text:'次へ', onclick:'config.reception.paperForm2()'}
-    ]});
-    if( o.append ){
-      this.dom.main.appendChild(o.result);
-    }
-    ['①','②','③','④','⑤'].forEach(x => {
-      o = genChild({tag:'tr', children:[
-        {tag:'td', text:x},
-        {tag:'td', children:[
-          {tag:'select', opt:['未就学児','小1','小2','小3','小4','小5','小6','卒業生','保護者']}
-        ]}
-      ]});
-      console.log('l.104',o);
-      if( o.append ){
-        this.dom.main.querySelector('.paperForm table').appendChild(o.result);
-      }
-    });
-    /*
-      {tag:'p', text:'属性別人数を入力してください'},
-    ['未就学児','小1','小2','小3','小4','小5','小6','卒業生','保護者'].forEach(x => {
-      o = genChild({tag:'tr', children:[
-        {tag:'td', variable:x},
-        {tag:'td', children:[
-          {tag:'select', opt:['0人','1人','2人','3人','4人','5人']}
-        ]}
-      ]});
-      if( o.append ){
-        this.dom.main.querySelector('table'),appendChild(o.result);
-      }
-    });
-
-    this.dom.main.innerHTML = `
-    <h1>(未実装)</h1>
-    <button name="display">受付業務に戻る</button>
-    `;
-    document.addEventListener('click',(e)=>{
-      switch( e.target.name ){
-        case 'display':
-          this.display();
-          break;
-      }
-    });
-    */
   }
 
   /** searchKey: 検索キー(受付番号または氏名の一部)で検索
@@ -233,9 +273,7 @@ class Reception {
   */
   searchKey(arg=''){
     console.log('reception.search start. arg='+JSON.stringify(arg));
-    this.dom.title.innerText = '該当者の検索';
-
-    this.dom.main.innerHTML = '<img src="img/loading.gif" />';
+    config.menu.changeArea('reception','searching');
 
     /* fetchGAS
     * @param {object}   arg          - 引数
@@ -249,7 +287,7 @@ class Reception {
       data: arg.length > 0 ? arg : this.dom.keyWordArea.value,
       callback: (res => {
         if( res.isErr ){
-          this.dom.main.innerHTML = '<h1 class="error">' + res.message + '</h1>';
+          document.querySelector('.reception .error p').innerText = res.message;
           return;
         } else {
           if( res.result.length === 0 ){
@@ -272,8 +310,9 @@ class Reception {
   selectParticipant(arg){
     console.log('selectParticipant start. arg='+JSON.stringify(arg));
     this.dom.title.innerText = '対象者の選択';
+    config.menu.changeArea('reception','select');
     try {
-      const editArea = this.dom.main;
+      const editArea = this.dom.main.querySelector('.select');
       editArea.innerHTML = '<p>検索結果が複数あります。選択してください。</p>';
       for( let i=0 ; i<arg.length ; i++ ){
         const o = document.createElement('div');
@@ -297,93 +336,53 @@ class Reception {
   editParticipant(arg){
     console.log('editParticipant start. arg='+JSON.stringify(arg));
     this.dom.title.innerText = '参加者情報の編集';
+    config.menu.changeArea('reception','edit');
     try {
-      this.dom.main.innerHTML = '';
       this.entryNo = arg.entryNo;  // 更新時に利用
+      const applicant = this.dom.edit.querySelector('.edit > div.applicant');
+      const details = this.dom.edit.querySelector('.edit > div.details');
+      const members = this.dom.edit.querySelector('.edit > div.members');
+      const result = this.dom.edit.querySelector('.edit > div.result');
 
-      // 01. 全体の枠組みを生成
-      let o = genChild({class:'wrapper', children:[
-        {class:'applicant'},          // 申込概要
-        {class:'details none table'}, // 申込詳細
-        {class:'members table'},      // 参加者リスト
-        {class:'result none'}         // 更新結果表示
-      ]});
-      if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
-        throw o.result;
-      } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
-        this.dom.main.appendChild(o.result);
-      }
-
-      // 02.申込概要
-      // 02.1 空欄・読替処理
-      arg.entryNo = ('000'+arg.entryNo).slice(-4);
-      // 02.2 追加するテンプレートの作成
-      const applicant = [
-        {variable:'entryNo'},
-        {tag:'ruby', children:[
-          {tag:'rb', variable:'name00'},
-          {tag:'rt', variable:'yomi00'}
-        ]},
-        {tag:'button', name:'details', text:'詳細'},
-      ];
-      // 02.3 追加処理
-      for( let i=0 ; i<applicant.length ; i++ ){
-        o = genChild(applicant[i],arg,'applicant'+i);
-        if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
-          throw o.result;
-        } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
-          this.dom.main.querySelector('.applicant').appendChild(o.result);
-        }
-      }
-      // 02.4 イベントリスナの定義
+      // 01.申込概要
+      // 01.1 空欄・読替処理
+      applicant.querySelector('.entryNo').innerText = config.entryStr;
+      applicant.querySelector('rb').innerText = arg.name00;
+      applicant.querySelector('rt').innerText = arg.yomi00;
+      // 01.2 イベントリスナの定義
       // 「詳細」ボタンクリック
-      this.dom.main.querySelector('button[name="details"]').addEventListener('click',() => {
-        const btn = this.dom.main.querySelector('button[name="details"]');
+      let btn = applicant.querySelector('button[name="details"]');
+      btn.addEventListener('click',() => {
         if( btn.textContent === '詳細' ){
-          toggleView(this.dom.main.querySelector('div.details'),true);
+          details.classList.remove('hide');
           btn.textContent = '閉じる';
         } else {
-          toggleView(this.dom.main.querySelector('div.details'),false);
+          details.classList.add('hide');
           btn.textContent = '詳細';
         }
       });
 
-      // 03.申込詳細
-      // 03.1 空欄・読替処理
+      // 02.申込詳細
+      // 02.1 空欄・読替処理
       arg['タイムスタンプ'] = getJPDateTime(arg['タイムスタンプ']);
       arg.cancel = arg.cancel < 0 ? "取消済" : "( — )";
-      // 03.2 追加するテンプレートの作成
-      const details = [
-        {class:'tr', children:[{class:'th', text:'受付日時'},{class:'td',variable:'タイムスタンプ'}]},
-        {class:'tr', children:[{class:'th', text:'e-mail'},{class:'td',variable:'メールアドレス'}]},
-        {class:'tr', children:[{class:'th', text:'緊急連絡先'},{class:'td',variable:'緊急連絡先'}]},
-        {class:'tr', children:[{class:'th', text:'引取者'},{class:'td',variable:'引取者氏名'}]},
-        {class:'tr', children:[{class:'th', text:'備考'},{class:'td',variable:'備考'}]},
-        {class:'tr', children:[{class:'th', text:'キャンセル'},{class:'td',variable:'cancel'}]},
-        {class:'tr', children:[{class:'th', text:'申込フォーム'},{class:'td qrcode'}]},
-      ];
-      // 03.3 追加処理
-      for( let i=0 ; i<details.length ; i++ ){
-        o = genChild(details[i],arg,'details'+i);
-        if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
-          throw o.result;
-        } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
-          this.dom.main.querySelector('.details').appendChild(o.result);
-        }
-      }
-      // 申込フォームへの誘導用QRコード
-      let qrcode = new QRCode(this.dom.main.querySelector('.qrcode'),{
+      details.querySelector('.timestamp').innerText = arg['タイムスタンプ'];
+      details.querySelector('.email').innerText = arg['メールアドレス'];
+      details.querySelector('.tel').innerText = arg['緊急連絡先'];
+      details.querySelector('.pickup').innerText = arg['引取者氏名'];
+      details.querySelector('.note').innerText = arg['備考'];
+      details.querySelector('.cancel').innerText = arg['cancel'];
+      let qrcode = new QRCode(details.querySelector('.qrcode'),{
         text: config.private.editURL,
         width: 200,
         height: 200,
         colorDark : "#000000",
         colorLight : "#ffffff",
         correctLevel : QRCode.CorrectLevel.H
-      })
-      // 03.4 イベントリスナの定義 ⇒ なし
-
-      // 04.参加者リスト(状態・参加費)
-      // 04.1 空欄・読替処理
+      });
+      
+      // 03.参加者リスト(状態・参加費)
+      // 03.1 空欄・読替処理
       for( let i=0 ; i<4 ; i++ ){
         const num = ('0'+i).slice(-2);
         if( arg['status'+num].length === 0 ){
@@ -393,69 +392,34 @@ class Reception {
           arg['fee'+num] = arg['name'+num].length === 0 ? '無し' : '未収';
         }
       }
-      // 04.2 追加するテンプレートの作成
-      const maruNo = ['','①','②','③'];  // 丸数字
-      const members = [{class:'tr', children:[ // 表のラベル行
-        {class:'th no', text:'No'},
-        {class:'th name', text:'氏名'},
-        {class:'th status', text:'入退場'},
-        {class:'th fee', text:'参加費'}
-      ]}];
-      for( let i=0 ; i<4 ; i++ ){   // 申込者、参加者行
-        const num = ('0'+i).slice(-2);
-        members.push({class:'tr',children:[
-          {class:'td no', text:maruNo[i]},
-          {class:'td name', text:arg['name'+num]},
-          {class:'td status', children:[
-            {tag:'select', name:'status'+num, variable:'status'+num, opt:['未入場','入場済','退場済','不参加','未登録']},
-          ]},
-          {class:'td fee', children:[
-            {tag:'select', name:'fee'+num, variable:'fee'+num, opt:['未収','既収','免除','無し']},
-
-          ]}
-        ]});
-      }
-      members.push({class:'tr', children:[  // 更新・取消ボタン行
-        {tag:'button', name:'cancel', text:'取消'},
-        {tag:'button', name:'update', text:'更新'}
-      ]});
-      // 04.3 追加処理
-      for( let i=0 ; i<members.length ; i++ ){
-        o = genChild(members[i],arg,'members'+i);
-        if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
-          throw o.result;
-        } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
-          this.dom.main.querySelector('.members').appendChild(o.result);
-        }
-      }
-      // 04.4 イベントリスナの定義
+      // 03.2 イベントリスナの定義
       // 「更新」ボタンクリック
-      this.dom.main.querySelector('button[name="update"]').addEventListener('click',() => {
+      members.querySelector('button[name="update"]').addEventListener('click',() => {
         this.updateParticipant();
       });
       // 「取消」ボタンクリック
-      this.dom.main.querySelector('button[name="cancel"]').addEventListener('click',() => {
+      members.querySelector('button[name="cancel"]').addEventListener('click',() => {
         this.display();
       });
-
-      // 05.更新結果表示
-      // 05.1 空欄・読替処理
-      // 05.2 追加するテンプレートの作成
-      const result = [
-        {tag:'p', class:'message', text:''},
-        {tag:'button', name:'result', text:'確認'}
-      ];
-      // 05.3 追加処理
-      for( let i=0 ; i<result.length ; i++ ){
-        o = genChild(result[i],arg,'result'+i);
-        if( toString.call(o.result).match(/Error/) ){  // エラーObjが帰ったら
-          throw o.result;
-        } else if( o.append ){  // 追加フラグがtrueなら親要素に追加
-          this.dom.main.querySelector('.result').appendChild(o.result);
-        }
+      // 03.3 プルダウン項目が現状を表示するよう設定
+      for( let i=0 ; i<4 ; i++ ){
+        members.querySelector('.n0'+i+' .name').innerText = arg['name0'+i];
+        ['status0','fee0'].forEach(x => {
+          const n = x + String(i);
+          const o = members.querySelector('select[name="'+n+'"]');
+          for( let j=0 ; j<o.options.length ; j++ ){
+            if( o.options[j].value === arg[n] ){
+              o.selectedIndex = j;
+              break;
+            }
+          }
+        });
       }
-      // 05.4 イベントリスナの定義
-      this.dom.main.querySelector('button[name="result"]').addEventListener('click',() => {
+
+      // 04.更新結果表示
+      // 04.1 空欄・読替処理
+      // 04.2 イベントリスナの定義
+      result.querySelector('button').addEventListener('click',() => {
         this.display();
       });
 
@@ -464,7 +428,7 @@ class Reception {
     } catch(e) {
       console.error('editParticipant abnormal end.\n'+e.message);
       alert(e.message);
-    }  
+    }
   }
 
   /** updateParticipant: 参加者情報更新
@@ -484,7 +448,7 @@ class Reception {
         const f = this.dom.main.querySelector('select[name="fee'+num+'"]');
         data['fee'+num] = f.options[f.selectedIndex].value;
       }
-      console.log('l.395 data='+JSON.stringify(data));
+      //console.log('l.395 data='+JSON.stringify(data));
 
       // 02.スプレッドシートの更新
       /* @param {string}   arg.to       - 受信側のコード名(平文)
@@ -507,8 +471,9 @@ class Reception {
             * <li>column {string} - 更新した項目名
             * <li>before {any} - 修正前の値
             * <li>after {any} - 修正後の値 */
-          this.dom.main.querySelector('div.result').classList.replace('none','flex');
-          const msg = this.dom.main.querySelector('.message');
+          const result = this.dom.edit.querySelector('.result');
+          result.classList.remove('hide');
+          const msg = result.querySelector('p');
           let message = '';
           if( res.isErr ){
             msg.classList.add('error');
@@ -521,7 +486,7 @@ class Reception {
           console.log('updateParticipant end.\n'+JSON.stringify(res));
         }
       });
-    
+
     } catch(e) {
       console.error(e.message);
       alert(e.message);

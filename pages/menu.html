@@ -22,9 +22,11 @@ class Menu {
     this.closeMenu();
 
     // メニューの定義
-    this.menuObj = {
+    this.menuObj = {  // flag=0 -> メニュー以外から誘導される画面
       messageBoard: {title:'お知らせ', flag:3},
       reception: {title:'受付業務', flag:28},
+      paperForm: {title:'用紙による申請登録', flag:0},
+      applicationQR: {title:'参加申請フォームへの誘導', flag:0},
       cornerOperation: {title:'コーナー運営', flag:32},
       entry: {title:'参加受付', flag:192},
       referState: {title:'予約状況参照', flag:768},
@@ -32,19 +34,21 @@ class Menu {
       enquete: {title:'参加者アンケート', flag:8192},
       system: {title:'システム設定', flag:49152}
     }
-    console.log('l.97 config.private.menuFlags='+config.private.menuFlags);
+    //console.log('l.97 config.private.menuFlags='+config.private.menuFlags);
     Object.keys(this.menuObj).forEach(x => {
-      // config.private.menuFlagsで指定されたメニューのみ追加
-      const li = this.dom.nav.querySelector('li[name="'+x+'"]');
-      console.log('l.101 x='+JSON.stringify(x));
-      if( (this.menuObj[x].flag & config.private.menuFlags) === 0 ){
-        li.classList.add('hide');
-      } else {
-        li.classList.remove('hide');
-        li.addEventListener('click',() => {
-          this.closeMenu();
-          this.changeScreen();
-        });
+      if( this.menuObj[x].flag > 0 ){
+        // config.private.menuFlagsで指定されたメニューのみ追加
+        const li = this.dom.nav.querySelector('li[name="'+x+'"]');
+        //console.log('l.101 x='+JSON.stringify(x));
+        if( (this.menuObj[x].flag & config.private.menuFlags) === 0 ){
+          li.classList.add('hide');
+        } else {
+          li.classList.remove('hide');
+          li.addEventListener('click',() => {
+            this.closeMenu();
+            this.changeScreen();
+          });
+        }
       }
     });
     this.changeScreen('messageBoard');
@@ -100,11 +104,9 @@ class Menu {
     // main直下の全DIVに対して、指定screenIdなら表示・それ以外は非表示
     document.querySelectorAll('.screen').forEach(x => {
       if( x.classList.contains(screenId) ){
-        console.log('l.103',screenId);
         x.classList.remove('hide');
         // 表示の際、何らかの処理が必要な場合は実行
         if( config[screenId] && config[screenId].display ){
-          console.log('l.106',config[screenId].display);
           config[screenId].display();
         }
       } else {
@@ -115,6 +117,22 @@ class Menu {
     console.log('Menu.changeScreen end.');
   }
 
+  /** changeArea: 指定画面内の表示領域を変更
+   * @param {string} screenId - this.menuObjのメンバ名
+   * @param {string} areaId - screenIdクラス内の領域のクラス名
+   * @returns {void} なし
+   */
+  changeArea = (screenId, areaId) => {
+    // 指定画面以下のareaクラスを持つ全ての要素に対して、
+    // 指定areaIdなら表示・それ以外は非表示
+    document.querySelectorAll('.'+screenId+' .area').forEach(x => {
+      if( x.classList.contains(areaId) ){
+        x.classList.remove('hide');
+      } else {
+        x.classList.add('hide');
+      }
+    });
+  }
 }
 
 </script>

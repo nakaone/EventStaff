@@ -1,0 +1,122 @@
+<!DOCTYPE html><html lang="ja">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<title>paperForm</title>
+<style type="text/css">
+.paperForm .step1 {
+  flex-direction: column;
+}
+</style>
+</head>
+<body class="paperForm">
+  <div class="area step1">
+    <div><p>申込者の属性を入力してください</p></div>
+    <div><table>
+      <tr><th>No</th><th>属性</th></tr>
+      <tr><td>①</td><td><select>
+        <option value="未就学児">未就学児</option>
+        <option value="小1">小1</option>
+        <option value="小2">小2</option>
+        <option value="小3">小3</option>
+        <option value="小4">小4</option>
+        <option value="小5">小5</option>
+        <option value="小6">小6</option>
+        <option value="卒業生">卒業生</option>
+        <option value="保護者">保護者</option>
+      </select></td></tr>
+      <tr><td>②</td><td><select>
+        <option value="未就学児">未就学児</option>
+        <option value="小1">小1</option>
+        <option value="小2">小2</option>
+        <option value="小3">小3</option>
+        <option value="小4">小4</option>
+        <option value="小5">小5</option>
+        <option value="小6">小6</option>
+        <option value="卒業生">卒業生</option>
+        <option value="保護者">保護者</option>
+      </select></td></tr>
+      <tr><td>③</td><td><select>
+        <option value="未就学児">未就学児</option>
+        <option value="小1">小1</option>
+        <option value="小2">小2</option>
+        <option value="小3">小3</option>
+        <option value="小4">小4</option>
+        <option value="小5">小5</option>
+        <option value="小6">小6</option>
+        <option value="卒業生">卒業生</option>
+        <option value="保護者">保護者</option>
+      </select></td></tr>
+      <tr><td>④</td><td><select>
+        <option value="未就学児">未就学児</option>
+        <option value="小1">小1</option>
+        <option value="小2">小2</option>
+        <option value="小3">小3</option>
+        <option value="小4">小4</option>
+        <option value="小5">小5</option>
+        <option value="小6">小6</option>
+        <option value="卒業生">卒業生</option>
+        <option value="保護者">保護者</option>
+      </select></td></tr>
+      <tr><td>⑤</td><td><select>
+        <option value="未就学児">未就学児</option>
+        <option value="小1">小1</option>
+        <option value="小2">小2</option>
+        <option value="小3">小3</option>
+        <option value="小4">小4</option>
+        <option value="小5">小5</option>
+        <option value="小6">小6</option>
+        <option value="卒業生">卒業生</option>
+        <option value="保護者">保護者</option>
+      </select></td></tr>
+    </table></div>
+    <div><button>次へ</button></div>
+  </div>
+
+  <div class="area step2 hide">
+    <h1>受付番号：</h1>
+    <p>申込用紙に上の受付番号を記入の上、用紙を撮影してください</p>
+  </div>
+</body>
+<script type="text/javascript">
+class PaperForm {
+  constructor(){
+    this.dom = {
+      step1: document.querySelector('.paperForm .step1'),
+      step2: document.querySelector('.paperForm .step2'),
+    }
+    this.dom.step1.querySelector('button').addEventListener('click', ()=>{
+      this.getEntryNo();
+    });
+  }
+
+  display(){
+    config.menu.changeArea('paperForm','step1');
+  }
+
+  /** 受付番号を取得してスキャン画面を表示する
+   * @param {void} - なし
+   * @returns {void} なし
+   */
+  getEntryNo(){
+    console.log('PaperForm.getEntryNo start');
+    // 入力された内容をGAS.Masterに送信
+    // GAS.Master側で採番された受付番号を表示
+    console.log('PaperForm.getEntryNo end');
+  }
+
+  /** scanForm: 紙申請用紙を撮影し、登録する
+   * @param {void} - なし
+   * @returns {void} なし
+   */
+  scanForm(){
+    console.log('PaperForm.scanForm start');
+    config.menu.changeArea('paperForm','step2');
+    // スキャナで申請用紙を撮影
+    // GAS.Masterに撮影された申請用紙を登録
+    console.log('PaperForm.scanForm end');
+  }
+}
+</script>
+</html>

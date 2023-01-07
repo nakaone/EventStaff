@@ -2,9 +2,9 @@ const specification = {  // 仕様
 /** deploy.js: ページ毎に分割されたページのソースを統合する
  * <br>
  * SPA開発において、ページごとに分割されたCSS/Script/HTMLを統合して index.html を作成する。<br>
- * 
+ *
  * <h2>処理概要</h2>
- * 
+ *
  * 01. 各ページファイルの以下の項目を抽出し、dObjに格納
  * <ol>
  * <li>link: 外部スタイルシート定義(<link rel="stylesheet" />)
@@ -13,12 +13,12 @@ const specification = {  // 仕様
  * <li>script: 内部スクリプト定義(<script> 〜 </script>)
  * <li>html: 内部HTML(<body> 〜 </body>)
  * </ol>
- * 
+ *
  * 02. index.htmlのテンプレートとなるhtmlファイルのプレースホルダ行を、dObjの内容で置換
- * 
+ *
  * <h2>useage</h2>
  * <code>node [-h:xxxx.html] [-c:yyyy.css] [-j:zzzz.js] aaaa.html [bbbb.html ...]</code>
- * 
+ *
  * <h2>options</h2>
  * <ul>
  * <li>h: index.htmlのテンプレートとなるhtmlファイル。既定値`prototype.html`
@@ -26,12 +26,12 @@ const specification = {  // 仕様
  * <li>j: 各ページのスクリプトを集めたファイル。既定値`js/script.js`
  * <li>その他のパラメータ: ページごとのhtml
  * </ul>
- * 
+ *
  * <h2>注意事項</h2>
  * <ol>
  * <li>CSSセレクタに使用するので、必ずbodyタグにベースファイル名をクラスとして指定
  * </ol>
- * 
+ *
  * <h2>残課題</h2>
  * <ul>
  * <li>Markdownに記述した内容をソースに入れ込む
@@ -40,7 +40,7 @@ const specification = {  // 仕様
  * </ul>
  */
 
-// ===== proto.html sample ========================
+// ===== index.html sample ========================
 // <!DOCTYPE html><html lang="ja">
 // <head>
 //   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -59,13 +59,29 @@ const specification = {  // 仕様
 //   <script type="text/javascript">
 //   // ::deploy.script::
 //   </script>
-// </html>    
+// </html>
+
+// ===== page.html sample ========================
+// <!DOCTYPE html><html lang="ja">
+// <head>
+// <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+// <meta http-equiv="Content-Style-Type" content="text/css">
+// <meta http-equiv="Content-Script-Type" content="text/javascript">
+// <title>proto</title>
+// <style type="text/css">
+// </style>
+// </head>
+// <body class="proto">
+// </body>
+// <script type="text/javascript">
+// </script>
+// </html>
 
 // ===== deploy.sh sample =========================
 // echo '\n\n\n\n\n==============================================================='
 // echo `TZ='Asia/Tokyo' date`
 // echo '\n'
-// 
+//
 // node deploy.js -h:proto.html a.html b.js c.css > test.html
 // #node deploy.js -h:proto.html -c:../css/style.css -j:../js/script.js information.html
 }
@@ -108,7 +124,7 @@ const conf = {
     footer: '</div><!-- page "\t" HTML section end. ::::::::::::::::::::::::::::::::: -->\n',
   },
 };
- 
+
  /** analyzeArg: コマンドライン引数を分析
  * @param {void} - なし(process.argv)
  * @returns {object} 以下のメンバを持つオブジェクト
