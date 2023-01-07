@@ -1,10 +1,73 @@
+<!DOCTYPE html><html lang="ja">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<title>library</title>
+<style type="text/css">
+html {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  font-size: 4vw;
+}
+
+body {
+  font-size: 1rem;
+}
+
+div {
+  font-size: 1rem;
+  margin: 0px;
+  padding: 0px;
+  box-sizing: border-box;
+  display: flex;
+  display: -webkit-flex;
+}
+
+div.table {
+  width: 100%;
+  flex-direction: column;
+}
+div.tr {
+  width: 100%;
+  padding: 0.25rem;
+  flex-direction: row;
+}
+
+h1 {
+  font-size: 1.6rem;
+}
+
+.error {
+  color: red;
+}
+.flex {
+  display: flex;
+  display: -webkit-flex;
+}
+.hide {
+  display: none;
+}
+
+button, input[type="button"] {
+  font-size: 1rem;
+}
+</style>
+</head>
+<body class="library">
+</body>
+<script src="js/jsQR.js" defer></script><!-- QRコード検出 -->
+<script src="js/qrcode.min.js" defer></script><!-- QRコード生成 -->
+<script type="text/javascript">
 /** webScanner: QRコードや文書をスキャン
  * <br>
  * 指定セレクタ以下にcanvas他の必要な要素を作成してスキャン実行、指定の後続処理を呼び出す。<br>
  * 呼び出す前に`config.scanCode = true`を実行しておくこと。<br>
  * 参考：[jsQRであっさりQRコードリーダ/メーカ](@link https://zenn.dev/sdkfz181tiger/articles/096dfb74d485db)
  */
-class webScanner {
+ class webScanner {
   /** constructor
    * @param {object} arg 
    * @param {object} arg.parent - 親要素(DOM object)
@@ -686,3 +749,5 @@ function sha256(text,callback){
   }
   sha(text).then((hash) => callback(hash));
 }
+</script>
+</html>

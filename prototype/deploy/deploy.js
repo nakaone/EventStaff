@@ -43,32 +43,47 @@ const specification = {  // 仕様
 // ===== proto.html sample ========================
 // <!DOCTYPE html><html lang="ja">
 // <head>
-//   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-//   <meta http-equiv="Content-Style-Type" content="text/css">
-//   <meta http-equiv="Content-Script-Type" content="text/javascript">
-//   <title></title>
-//   <link rel="stylesheet" href="css/default.css">
-//   <!-- ::deploy.link:: -->
-//   <style type="text/css">
-//     /* ::deploy.css:: */
-//   </style>
-//   </head>
-//   <body>
-//     <!-- ::deploy.html:: -->
-//   </body>
-//   <!-- ::deploy.include:: -->
-//   <script type="text/javascript">
-//   // ::deploy.script::
-//   </script>
-// </html>    
+// <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+// <meta http-equiv="Content-Style-Type" content="text/css">
+// <meta http-equiv="Content-Script-Type" content="text/javascript">
+// <title>proto</title>
+// <link rel="stylesheet" href="css/default.css">
+// <!-- ::deploy.link:: -->
+// <style type="text/css">
+// /* ::deploy.css:: */
+// </style>
+// </head>
+// <body class="proto">
+//   <!-- ::deploy.html:: -->
+// </body>
+// <!-- ::deploy.include:: -->
+// <script type="text/javascript">
+// // ::deploy.script::
+// </script>
+// </html>
 
 // ===== deploy.sh sample =========================
-// echo '\n\n\n\n\n==============================================================='
-// echo `TZ='Asia/Tokyo' date`
-// echo '\n'
+// # -h: index.htmlのテンプレートとなるhtmlファイル。既定値`prototype.html`
+// # その他のパラメータ: ページごとのhtml
 // 
-// node deploy.js -h:proto.html a.html b.js c.css > test.html
+// echo `TZ='Asia/Tokyo' date`
+// node deploy.js -h:index.html \
+//   menu.html \
+//   authorize.html \
+//   messageBoard.html \
+//   reception.html \
+//   cornerOperation.html \
+//   entry.html \
+//   referState.html \
+//   information.html \
+//   enquete.html \
+//   system.html \
+//   > ../index.html
+// #node deploy.js -h:index.html menu.html authorize.html EventStaff.html > ../index.html
+// #node deploy.js -h:proto.html a.html b.js c.css > test.html
 // #node deploy.js -h:proto.html -c:../css/style.css -j:../js/script.js information.html
+// 
+// echo '===============================================================\n'
 }
 
 /** rex:  ページごとの定義において、その開始/終了を定義した正規表現 */

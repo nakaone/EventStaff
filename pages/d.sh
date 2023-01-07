@@ -3,6 +3,7 @@
 
 echo `TZ='Asia/Tokyo' date`
 node deploy.js -h:index.html \
+  library.html \
   menu.html \
   authorize.html \
   messageBoard.html \
