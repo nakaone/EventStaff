@@ -241,7 +241,7 @@ const auth1B = (arg) => {
  * @example <caption>引数の例</caption>
  * 管理局.auth2B start. arg={"func":"auth2B","entryNo":"1.0","passCode":"478608","key":"GQD*4〜aQ8r"}
  */
-//const auth2Btest = () => auth2B({entryNo:1,passCode:232027});
+const auth2Btest = () => auth2B({entryNo:1,passCode:960219});
 const auth2B = (arg) => {
   console.log('管理局.auth2B start. arg='+JSON.stringify(arg));
   let rv = null;
@@ -269,11 +269,33 @@ const auth2B = (arg) => {
         //editURL: participant.editURL, // 参加申請フォームの編集用URL
         private: participant
       }};
+      // (2) conf(config.jsonに記載された内容)を転記
       for( let x in conf ){
-        if( conf[x].level & rv.config.AuthLevel > 0 ){
+        if( (conf[x].level & rv.config.private.AuthLevel) > 0 ){
           rv.config[x] = conf[x];
         }
       }
+      /* (3) 配信局の情報を追加
+      　① 現在稼働中の各局のURL等を取得
+      * @param {string}   arg.from     - 送信側のコード名(Auth, Master等)
+      * @param {string}   arg.to       - 受信側のコード名
+      * @param {string}   arg.func     - GAS側で処理分岐の際のキー文字列
+      * @param {string}   arg.endpoint - 受信側のコード名からURLが判断できない(配達員の)場合に指定
+      * @param {string}   arg.key      - endpoint指定の場合はその鍵も併せて指定
+      * @param {any}      arg.data     - 処理対象データ*/
+      const res = szLib.fetchGAS({
+        from: 'Master',
+        to: 'Agency',
+        func: 'listAgents',
+      });
+      if( res.isErr ){
+        throw new Error(res.message);
+      }
+      // ② rvにセット
+      rv.config.Agent = {
+        key: res.result[0].key,
+        url: res.result[0].endpoint,
+      };
     } else {
       // 検証NG：エラー通知
       rv = {
