@@ -436,9 +436,12 @@ const updateParticipant = (arg) => {
  * </ul>
  */
 const paperForm1Test = () => {
-  const testData = [{
-    '参加者①所属':'小1','参加者②所属':'小2','参加者③所属':'小3','PIC':'担当　太郎'
-  }];
+  const testData = [
+    {'参加者①所属':'1年','参加者③所属':'3年','PIC':'担当　太郎'},
+    {'参加者①所属':'1年','参加者②所属':'保護者','PIC':'担当　二郎'},
+    {'参加者③所属':'(空欄)','PIC':'担当　三郎'},
+    {'参加者①所属':'1年','参加者②所属':'2年','参加者③所属':'3年','PIC':''},
+  ];
   testData.forEach(x => paperForm1(x));
 }
 const paperForm1 = (arg) => {
@@ -452,12 +455,14 @@ const paperForm1 = (arg) => {
   arg.entryNo = dObj.data.length + 1;
   const maru = ['','①','②','③'];
   for( let i=1 ; i<4 ; i++ ){
-    if( arg['参加者'+maru[i]+'所属'].length > 0 ){
-      arg['status0'+i] = '入場済';
-      arg['fee0'+i]    = '既収';
-    } else {
-      arg['status0'+i] = '未登録';
-      arg['fee0'+i]    = '無し';
+    if( arg['参加者'+maru[i]+'所属'] && arg['参加者'+maru[i]+'所属'] !== '(空欄)' ){
+      if( arg['参加者'+maru[i]+'所属'].length === 0 ){
+        arg['status0'+i] = '未登録';
+        arg['fee0'+i]    = '無し';
+      } else {
+        arg['status0'+i] = '入場済';
+        arg['fee0'+i]    = '既収';
+      }
     }
   }
 
@@ -473,9 +478,9 @@ const paperForm1 = (arg) => {
  * @param {string} arg.image - 申込用紙のイメージ
  */
 const paperForm2Test = () => {
-  const testData = [{
-    entryNo:1, image:'hogefuga'
-  }];
+  const testData = [
+    {entryNo:72, image:'hogefuga'},
+  ];
   testData.forEach(x => paperForm2(x));
 }
 const paperForm2 = (arg) => {
