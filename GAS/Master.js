@@ -154,6 +154,12 @@ function doPost(e){
         case 'updateParticipant':
           rv = updateParticipant(arg.data);
           break;
+        case 'paperForm1':
+          rv = paperForm1(arg.data);
+          break;
+        case 'paperForm2':
+          rv = paperForm2(arg.data);
+          break;
       }
     } catch(e) {
       // Errorオブジェクトをrvとするとmessageが欠落するので再作成
@@ -399,5 +405,86 @@ const updateParticipant = (arg) => {
   const rv = dObj.update(arg.data,arg.opt);
 
   console.log('管理局.updateParticipant end. rv='+JSON.stringify(rv));
+  return rv;
+}
+
+/** paperForm1: 紙申請の第一段階。申請内容登録＋受付番号採番
+ * <br>
+ * 項目名はszSheet.updateに直接渡せるように、ローカル側でフォームの入力項目名に合わせておく。
+ * @param {object} arg - 引数オブジェクト
+ * @param {string} arg.参加者①所属
+ * @param {string} arg.参加者②所属
+ * @param {string} arg.参加者③所属
+ * @param {string} arg.PIC - 受付担当者名(person in charge)
+ * 以下はフォームで入力されず、導出も困難なため本関数内で設定する項目
+ * <ol>
+ * <li>タイムスタンプ = 申請時刻。yyyy/MM/dd hh:mm:ss.nnn形式の文字列
+ * <li>entryNo
+ * <li>status01/02/03 = 所属が設定されていれば「入場済」、無ければ「未登録」
+ * <li>fee01/02/03 = 同様に「既収」または「無し」
+ * </ol>
+ * タイムスタンプは転送時の遅延による事故の可能性を考え、サーバ側で設定する。
+ * 
+ * @returns {object} 以下のメンバを持つオブジェクト
+ * <ul>
+ * <li>isErr {boolean} - エラーならtrue
+ * <li>arr {any[]} - 追加した行の一次元配列
+ * <li>obj {object} - 追加した行オブジェクト({項目名1:値1,項目名2:値2,..}形式)
+ * <li>dataNum {number} - 追加行のrv.data上の添字
+ * <li>rawNum {number} - 追加行のrv.raw上の添字
+ * <li>rowNum {number} - 追加行のスプレッドシート上の行番号
+ * </ul>
+ */
+const paperForm1Test = () => {
+  const testData = [{
+    '参加者①所属':'小1','参加者②所属':'小2','参加者③所属':'小3','PIC':'担当　太郎'
+  }];
+  testData.forEach(x => paperForm1(x));
+}
+const paperForm1 = (arg) => {
+  console.log('管理局.paperForm1 start. arg='+JSON.stringify(arg));
+
+  // データをシートから取得
+  const dObj = szLib.szSheet('マスタ');
+
+  // シート上arrayformulaになっていない導出項目を更新データに追加
+  arg['タイムスタンプ'] = szLib.getJPDateTime();
+  arg.entryNo = dObj.data.length + 1;
+  const maru = ['','①','②','③'];
+  for( let i=1 ; i<4 ; i++ ){
+    if( arg['参加者'+maru[i]+'所属'].length > 0 ){
+      arg['status0'+i] = '入場済';
+      arg['fee0'+i]    = '既収';
+    } else {
+      arg['status0'+i] = '未登録';
+      arg['fee0'+i]    = '無し';
+    }
+  }
+
+  // 更新データをシートに追加
+  const rv = dObj.append(arg);
+  console.log('管理局.paperForm1 end. rv='+JSON.stringify(rv));
+  return rv;
+}
+
+/** paperForm2: 申込書イメージをシートに追加
+ * @param {object} arg - 引数オブジェクト
+ * @param {number} arg.entryNo - 受付番号
+ * @param {string} arg.image - 申込用紙のイメージ
+ */
+const paperForm2Test = () => {
+  const testData = [{
+    entryNo:1, image:'hogefuga'
+  }];
+  testData.forEach(x => paperForm2(x));
+}
+const paperForm2 = (arg) => {
+  console.log('管理局.paperForm2 start. arg='+JSON.stringify(arg));
+
+  // データをシートから取得して更新
+  const dObj = szLib.szSheet('マスタ');
+  const rv = dObj.update({application:arg.image},{key:'entryNo',value:arg.entryNo});
+
+  console.log('管理局.paperForm2 end. rv='+JSON.stringify(rv));
   return rv;
 }
