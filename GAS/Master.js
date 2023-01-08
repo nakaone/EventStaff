@@ -1,67 +1,6 @@
 const elaps = {account:'shimokitasho.oyaji@gmail.com',department:'管理局'};
 const conf = szLib.getConf();
 
-/** doPost: パラメータに応じて処理を分岐
- * @param {object} e - Class UrlFetchApp <a href="https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app#fetchurl,-params">fetch(url, params)</a>の"Make a POST request with a JSON payload"参照
- * @param {object} arg - データ部分。JSON.parse(e.postData.getDataAsString())の結果
- * @param {string} arg.key - 共通鍵。szLib.getUrl()で取得
- * @param {string} arg.from       - 送信元
- * @param {string} arg.to         - 送信先(自分)
- * @param {string} arg.func       - 分岐する処理名
- * @param {string} arg.data       - 処理対象データ
- * @return {object} 正常終了の場合は分岐先処理の戻り値、エラーの場合は以下。
- * <ul>
- * <li>isErr {boolean}  - true(固定)
- * <li>message {string} - エラーメッセージ
- * </ul>
- */
- function doPost(e){
-  elaps.startTime = Date.now();  // 開始時刻をセット
-  console.log('管理局.doPost start.',e);
-
-  const arg = JSON.parse(e.postData.contents);
-  let rv = null;
-  if( arg.key === conf.Master.key ){
-    try {
-      elaps.func = arg.func; // 処理名をセット
-      switch( arg.func ){
-        case 'auth1B':
-          rv = auth1B(arg.data);
-          break;
-        case 'auth2B':
-          rv = auth2B(arg.data);
-          break;
-        case 'candidates':
-          rv = candidates(arg.data);
-          break;
-        case 'updateParticipant':
-          rv = updateParticipant(arg.data);
-          break;
-      }
-    } catch(e) {
-      // Errorオブジェクトをrvとするとmessageが欠落するので再作成
-      rv = {isErr:true, message:e.name+': '+e.message};
-    } finally {
-      console.log('管理局.doPost end. rv='+JSON.stringify(rv));
-      szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');  // 結果を渡して書き込み
-      return ContentService
-      .createTextOutput(JSON.stringify(rv,null,2))
-      .setMimeType(ContentService.MimeType.JSON);
-    }
-  } else {
-    rv = {isErr:true,message:'invalid key :'+arg.key};
-    console.error('管理局.doPost end. '+rv.message);
-    console.log('end',elaps);
-    szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');
-  }
-}
-
-const ofsTest = () => {
-  onFormSubmit({
-    range:{rowStart:3},
-  });
-}
-
 /** onFormSubmit: フォーム申込み時のメールの自動返信
  * <br>
  * 予約されたイベント関数なので、アローでは無くfunctionで定義。<br>
@@ -111,6 +50,11 @@ const ofsTest = () => {
  * @param {Object} e - スプレッドシート上のonFormSubmitに渡される引数
  * @returns {object} 郵便局.doPostで処理された結果
  */
+const onFormSubmitTest = () => {
+  onFormSubmit({
+    range:{rowStart:3},
+  });
+}
 function onFormSubmit(e){
   elaps.startTime = Date.now();  // 開始時刻をセット
   elaps.func = 'onFormSubmit';
@@ -171,6 +115,61 @@ function onFormSubmit(e){
   } finally {
     console.log('管理局.onFormSubmit end. rv='+JSON.stringify(rv));
     szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');  // 結果を渡して書き込み
+  }
+}
+
+/** doPost: パラメータに応じて処理を分岐
+ * @param {object} e - Class UrlFetchApp <a href="https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app#fetchurl,-params">fetch(url, params)</a>の"Make a POST request with a JSON payload"参照
+ * @param {object} arg - データ部分。JSON.parse(e.postData.getDataAsString())の結果
+ * @param {string} arg.key - 共通鍵。szLib.getUrl()で取得
+ * @param {string} arg.from       - 送信元
+ * @param {string} arg.to         - 送信先(自分)
+ * @param {string} arg.func       - 分岐する処理名
+ * @param {string} arg.data       - 処理対象データ
+ * @return {object} 正常終了の場合は分岐先処理の戻り値、エラーの場合は以下。
+ * <ul>
+ * <li>isErr {boolean}  - true(固定)
+ * <li>message {string} - エラーメッセージ
+ * </ul>
+ */
+function doPost(e){
+  elaps.startTime = Date.now();  // 開始時刻をセット
+  console.log('管理局.doPost start.',e);
+
+  const arg = JSON.parse(e.postData.contents);
+  let rv = null;
+  if( arg.key === conf.Master.key ){
+    try {
+      elaps.func = arg.func; // 処理名をセット
+      switch( arg.func ){
+        case 'auth1B':
+          rv = auth1B(arg.data);
+          break;
+        case 'auth2B':
+          rv = auth2B(arg.data);
+          break;
+        case 'candidates':
+          rv = candidates(arg.data);
+          break;
+        case 'updateParticipant':
+          rv = updateParticipant(arg.data);
+          break;
+      }
+    } catch(e) {
+      // Errorオブジェクトをrvとするとmessageが欠落するので再作成
+      rv = {isErr:true, message:e.name+': '+e.message};
+    } finally {
+      console.log('管理局.doPost end. rv='+JSON.stringify(rv));
+      szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');  // 結果を渡して書き込み
+      return ContentService
+      .createTextOutput(JSON.stringify(rv,null,2))
+      .setMimeType(ContentService.MimeType.JSON);
+    }
+  } else {
+    rv = {isErr:true,message:'invalid key :'+arg.key};
+    console.error('管理局.doPost end. '+rv.message);
+    console.log('end',elaps);
+    szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');
   }
 }
 
