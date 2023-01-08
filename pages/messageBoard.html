@@ -66,7 +66,7 @@
 </style>
 </head>
 <body class="messageBoard">
-  <div class="postButton">
+  <div class="postButton hide">
     <input type="button" value="投稿する" />
   </div>
   <div class="postArea hide">
@@ -121,6 +121,7 @@ class messageBoard {
 
     // 1. 投稿権限がある場合は投稿エリアを表示
     if( (config.private.menuFlags & 2) > 0 ){
+      document.querySelector('.messageBoard .postButton').classList.remove('hide');
       this.dom.postButton.addEventListener('click',() => {
         if( this.dom.postButton.value === '投稿する' ){
           this.dom.postButton.value = '閉じる';
