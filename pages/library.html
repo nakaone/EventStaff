@@ -191,6 +191,8 @@ button, input[type="button"] {
       this.stop();
       // canvasからイメージをBASE64で取得
       const imageData = this.canvas.toDataURL('image/png',0.7);
+      callback(imageData);
+      /*
       const postData = {
         timestamp: getJPDateTime(),
         image: imageData,
@@ -208,6 +210,7 @@ button, input[type="button"] {
           }
         }
       });
+      */
       // 以下は圧縮検討時のメモ。削除可
       //const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
       //imageCompression(imageData,{maxSizeMB:1,maxWidthOrHeight:1280}).then(data => {
@@ -498,7 +501,7 @@ const whichType = (arg = undefined) => {
  *
  * @example <caption>使用例</caption>
       const res = fetchGAS({
-        from     : 'inputSearchKey',
+        from     : 'inputSearchKey',  ※既定値受付番号
         to       : 'Master',
         func     : 'candidates',
         data     : {..},
@@ -513,7 +516,7 @@ const fetchGAS = (arg) => {
     "method": "POST",
     "body": JSON.stringify({
       key : config[arg.to].key,
-      from: config.entryStr,
+      from: arg.from || config.entryStr,
       to  : arg.to,
       func: arg.func,
       data: arg.data,

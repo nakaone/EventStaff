@@ -397,6 +397,7 @@ function szSheet(arg,key=null){
    * @returns {object} 以下のメンバを持つオブジェクト
    * <ul>
    * <li>isErr {boolean} - エラーならtrue
+   * <li>message {string} - エラーメッセージ
    * <li>arr {any[]} - 追加した行の一次元配列
    * <li>obj {object} - 追加した行オブジェクト({項目名1:値1,項目名2:値2,..}形式)
    * <li>dataNum {number} - 追加行のrv.data上の添字
@@ -406,24 +407,27 @@ function szSheet(arg,key=null){
    */
   rv.append = (data) => {
     const r = {isErr:false,obj:{},arr:[]};
-    // 追加する行の配列・オブジェクトを作成
-    switch( whichType(data) ){
-      case 'Array':
-        for( let i=0 ; i<rv.keys.length ; i++ ){
-          r.arr.push(data[i] || null);
-          r.obj[rv.keys[i]] = data[i];
-        }
-        break;
-      case 'Object':
-        for( let i=0 ; i<rv.keys.length ; i++ ){
-          r.arr.push(data[rv.keys[i]] || null);
-        }
-        r.obj = data;
-        break;
-      default:
-        r.isErr = true;
-    }
-    if( !r.isErr ){
+    try {
+      // 追加する行の配列・オブジェクトを作成
+      switch( whichType(data) ){
+        case 'Array':
+          for( let i=0 ; i<rv.keys.length ; i++ ){
+            r.arr.push(data[i] || null);
+            r.obj[rv.keys[i]] = data[i];
+          }
+          break;
+        case 'Object':
+          for( let i=0 ; i<rv.keys.length ; i++ ){
+            r.arr.push(data[rv.keys[i]] || null);
+          }
+          r.obj = data;
+          break;
+        default:
+          r.isErr = true;
+      }
+      if( r.isErr ){
+        throw new Error('引数が配列・オブジェクトではありません');
+      }
       // 追加位置の計算とシートへの追加
       r.dataNum = rv.data.length;
       rv.data.push(r.obj);
@@ -432,9 +436,13 @@ function szSheet(arg,key=null){
       r.rowNum = r.rawNum + 1;
       rv.lastRow += 1;
       rv.sheet.appendRow(r.arr);
+    } catch(e) {
+      r.isErr = true;
+      r.message = e.message;
+    } finally {
+      console.log('szSheet.append('+JSON.stringify(data)+') -> '+JSON.stringify(r));
+      return r;
     }
-    console.log('szSheet.append('+JSON.stringify(data)+') -> '+JSON.stringify(r));
-    return r;
   }
 
   console.log('szSheet(arg='+JSON.stringify(arg)+',key='+key+') -> '+JSON.stringify(rv));

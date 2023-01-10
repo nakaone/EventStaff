@@ -20,7 +20,7 @@
     -->
     <div><table>
       <tr><th>No</th><th>属性</th></tr>
-      <tr><td>①</td><td><select>
+      <tr><td>①</td><td><select name="n01">
         <option value="(空欄)">(空欄)</option>
         <option value="未就学児">未就学児</option>
         <option value="1年">1年</option>
@@ -32,7 +32,7 @@
         <option value="卒業生">卒業生</option>
         <option value="保護者">保護者</option>
       </select></td></tr>
-      <tr><td>②</td><td><select>
+      <tr><td>②</td><td><select name="n02">
         <option value="(空欄)">(空欄)</option>
         <option value="未就学児">未就学児</option>
         <option value="1年">1年</option>
@@ -44,7 +44,7 @@
         <option value="卒業生">卒業生</option>
         <option value="保護者">保護者</option>
       </select></td></tr>
-      <tr><td>③</td><td><select>
+      <tr><td>③</td><td><select name="n03">
         <option value="(空欄)">(空欄)</option>
         <option value="未就学児">未就学児</option>
         <option value="1年">1年</option>
@@ -63,6 +63,7 @@
   <div class="area step2 hide">
     <h1>受付番号：</h1>
     <p>申込用紙に上の受付番号を記入の上、用紙を撮影してください</p>
+    <div class="scanner"></div>
   </div>
 </body>
 <script type="text/javascript">
@@ -87,21 +88,71 @@ class PaperForm {
    */
   getEntryNo(){
     console.log('PaperForm.getEntryNo start');
+    // 入力された項目をオブジェクト化
+    // GAS側でszSheet.updateに直接渡せるよう、フォームの入力項目名に合わせる
+    const mem = [
+      {form:'参加者①所属',name:'n01'},
+      {form:'参加者②所属',name:'n02'},
+      {form:'参加者③所属',name:'n03'},
+    ];
+    const data = {PIC:config.handleName};
+    for( let i=0 ; i<mem.length ; i++ ){
+      const s = this.dom.step1.querySelector('select[name="'+mem[i].name+'"]');
+      data[mem[i].form] = s.options[s.selectedIndex].value;
+    }
+
     // 入力された内容をGAS.Masterに送信
-    // GAS.Master側で採番された受付番号を表示
-    console.log('PaperForm.getEntryNo end');
+    const res = fetchGAS({
+      to: 'Master',
+      func: 'paperForm1',
+      data: data,
+      callback: (r) => {
+        console.log('l.109 r=',r);
+        if( r.isErr ){
+          alert(r.message);
+        } else {
+          this.scanForm(r.obj.entryNo);
+        }
+        console.log('PaperForm.getEntryNo end');
+      },
+    });
   }
 
   /** scanForm: 紙申請用紙を撮影し、登録する
-   * @param {void} - なし
+   * @param {number} - 採番された受付番号
    * @returns {void} なし
    */
-  scanForm(){
+  scanForm(entryNo){
     console.log('PaperForm.scanForm start');
+
+    // configに新規採番された受付番号を保存
+    config.entryNo = entryNo;
+    config.entryStr = ('000'+entryNo).slice(-4);
+
+    // GAS.Master側で採番された受付番号を表示
     config.menu.changeArea('paperForm','step2');
+    this.dom.step2.querySelector('h1').innerText = '受付番号：'+entryNo;
+
     // スキャナで申請用紙を撮影
-    // GAS.Masterに撮影された申請用紙を登録
-    console.log('PaperForm.scanForm end');
+    const scanner = new webScanner({
+      parent: this.dom.step2.querySelector('.scanner'),
+    });
+    scanner.scanDoc((imageData)=>{
+      // GAS.Masterに撮影された申請用紙を登録
+      const res = fetchGAS({
+        to: 'Master',
+        func: 'paperForm2',
+        data: {
+          entryNo: entryNo,
+          application: imageData,
+        },
+        callback: (r) => {
+          alert(JSON.stringify(r));
+          console.log('l.150',r);
+          console.log('PaperForm.scanForm end');
+        },
+      })
+    });
   }
 }
 </script>
