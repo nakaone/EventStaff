@@ -19,6 +19,6 @@ node deploy.js -h:index.html \
   > ../index.html
 #node deploy.js -h:index.html menu.html authorize.html EventStaff.html > ../index.html
 #node deploy.js -h:proto.html a.html b.js c.css > test.html
-#node deploy.js -h:proto.html -c:../css/style.css -j:../js/script.js information.html
+#node deploy.js -h:proto.html -c:../css/style.css -j:../lib/script.js information.html
 
 echo '===============================================================\n'

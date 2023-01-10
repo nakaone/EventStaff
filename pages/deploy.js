@@ -23,7 +23,7 @@ const specification = {  // 仕様
  * <ul>
  * <li>h: index.htmlのテンプレートとなるhtmlファイル。既定値`prototype.html`
  * <li>c: 各ページのCSSを集めたファイル。既定値`css/style.css`
- * <li>j: 各ページのスクリプトを集めたファイル。既定値`js/script.js`
+ * <li>j: 各ページのスクリプトを集めたファイル。既定値`lib/script.js`
  * <li>その他のパラメータ: ページごとのhtml
  * </ul>
  *
@@ -83,7 +83,7 @@ const specification = {  // 仕様
 // echo '\n'
 //
 // node deploy.js -h:proto.html a.html b.js c.css > test.html
-// #node deploy.js -h:proto.html -c:../css/style.css -j:../js/script.js information.html
+// #node deploy.js -h:proto.html -c:../css/style.css -j:../lib/script.js information.html
 }
 
 /** rex:  ページごとの定義において、その開始/終了を定義した正規表現 */
