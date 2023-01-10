@@ -46,6 +46,13 @@ class Auth {
       this.setTestData(config.debugMode);
       this.callback();
     }
+
+    // ハンドル名の初期値としてIPアドレスを設定
+    fetch('https://ipinfo.io?callback')
+      .then(res => res.json())
+      .then(json => {
+        config.handleName = json.ip;
+      });
   }
 
   /** getEntryNo: 受付番号を入力、認証局に問合せ
@@ -180,7 +187,7 @@ class Auth {
       "Master": { // 管理局
         "level": 8,
         "key": "_WGbHipKdOeuFydHpbz2yzjBmnFNqHYuhAvyMy1QcX5BQgyLl",
-        "url": "https://script.google.com/macros/s/AKfycbzuKbQ053i_x6RrkkIqBwNcmvRg4tEQCOFvIPjDlVtajDy7i4LzkVS3YtyI2LhpjkJ32w/exec",
+        "url": "https://script.google.com/macros/s/AKfycbyk44w7VvsMr-IDt6eVwWRte3dkPYwhi8YNDxE0cTexdQgAe4DoLfTiChIkKphikBZLnA/exec",
         "validTime": 3600000  // パスコードの有効時間。ミリ秒
       },
       "Post": {   // 郵便局
