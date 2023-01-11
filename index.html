@@ -141,7 +141,7 @@ button, input[type="button"] {
 
 
 /* :: page "classWebScanner" CSS section start. :::::::::::::::::::::::::::::::::::::: */
-.webScanner {
+.webScanner div {
   display: flex;
   display: -webkit-flex;
   flex-direction: column;
@@ -150,23 +150,16 @@ button, input[type="button"] {
   display: none;
 }
 .webScanner .buttons {
+  width: calc(100% - 2rem);
   padding: 1rem;
   flex-direction: row;
-  -webkit-justify-content: space-around;
-  justify-content: space-around;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
 }
 .webScanner .buttons input {
-  font-size: 2rem;
+  font-size: 1.6rem;
 }
 /* :: page "classWebScanner" CSS section end. :::::::::::::::::::::::::::::::::::::::: */
-
-
-/* :: page "menu" CSS section start. :::::::::::::::::::::::::::::::::::::: */
-/* :: page "menu" CSS section end. :::::::::::::::::::::::::::::::::::::::: */
-
-
-/* :: page "authorize" CSS section start. :::::::::::::::::::::::::::::::::::::: */
-/* :: page "authorize" CSS section end. :::::::::::::::::::::::::::::::::::::::: */
 
 
 /* :: page "messageBoard" CSS section start. :::::::::::::::::::::::::::::::::::::: */
@@ -312,22 +305,6 @@ button, input[type="button"] {
 /* :: page "paperForm" CSS section end. :::::::::::::::::::::::::::::::::::::::: */
 
 
-/* :: page "applicationQR" CSS section start. :::::::::::::::::::::::::::::::::::::: */
-/* :: page "applicationQR" CSS section end. :::::::::::::::::::::::::::::::::::::::: */
-
-
-/* :: page "cornerOperation" CSS section start. :::::::::::::::::::::::::::::::::::::: */
-/* :: page "cornerOperation" CSS section end. :::::::::::::::::::::::::::::::::::::::: */
-
-
-/* :: page "entry" CSS section start. :::::::::::::::::::::::::::::::::::::: */
-/* :: page "entry" CSS section end. :::::::::::::::::::::::::::::::::::::::: */
-
-
-/* :: page "referState" CSS section start. :::::::::::::::::::::::::::::::::::::: */
-/* :: page "referState" CSS section end. :::::::::::::::::::::::::::::::::::::::: */
-
-
 /* :: page "information" CSS section start. :::::::::::::::::::::::::::::::::::::: */
 /* https://pulpxstyle.com/css-button/ */
 div.button a {
@@ -381,10 +358,6 @@ div.button a:hover {
 /* :: page "information" CSS section end. :::::::::::::::::::::::::::::::::::::::: */
 
 
-/* :: page "enquete" CSS section start. :::::::::::::::::::::::::::::::::::::: */
-/* :: page "enquete" CSS section end. :::::::::::::::::::::::::::::::::::::::: */
-
-
 /* :: page "system" CSS section start. :::::::::::::::::::::::::::::::::::::: */
 div.system div {
   flex-direction: column;
@@ -412,18 +385,6 @@ div.system div {
     </ol>
   </nav>
   <div id="main">
-
-<div class="screen library"><!-- :: page "library" HTML section start. ::::::::::: -->
-</div><!-- page "library" HTML section end. ::::::::::::::::::::::::::::::::: -->
-
-
-<div class="screen classWebScanner"><!-- :: page "classWebScanner" HTML section start. ::::::::::: -->
-</div><!-- page "classWebScanner" HTML section end. ::::::::::::::::::::::::::::::::: -->
-
-
-<div class="screen menu"><!-- :: page "menu" HTML section start. ::::::::::: -->
-</div><!-- page "menu" HTML section end. ::::::::::::::::::::::::::::::::: -->
-
 
 <div class="screen authorize"><!-- :: page "authorize" HTML section start. ::::::::::: -->
   <div class="entryNo">
@@ -696,10 +657,6 @@ div.system div {
 </div><!-- page "applicationQR" HTML section end. ::::::::::::::::::::::::::::::::: -->
 
 
-<div class="screen cornerOperation"><!-- :: page "cornerOperation" HTML section start. ::::::::::: -->
-</div><!-- page "cornerOperation" HTML section end. ::::::::::::::::::::::::::::::::: -->
-
-
 <div class="screen entry"><!-- :: page "entry" HTML section start. ::::::::::: -->
   <button>参加者の追加・変更・取消</button>
   <h1></h1>
@@ -717,10 +674,6 @@ div.system div {
   <div class="button"><a href="../lib/map.html" target="_blank">校内案内図</a></div>
   <div class="button"><a href="https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97" target="_blank">募集要項</a></div>
 </div><!-- page "information" HTML section end. ::::::::::::::::::::::::::::::::: -->
-
-
-<div class="screen enquete"><!-- :: page "enquete" HTML section start. ::::::::::: -->
-</div><!-- page "enquete" HTML section end. ::::::::::::::::::::::::::::::::: -->
 
 
 <div class="screen system"><!-- :: page "system" HTML section start. ::::::::::: -->
@@ -1212,12 +1165,11 @@ function sha256(text,callback){
 /** webScanner: QRコードや文書をスキャン
  * <br>
  * 指定セレクタ以下にcanvas他の必要な要素を作成してスキャン実行、指定の後続処理を呼び出す。<br>
- * 呼び出す前に`config.scanCode = true`を実行しておくこと。<br>
  * 参考：[jsQRであっさりQRコードリーダ/メーカ](@link https://zenn.dev/sdkfz181tiger/articles/096dfb74d485db)
  */
 class webScanner {
   /** constructor
-   * @param {object} arg
+   * @param {object|HTMLDivElement} arg - HTMLDivElementなら親要素のみ指定と解釈
    * @param {object} arg.parent - 親要素(DOM object)
    * @param {number} arg.interval - 動画状態で撮像、読み込めなかった場合の時間間隔
    * @param {object} arg.RegExp - QRコードスキャン時、内容が適切か判断
@@ -1235,11 +1187,21 @@ class webScanner {
       return;
     }
 
-    this.parent = arg.parent;
-    this.interval = arg.interval || 0.25;
-    this.RegExp = arg.RegExp || /.+/;
-    this.alert = arg.alert || false;
+    // メンバ(既定値)の設定
+    if( whichType(arg) === 'HTMLDivElement' ){
+      this.parent = arg;
+      this.interval = 0.25;
+      this.RegExp = /.+/;
+      this.alert = false;
+    } else {
+      this.parent = arg.parent;
+      this.interval = arg.interval || 0.25;
+      this.RegExp = arg.RegExp || /.+/;
+      this.alert = arg.alert || false;
+    }
     this.onGoing = false; // カメラ動作中はtrue
+    this.scanned = null;  // 画像を1フレーム読み込んだ際の処理
+    this.callback = null; // 適切な画像が選択された際、それを使用して行う後続処理
 
     // 親要素をwebScannerクラスとして指定
     this.parent.classList.add('webScanner');
@@ -1283,23 +1245,31 @@ class webScanner {
     this.onGoing = false;
   }
 
-  /** scanDoc: 文書のスキャン */
-  scanDoc(callback){
+  /** scanDoc: 文書のスキャン
+   * @param {function} callback - 後続処理
+   * @param {object} opt - オプション指定。scanQRに合わせただけで、指定不要
+   * @returns {void} 無し
+   * callbackにはbase64化したpng(文字列)が渡される。
+  */
+  scanDoc(callback,opt={}){
 
-    // 親要素にカメラやファインダ等の作業用DIVを追加
+    // 1.既定値の設定
+    this.callback = callback; // 後続処理をメンバとして保存
+
+    // 2.カメラやファインダ等の作業用DIVを追加
     this.parent.innerHTML
     = '<video autoplay class="hide"></video>'
     + '<canvas></canvas>'  // 撮影結果
     + '<div class="buttons hide">'  // カメラ操作ボタン
-    + '<input type="button" name="undo" value="◀" />'
-    + '<input type="button" name="shutter" value="[ ● ]" />'
-    + '<input type="button" name="adopt" value="▶" />'
+    + '<div><input type="button" name="undo" value="◀" /></div>'
+    + '<div><input type="button" name="shutter" value="[ ● ]" /></div>'
+    + '<div><input type="button" name="adopt" value="▶" /></div>'
     + '</div>';
     this.video = this.parent.querySelector('video');
     this.canvas = this.parent.querySelector('canvas');
     this.ctx = this.canvas.getContext('2d');
 
-    // カメラ操作ボタン関係の定義
+    // 3.カメラ操作ボタン関係の定義
     this.buttons = this.parent.querySelector('div.buttons');
     this.undo = this.buttons.querySelector('input[name="undo"]');
     this.undo.disabled = true;  // 再撮影
@@ -1308,62 +1278,42 @@ class webScanner {
     this.adopt = this.buttons.querySelector('input[name="adopt"]');
     this.adopt.disabled = true;  // 採用
 
-    // 1. スキャナのボタン操作時の定義
     // (1) 再撮影ボタンクリック時
     this.undo.addEventListener('click',() => {
-      //this.video.style.display = 'block';
-      //this.canvas.style.display = 'none';
+      console.log('webScanner.scanDoc undo clicked.');
+      this.onGoing = true;  // カメラ動作中フラグを立てる
+      this.drawFinder();  // キャンパスへの描画をスタート
       this.undo.disabled = true;
       this.shutter.disabled = false;
       this.adopt.disabled = true;
     });
     // (2) シャッタークリック時
     this.shutter.addEventListener('click',() => {
-      this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
-      //this.video.style.display = 'none';
-      //this.canvas.style.display = 'block';
+      console.log('webScanner.scanDoc shutter clicked.');
+      this.onGoing = false;  // カメラを一時停止
       this.undo.disabled = false;
       this.shutter.disabled = true;
       this.adopt.disabled = false;
     });
     // (3) 採用ボタンクリック時
     this.adopt.addEventListener('click',() => {
-      // 正常終了時はスキャナを停止
-      this.parent.innerHTML = '';
-      this.stop();
+      console.log('webScanner.scanDoc adopt clicked.');
       // canvasからイメージをBASE64で取得
       const imageData = this.canvas.toDataURL('image/png',0.7);
-      callback(imageData);
-      /*
-      const postData = {
-        timestamp: getJPDateTime(),
-        image: imageData,
-      }
-      fetchGAS({
-        from: 'scanDocHtml',
-        to:   'scanDoc',
-        func: 'scanDoc',
-        data: postData,
-        callback: res => {
-          if( res.isErr ){
-            alert(res.message);
-          } else {
-            console.log('scanDoc normal end.',res);
-          }
-        }
-      });
-      */
+      this.callback(imageData);  // base64化したpngを後続処理に渡す
+      this.stop();  // スキャナを停止
       // 以下は圧縮検討時のメモ。削除可
       //const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
       //imageCompression(imageData,{maxSizeMB:1,maxWidthOrHeight:1280}).then(data => {
       //  this.ctx.putImageData(data,0,0,this.canvas.width,this.canvas.height);
-
     })
 
-    // 2. カメラ操作ボタンを表示してカメラを起動
-    //this.buttons.style.display = 'flex';
+    // 4.画像を1フレーム読み込んだ際の処理を定義
+    this.scanned = () => {};  // フレームごとの処理は無し
+
+    // 5.カメラ操作ボタンを表示してカメラを起動
     this.buttons.classList.remove('hide');
-    this.start(()=>{console.log('Camera getting started!')});
+    this.start();
   }
 
   /** scanQR: QRコードスキャン
@@ -1372,27 +1322,59 @@ class webScanner {
    * @param {object} opt.RegExp - スキャン結果が適切か判断。RegExpオブジェクト
    * @param {boolean} opt.alert - true:読み込み完了時に内容をalert表示
    * @returns {void} なし
+   * callbackにはQRコードの文字列が渡される。
    */
   scanQR(callback,opt={}){
     console.log('webScanner.scanQR start. opt='+JSON.stringify(opt)+'\n',callback);
 
-    // 既定値の設定
+    // 1.既定値の設定
     this.RegExp = opt.RegExp || this.RegExp;
     this.alert = opt.alert || this.alert;
     this.callback = callback; // 後続処理をメンバとして保存
 
-    // カメラやファインダ等の作業用DIVを追加
+    // 2.カメラやファインダ等の作業用DIVを追加
     this.parent.innerHTML = '<canvas></canvas>';
     this.video = document.createElement('video');
     this.canvas = this.parent.querySelector('canvas');
     this.ctx = this.canvas.getContext('2d');
 
-    // 動画撮影用Webカメラを起動
+    // 3.カメラ操作ボタン関係の定義
+    // QRコードスキャンでは操作ボタンは無いので定義不要
+
+    // 4.画像を1フレーム読み込んだ際の処理を定義
+    this.scanned = (img) => {
+      // このタイミングでQRコードを判定
+      let code = jsQR(img.data, img.width, img.height, {inversionAttempts: "dontInvert"});
+			if(code){
+        //console.log('drawFinder: code='+JSON.stringify(code));
+        // QRコード読み取り成功
+				this.drawRect(code.location);// ファインダ上のQRコードに枠を表示
+        if( this.alert ) alert(code.data);  // alert出力指定があれば出力
+        if( code.data.match(this.RegExp) ){  // 正しい内容が読み込まれた場合
+          this.stop();
+          this.callback(code.data); // 読み込んだQRコードを引数にコールバック
+        } else {
+          // 不適切な、別のQRコードが読み込まれた場合
+          alert('不適切なQRコードです。再読込してください。');
+          console.error('webScanner.drawFinder: not match pattern. code='+code.data);
+          // 再読込。drawFinderはクラス内のメソッドなのでアロー関数で呼び出す
+          // MDN setTimeout() thisの問題
+          // https://developer.mozilla.org/ja/docs/Web/API/setTimeout#this_%E3%81%AE%E5%95%8F%E9%A1%8C
+        }
+			}
+    };
+
+    // 5.動画撮影用Webカメラを起動
     this.start();
   }
 
-  drawFinder(){  // キャンバスに描画する
-    //console.log('webScanner.drawFinder start.',this.video);
+  /** drawFinder: キャンバスに描画する
+   * @param {void} - 無し
+   * @returns {void} 無し
+   * 1フレーム読み込むごとにthis.scannedに読み込んだイメージを渡す。
+  */
+  drawFinder(){  // 
+    console.log('webScanner.drawFinder start.',this.video);
 
     // スキャン実行フラグが立っていなかったら終了
     if( !this.onGoing )  return;
@@ -1417,27 +1399,8 @@ class webScanner {
         this.stop();
         return;
       }
-      // このタイミングでQRコードを判定
-      let code = jsQR(img.data, img.width, img.height, {inversionAttempts: "dontInvert"});
-			if(code){
-        console.log('drawFinder: code='+JSON.stringify(code));
-        // QRコード読み取り成功
-				this.drawRect(code.location);// ファインダ上のQRコードに枠を表示
-        if( this.alert ) alert(code.data);  // alert出力指定があれば出力
-        if( code.data.match(this.RegExp) ){  // 正しい内容が読み込まれた場合
-          this.drawRect(code.location);
-          this.stop();
-          this.callback(code.data); // 読み込んだQRコードを引数にコールバック
-        } else {
-          // 不適切な、別のQRコードが読み込まれた場合
-          alert('不適切なQRコードです。再読込してください。');
-          console.log('[scanCode.drawFinder] Error: not match pattern. code='+code.data);
-          // 再読込。drawFinderはクラス内のメソッドなのでアロー関数で呼び出す
-          // MDN setTimeout() thisの問題
-          // https://developer.mozilla.org/ja/docs/Web/API/setTimeout#this_%E3%81%AE%E5%95%8F%E9%A1%8C
-          setTimeout(()=>this.drawFinder(), this.interval);
-        }
-			}
+      this.scanned(img);  // 1フレーム読み込み時の処理を実行
+      setTimeout(()=>this.drawFinder(), this.interval);
     }
     setTimeout(()=>this.drawFinder(), this.interval);
   }
@@ -1460,6 +1423,7 @@ class webScanner {
 		this.ctx.stroke();
 	}
 }
+
 // :: page "classWebScanner" Script section end. ::::::::::::::::::::::::::::::::::::::::
 
 
@@ -2504,10 +2468,6 @@ class ApplicationQR {
 // :: page "applicationQR" Script section end. ::::::::::::::::::::::::::::::::::::::::
 
 
-// :: page "cornerOperation" Script section start. ::::::::::::::::::::::::::::::::::::::
-// :: page "cornerOperation" Script section end. ::::::::::::::::::::::::::::::::::::::::
-
-
 // :: page "entry" Script section start. ::::::::::::::::::::::::::::::::::::::
 class Entry {
   display(){
@@ -2532,18 +2492,6 @@ class Entry {
   }
 }
 // :: page "entry" Script section end. ::::::::::::::::::::::::::::::::::::::::
-
-
-// :: page "referState" Script section start. ::::::::::::::::::::::::::::::::::::::
-// :: page "referState" Script section end. ::::::::::::::::::::::::::::::::::::::::
-
-
-// :: page "information" Script section start. ::::::::::::::::::::::::::::::::::::::
-// :: page "information" Script section end. ::::::::::::::::::::::::::::::::::::::::
-
-
-// :: page "enquete" Script section start. ::::::::::::::::::::::::::::::::::::::
-// :: page "enquete" Script section end. ::::::::::::::::::::::::::::::::::::::::
 
 
 // :: page "system" Script section start. ::::::::::::::::::::::::::::::::::::::

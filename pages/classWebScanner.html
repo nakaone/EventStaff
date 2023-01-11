@@ -26,21 +26,14 @@
 </style>
 </head>
 <body class="webScanner">
+  <!-- ::deploy.ignore.start:: -->
   <h1>class webScanner test</h1>
-  <p>実運用時には以下の点を修正する</p>
-  <ol>
-    <li>以下の要素のコメントアウト</li>
-    <ul>
-      <li>bodyタグの中を全て</li>
-      <li>スクリプトの「メイン処理」</li>
-      <li>whichType他、テスト用関数</li>
-    </ul>
-    <li>jsQRの読み込み先を修正</li>
-  </ol>
+  <p>実運用時にはjsQRの読み込み先を修正する</p>
   <div class="scanner"></div>
   <img src="" />
+  <!-- ::deploy.ignore.end:: -->
 </body>
-<script src="../lib/jsQR.js" defer></script><!-- QRコード検出 -->
+<script src="lib/jsQR.js" defer></script><!-- QRコード検出 -->
 <script type="text/javascript">
 /** webScanner: QRコードや文書をスキャン
  * <br>
@@ -304,6 +297,7 @@ class webScanner {
 	}
 }
 
+// ::deploy.ignore.start::
 const whichType = (arg = undefined) => {
   return arg === undefined ? 'undefined'
    : Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
@@ -320,6 +314,6 @@ window.addEventListener('DOMContentLoaded',() => {
     console.log(code);
   });*/
 });
-
+// ::deploy.ignore.end::
 </script>
 </html>

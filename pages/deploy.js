@@ -13,6 +13,9 @@ const specification = {  // 仕様
  * <li>script: 内部スクリプト定義(<script> 〜 </script>)
  * <li>html: 内部HTML(<body> 〜 </body>)
  * </ol>
+ * 
+ * なお ::deploy.ignore.start:: 〜 ::deploy.ignore.end:: に囲まれた部分は
+ * 無効範囲として処理対象から外す。
  *
  * 02. index.htmlのテンプレートとなるhtmlファイルのプレースホルダ行を、dObjの内容で置換
  *
@@ -22,8 +25,6 @@ const specification = {  // 仕様
  * <h2>options</h2>
  * <ul>
  * <li>h: index.htmlのテンプレートとなるhtmlファイル。既定値`prototype.html`
- * <li>c: 各ページのCSSを集めたファイル。既定値`css/style.css`
- * <li>j: 各ページのスクリプトを集めたファイル。既定値`lib/script.js`
  * <li>その他のパラメータ: ページごとのhtml
  * </ul>
  *
@@ -90,9 +91,19 @@ const specification = {  // 仕様
 const rex = {
   link: /^[ \t]*<link .*href=["'](.+)["']/,
   include : /^[ \t]*<script .*src=["'](.+)["']/,
-  css: [/^[ \t]*<style type=["'](.+)["']/,/^ *<\/style>/],
-  script: [/^[ \t]*<script type=["'](.+)["']/,/^ *<\/script>/],
-  html: [/^[ \t]*<body/,/^ *<\/body>/],
+  css: [
+    /^[ \t]*<style type=["'](.+)["']/,
+    /^ *<\/style>/
+  ],
+  script: [
+    /^[ \t]*<script type=["'](.+)["']/,
+    /^ *<\/script>/
+  ],
+  html: [
+    /^[ \t]*<body/,
+    /^ *<\/body>/
+  ],
+  ignore: /::deploy\.ignore\.(start|end)::/,
 }
 
 /* dObj: 要素別に統合したオブジェクト
@@ -189,42 +200,64 @@ const extract = (filename) => {
   const on = { // 現在処理中の行が該当する属性
     css   : fn.suffix.toLowerCase() === 'css', // 拡張子がcssなら最初からtrue
     script: fn.suffix.toLowerCase() === 'js',  // 拡張子がjsなら最初からtrue
-    html  : false
+    html  : false,
+    ignore: false,
   };
+  const stNum = {};  // 開始時点の行数
+  ['css','script','html'].forEach(x => {
+    stNum[x] = dObj[x].length;
+  });
 
+  // 個別ページ定義ファイルごとのヘッダ文字列をセット
+  /*
   ['css','script'].forEach(x => {
     if(on[x]){
       dObj[x].push(conf[x].header.replaceAll('\t',fn.base));
     }
   });
+  */
 
   for( let i=0 ; i<lines.length ; i++ ){
-    ['link','include'].forEach(x => {
-      const m = lines[i].match(rex[x]);
-      if( m ){
-        // 既出の場合は登録しない
-        if( dObj.list[x].findIndex(y => y === m[1]) < 0 ){
-          dObj[x].push(lines[i]);
-          dObj.list[x].push(m[1]);
+    // "::deploy.ignore.start/end::"の制御
+    let m = lines[i].match(rex.ignore);
+    if( m ){
+      on.ignore = m[1] === 'start';
+    } else if( !on.ignore ){
+      ['link','include'].forEach(x => {
+        m = lines[i].match(rex[x]);
+        if( m ){
+          // 既出の場合は登録しない
+          if( dObj.list[x].findIndex(y => y === m[1]) < 0 ){
+            dObj[x].push(lines[i]);
+            dObj.list[x].push(m[1]);
+          }
         }
-      }
-    });
-    ['css','script','html'].forEach(x => {
-      if( on[x] ){
-        if( lines[i].match(rex[x][1]) ){
-          on[x] = false;
-          dObj[x].push(conf[x].footer.replaceAll('\t',fn.base));
+      });
+      ['css','script','html'].forEach(x => {
+        if( on[x] ){
+          if( lines[i].match(rex[x][1]) ){
+            on[x] = false;
+            //dObj[x].push(conf[x].footer.replaceAll('\t',fn.base));
+          } else {
+            dObj[x].push(lines[i]);
+          }
         } else {
-          dObj[x].push(lines[i]);
+          if( lines[i].match(rex[x][0]) ){
+            on[x] = true;
+            //dObj[x].push(conf[x].header.replaceAll('\t',fn.base));
+          }
         }
-      } else {
-        if( lines[i].match(rex[x][0]) ){
-          on[x] = true;
-          dObj[x].push(conf[x].header.replaceAll('\t',fn.base));
-        }
-      }
-    });
+      });
+    }
   }
+
+  // 有効な追加行があればdObjに追加
+  ['css','script','html'].forEach(x => {
+    if( dObj[x].length > stNum[x] ){
+      dObj[x].splice(stNum[x],0,conf[x].header.replaceAll('\t',fn.base));
+      dObj[x].push(conf[x].footer.replaceAll('\t',fn.base));
+    }
+  });  
 }
 
 /** readfile: 指定テキストファイルを読み込み、行毎に分割
@@ -258,15 +291,6 @@ const integrate = (filename) => {
     }
   }
   return rv.join('\n');
-}
-
-/** whichType: 変数の型を判定
- * @param {any} arg - 判定対象の変数
- * @returns {string} - 型の名前
- */
-const whichType = (arg = undefined) => {
-  return arg === undefined ? 'undefined'
-   : Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
 }
 
 /** main: 主処理 */
