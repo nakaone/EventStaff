@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Script-Type" content="text/javascript">
 <title>webScanner</title>
 <style type="text/css">
-.webScanner {
+.webScanner div {
   display: flex;
   display: -webkit-flex;
   flex-direction: column;
@@ -14,13 +14,14 @@
   display: none;
 }
 .webScanner .buttons {
+  width: calc(100% - 2rem);
   padding: 1rem;
   flex-direction: row;
-  -webkit-justify-content: space-around;
-  justify-content: space-around;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
 }
 .webScanner .buttons input {
-  font-size: 2rem;
+  font-size: 1.6rem;
 }
 </style>
 </head>
@@ -66,7 +67,7 @@ class webScanner {
       return;
     }
 
-    // 既定値の設定
+    // メンバ(既定値)の設定
     if( whichType(arg) === 'HTMLDivElement' ){
       this.parent = arg;
       this.interval = 0.25;
@@ -134,9 +135,9 @@ class webScanner {
     = '<video autoplay class="hide"></video>'
     + '<canvas></canvas>'  // 撮影結果
     + '<div class="buttons hide">'  // カメラ操作ボタン
-    + '<input type="button" name="undo" value="◀" />'
-    + '<input type="button" name="shutter" value="[ ● ]" />'
-    + '<input type="button" name="adopt" value="▶" />'
+    + '<div><input type="button" name="undo" value="◀" /></div>'
+    + '<div><input type="button" name="shutter" value="[ ● ]" /></div>'
+    + '<div><input type="button" name="adopt" value="▶" /></div>'
     + '</div>';
     this.video = this.parent.querySelector('video');
     this.canvas = this.parent.querySelector('canvas');
