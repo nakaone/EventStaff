@@ -125,12 +125,18 @@ class webScanner {
     this.onGoing = false;
   }
 
-  /** scanDoc: 文書のスキャン */
+  /** scanDoc: 文書のスキャン
+   * @param {function} callback - 後続処理
+   * @param {object} opt - オプション指定。scanQRに合わせただけで、指定不要
+   * @returns {void} 無し
+   * callbackにはbase64化したpng(文字列)が渡される。
+  */
   scanDoc(callback,opt={}){
 
-    // 既定値の設定
+    // 1.既定値の設定
+    this.callback = callback; // 後続処理をメンバとして保存
 
-    // カメラやファインダ等の作業用DIVを追加
+    // 2.カメラやファインダ等の作業用DIVを追加
     this.parent.innerHTML
     = '<video autoplay class="hide"></video>'
     + '<canvas></canvas>'  // 撮影結果
@@ -143,7 +149,7 @@ class webScanner {
     this.canvas = this.parent.querySelector('canvas');
     this.ctx = this.canvas.getContext('2d');
 
-    // カメラ操作ボタン関係の定義
+    // 3.カメラ操作ボタン関係の定義
     this.buttons = this.parent.querySelector('div.buttons');
     this.undo = this.buttons.querySelector('input[name="undo"]');
     this.undo.disabled = true;  // 再撮影
@@ -152,14 +158,11 @@ class webScanner {
     this.adopt = this.buttons.querySelector('input[name="adopt"]');
     this.adopt.disabled = true;  // 採用
 
-    // 1. スキャナのボタン操作時の定義
     // (1) 再撮影ボタンクリック時
     this.undo.addEventListener('click',() => {
       console.log('webScanner.scanDoc undo clicked.');
       this.onGoing = true;  // カメラ動作中フラグを立てる
       this.drawFinder();  // キャンパスへの描画をスタート
-      //this.video.style.display = 'block';
-      //this.canvas.style.display = 'none';
       this.undo.disabled = true;
       this.shutter.disabled = false;
       this.adopt.disabled = true;
@@ -167,10 +170,7 @@ class webScanner {
     // (2) シャッタークリック時
     this.shutter.addEventListener('click',() => {
       console.log('webScanner.scanDoc shutter clicked.');
-      this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
-      this.onGoing = false;
-      //this.video.style.display = 'none';
-      //this.canvas.style.display = 'block';
+      this.onGoing = false;  // カメラを一時停止
       this.undo.disabled = false;
       this.shutter.disabled = true;
       this.adopt.disabled = false;
@@ -180,42 +180,19 @@ class webScanner {
       console.log('webScanner.scanDoc adopt clicked.');
       // canvasからイメージをBASE64で取得
       const imageData = this.canvas.toDataURL('image/png',0.7);
-      callback(imageData);
-      // 正常終了時はスキャナを停止
-      this.stop();
-      /*
-      const postData = {
-        timestamp: getJPDateTime(),
-        image: imageData,
-      }
-      fetchGAS({
-        from: 'scanDocHtml',
-        to:   'scanDoc',
-        func: 'scanDoc',
-        data: postData,
-        callback: res => {
-          if( res.isErr ){
-            alert(res.message);
-          } else {
-            console.log('scanDoc normal end.',res);
-          }
-        }
-      });
-      */
+      this.callback(imageData);  // base64化したpngを後続処理に渡す
+      this.stop();  // スキャナを停止
       // 以下は圧縮検討時のメモ。削除可
       //const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
       //imageCompression(imageData,{maxSizeMB:1,maxWidthOrHeight:1280}).then(data => {
       //  this.ctx.putImageData(data,0,0,this.canvas.width,this.canvas.height);
-
     })
 
-    // 画像を1フレーム読み込んだ際の処理を定義
+    // 4.画像を1フレーム読み込んだ際の処理を定義
     this.scanned = () => {};  // フレームごとの処理は無し
 
-    // 2. カメラ操作ボタンを表示してカメラを起動
-    //this.buttons.style.display = 'flex';
+    // 5.カメラ操作ボタンを表示してカメラを起動
     this.buttons.classList.remove('hide');
-    //this.start(()=>{console.log('Camera getting started!')});
     this.start();
   }
 
@@ -225,22 +202,26 @@ class webScanner {
    * @param {object} opt.RegExp - スキャン結果が適切か判断。RegExpオブジェクト
    * @param {boolean} opt.alert - true:読み込み完了時に内容をalert表示
    * @returns {void} なし
+   * callbackにはQRコードの文字列が渡される。
    */
   scanQR(callback,opt={}){
     console.log('webScanner.scanQR start. opt='+JSON.stringify(opt)+'\n',callback);
 
-    // 既定値の設定
+    // 1.既定値の設定
     this.RegExp = opt.RegExp || this.RegExp;
     this.alert = opt.alert || this.alert;
     this.callback = callback; // 後続処理をメンバとして保存
 
-    // カメラやファインダ等の作業用DIVを追加
+    // 2.カメラやファインダ等の作業用DIVを追加
     this.parent.innerHTML = '<canvas></canvas>';
     this.video = document.createElement('video');
     this.canvas = this.parent.querySelector('canvas');
     this.ctx = this.canvas.getContext('2d');
 
-    // 画像を1フレーム読み込んだ際の処理を定義
+    // 3.カメラ操作ボタン関係の定義
+    // QRコードスキャンでは操作ボタンは無いので定義不要
+
+    // 4.画像を1フレーム読み込んだ際の処理を定義
     this.scanned = (img) => {
       // このタイミングでQRコードを判定
       let code = jsQR(img.data, img.width, img.height, {inversionAttempts: "dontInvert"});
@@ -263,12 +244,17 @@ class webScanner {
 			}
     };
 
-    // 動画撮影用Webカメラを起動
+    // 5.動画撮影用Webカメラを起動
     this.start();
   }
 
-  drawFinder(){  // キャンバスに描画する
-    //console.log('webScanner.drawFinder start.',this.video);
+  /** drawFinder: キャンバスに描画する
+   * @param {void} - 無し
+   * @returns {void} 無し
+   * 1フレーム読み込むごとにthis.scannedに読み込んだイメージを渡す。
+  */
+  drawFinder(){  // 
+    console.log('webScanner.drawFinder start.',this.video);
 
     // スキャン実行フラグが立っていなかったら終了
     if( !this.onGoing )  return;
