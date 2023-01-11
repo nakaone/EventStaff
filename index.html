@@ -299,7 +299,7 @@ button, input, select {
 
 
 /* :: page "paperForm" CSS section start. :::::::::::::::::::::::::::::::::::::: */
-.paperForm .step1 {
+.paperForm div {
   flex-direction: column;
 }
 /* :: page "paperForm" CSS section end. :::::::::::::::::::::::::::::::::::::::: */
@@ -593,7 +593,7 @@ div.system div {
 
 
 <div class="screen paperForm"><!-- :: page "paperForm" HTML section start. ::::::::::: -->
-  <div class="area step1">
+  <div class="area step1 flex">
     <div><p>申込者の属性を入力してください</p></div>
     <!-- 【入力欄作成時の注意事項】
       1.「(空欄)」文字列はGAS側で入力チェックに使用するので変更不可
@@ -642,10 +642,14 @@ div.system div {
     <div><button>次へ</button></div>
   </div>
 
-  <div class="area step2 hide">
+  <div class="area loading hide">
+    <img src="img/loading.gif" />
+  </div>
+
+  <div class="area step2 hide flex">
     <h1>受付番号：</h1>
     <p>申込用紙に上の受付番号を記入の上、用紙を撮影してください</p>
-    <div class="scanner"></div>
+    <div class="scanner flex"></div>
   </div>
 </div><!-- page "paperForm" HTML section end. ::::::::::::::::::::::::::::::::: -->
 
@@ -2368,6 +2372,7 @@ class PaperForm {
       step2: document.querySelector('.paperForm .step2'),
     }
     this.dom.step1.querySelector('button').addEventListener('click', ()=>{
+      config.menu.changeArea('paperForm','loading');
       this.getEntryNo();
     });
   }

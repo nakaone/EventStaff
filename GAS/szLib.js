@@ -230,10 +230,10 @@ const readJson = () => {
  */
 function szSheet(arg,key=null){
   const rv = {};
-  if( typeof arg === 'string' ){  // 文字列のみ ⇒ シート名の指定
+  if( typeof arg === 'string' ){  // 引数が文字列 ⇒ シート名の指定
     rv.sheet = SpreadsheetApp.getActive().getSheetByName(arg);
     rv.headerRow = 1; // ヘッダ行は1行目(固定)
-  } else {
+  } else {  // 	引数がオブジェクト ⇒ 詳細指定
     if( 'spreadId' in arg ){
       rv.sheet = SpreadsheetApp.openById(arg.spreadId).getSheetByName(arg.sheetName);
     } else {
@@ -271,7 +271,7 @@ function szSheet(arg,key=null){
   rv.search = (value,key=rv.key) => {
     let r = {match:0};
     const vType = whichType(value).toLowerCase();
-    console.log('vType='+vType)
+    //console.log('vType='+vType)
     for( let i=0 ; i<rv.data.length ; i++ ){
       let flag = false;
       switch( vType ){
@@ -305,7 +305,9 @@ function szSheet(arg,key=null){
    */
   rv.lookup = (value,key=rv.key) => {
     let searchResult = rv.search(value,key);
-    return searchResult.match === 1 ? searchResult.obj : {};
+    const r = searchResult.match === 1 ? searchResult.obj : {};
+    console.log('szSheet.search('+value+','+key+') -> '+JSON.stringify(r));
+    return r;
   };
 
   /** update: 該当する行の値を変更する
@@ -332,6 +334,7 @@ function szSheet(arg,key=null){
    * </ul>
    */
   rv.update = (data,opt) => {
+    let r = {};
     try {
       // オプションに既定値セット
       if( whichType(opt).toLocaleLowerCase() === 'object' ){
@@ -381,12 +384,12 @@ function szSheet(arg,key=null){
       const range = rv.sheet.getRange(searchResult.rowNum, minColumn+1, 1, maxColumn-minColumn+1);
       const sv = uArr.splice(minColumn, maxColumn-minColumn+1);
       range.setValues([sv]);
-      console.log('szSheet.update(data='+JSON.stringify(data)+',opt='+JSON.stringify(opt)+') -> '+JSON.stringify({isErr:false,result:log}));
-      return {isErr:false,result:log};
-      
+      r = {isErr:false,result:log};
     } catch(e) {
-      console.error('szSheet.update(data='+JSON.stringify(data)+',opt='+JSON.stringify(opt)+') -> '+JSON.stringify({isErr:true,message:e.message}));
-      return {isErr:true,message:e.message};
+      r = {isErr:true,message:e.message};
+    } finally {
+      console.log('szSheet.update(data='+JSON.stringify(data)+',opt='+JSON.stringify(opt)+') -> '+JSON.stringify(r));
+      return r;
     }
   };
 
