@@ -3,7 +3,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta http-equiv="Content-Style-Type" content="text/css">
 <meta http-equiv="Content-Script-Type" content="text/javascript">
-<title>library</title>
+<title>webScanner</title>
 <style type="text/css">
 .webScanner {
   display: flex;
@@ -24,19 +24,31 @@
 }
 </style>
 </head>
-<body class="library">
+<body class="webScanner">
+  <h1>class webScanner test</h1>
+  <p>実運用時には以下の点を修正する</p>
+  <ol>
+    <li>以下の要素のコメントアウト</li>
+    <ul>
+      <li>bodyタグの中を全て</li>
+      <li>スクリプトの「メイン処理」</li>
+      <li>whichType他、テスト用関数</li>
+    </ul>
+    <li>jsQRの読み込み先を修正</li>
+  </ol>
+  <div class="scanner"></div>
+  <img src="" />
 </body>
-<script src="lib/jsQR.js" defer></script><!-- QRコード検出 -->
+<script src="../lib/jsQR.js" defer></script><!-- QRコード検出 -->
 <script type="text/javascript">
 /** webScanner: QRコードや文書をスキャン
  * <br>
  * 指定セレクタ以下にcanvas他の必要な要素を作成してスキャン実行、指定の後続処理を呼び出す。<br>
- * 呼び出す前に`config.scanCode = true`を実行しておくこと。<br>
  * 参考：[jsQRであっさりQRコードリーダ/メーカ](@link https://zenn.dev/sdkfz181tiger/articles/096dfb74d485db)
  */
 class webScanner {
   /** constructor
-   * @param {object} arg
+   * @param {object|HTMLDivElement} arg - HTMLDivElementなら親要素のみ指定と解釈
    * @param {object} arg.parent - 親要素(DOM object)
    * @param {number} arg.interval - 動画状態で撮像、読み込めなかった場合の時間間隔
    * @param {object} arg.RegExp - QRコードスキャン時、内容が適切か判断
@@ -54,11 +66,21 @@ class webScanner {
       return;
     }
 
-    this.parent = arg.parent;
-    this.interval = arg.interval || 0.25;
-    this.RegExp = arg.RegExp || /.+/;
-    this.alert = arg.alert || false;
+    // 既定値の設定
+    if( whichType(arg) === 'HTMLDivElement' ){
+      this.parent = arg;
+      this.interval = 0.25;
+      this.RegExp = /.+/;
+      this.alert = false;
+    } else {
+      this.parent = arg.parent;
+      this.interval = arg.interval || 0.25;
+      this.RegExp = arg.RegExp || /.+/;
+      this.alert = arg.alert || false;
+    }
     this.onGoing = false; // カメラ動作中はtrue
+    this.scanned = null;  // 画像を1フレーム読み込んだ際の処理
+    this.callback = null; // 適切な画像が選択された際、それを使用して行う後続処理
 
     // 親要素をwebScannerクラスとして指定
     this.parent.classList.add('webScanner');
@@ -103,9 +125,11 @@ class webScanner {
   }
 
   /** scanDoc: 文書のスキャン */
-  scanDoc(callback){
+  scanDoc(callback,opt={}){
 
-    // 親要素にカメラやファインダ等の作業用DIVを追加
+    // 既定値の設定
+
+    // カメラやファインダ等の作業用DIVを追加
     this.parent.innerHTML
     = '<video autoplay class="hide"></video>'
     + '<canvas></canvas>'  // 撮影結果
@@ -130,6 +154,9 @@ class webScanner {
     // 1. スキャナのボタン操作時の定義
     // (1) 再撮影ボタンクリック時
     this.undo.addEventListener('click',() => {
+      console.log('webScanner.scanDoc undo clicked.');
+      this.onGoing = true;  // カメラ動作中フラグを立てる
+      this.drawFinder();  // キャンパスへの描画をスタート
       //this.video.style.display = 'block';
       //this.canvas.style.display = 'none';
       this.undo.disabled = true;
@@ -138,7 +165,9 @@ class webScanner {
     });
     // (2) シャッタークリック時
     this.shutter.addEventListener('click',() => {
+      console.log('webScanner.scanDoc shutter clicked.');
       this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+      this.onGoing = false;
       //this.video.style.display = 'none';
       //this.canvas.style.display = 'block';
       this.undo.disabled = false;
@@ -147,12 +176,12 @@ class webScanner {
     });
     // (3) 採用ボタンクリック時
     this.adopt.addEventListener('click',() => {
-      // 正常終了時はスキャナを停止
-      this.parent.innerHTML = '';
-      this.stop();
+      console.log('webScanner.scanDoc adopt clicked.');
       // canvasからイメージをBASE64で取得
       const imageData = this.canvas.toDataURL('image/png',0.7);
       callback(imageData);
+      // 正常終了時はスキャナを停止
+      this.stop();
       /*
       const postData = {
         timestamp: getJPDateTime(),
@@ -179,10 +208,14 @@ class webScanner {
 
     })
 
+    // 画像を1フレーム読み込んだ際の処理を定義
+    this.scanned = () => {};  // フレームごとの処理は無し
+
     // 2. カメラ操作ボタンを表示してカメラを起動
     //this.buttons.style.display = 'flex';
     this.buttons.classList.remove('hide');
-    this.start(()=>{console.log('Camera getting started!')});
+    //this.start(()=>{console.log('Camera getting started!')});
+    this.start();
   }
 
   /** scanQR: QRコードスキャン
@@ -205,6 +238,29 @@ class webScanner {
     this.video = document.createElement('video');
     this.canvas = this.parent.querySelector('canvas');
     this.ctx = this.canvas.getContext('2d');
+
+    // 画像を1フレーム読み込んだ際の処理を定義
+    this.scanned = (img) => {
+      // このタイミングでQRコードを判定
+      let code = jsQR(img.data, img.width, img.height, {inversionAttempts: "dontInvert"});
+			if(code){
+        //console.log('drawFinder: code='+JSON.stringify(code));
+        // QRコード読み取り成功
+				this.drawRect(code.location);// ファインダ上のQRコードに枠を表示
+        if( this.alert ) alert(code.data);  // alert出力指定があれば出力
+        if( code.data.match(this.RegExp) ){  // 正しい内容が読み込まれた場合
+          this.stop();
+          this.callback(code.data); // 読み込んだQRコードを引数にコールバック
+        } else {
+          // 不適切な、別のQRコードが読み込まれた場合
+          alert('不適切なQRコードです。再読込してください。');
+          console.error('webScanner.drawFinder: not match pattern. code='+code.data);
+          // 再読込。drawFinderはクラス内のメソッドなのでアロー関数で呼び出す
+          // MDN setTimeout() thisの問題
+          // https://developer.mozilla.org/ja/docs/Web/API/setTimeout#this_%E3%81%AE%E5%95%8F%E9%A1%8C
+        }
+			}
+    };
 
     // 動画撮影用Webカメラを起動
     this.start();
@@ -236,27 +292,8 @@ class webScanner {
         this.stop();
         return;
       }
-      // このタイミングでQRコードを判定
-      let code = jsQR(img.data, img.width, img.height, {inversionAttempts: "dontInvert"});
-			if(code){
-        console.log('drawFinder: code='+JSON.stringify(code));
-        // QRコード読み取り成功
-				this.drawRect(code.location);// ファインダ上のQRコードに枠を表示
-        if( this.alert ) alert(code.data);  // alert出力指定があれば出力
-        if( code.data.match(this.RegExp) ){  // 正しい内容が読み込まれた場合
-          this.drawRect(code.location);
-          this.stop();
-          this.callback(code.data); // 読み込んだQRコードを引数にコールバック
-        } else {
-          // 不適切な、別のQRコードが読み込まれた場合
-          alert('不適切なQRコードです。再読込してください。');
-          console.log('[scanCode.drawFinder] Error: not match pattern. code='+code.data);
-          // 再読込。drawFinderはクラス内のメソッドなのでアロー関数で呼び出す
-          // MDN setTimeout() thisの問題
-          // https://developer.mozilla.org/ja/docs/Web/API/setTimeout#this_%E3%81%AE%E5%95%8F%E9%A1%8C
-          setTimeout(()=>this.drawFinder(), this.interval);
-        }
-			}
+      this.scanned(img);  // 1フレーム読み込み時の処理を実行
+      setTimeout(()=>this.drawFinder(), this.interval);
     }
     setTimeout(()=>this.drawFinder(), this.interval);
   }
@@ -279,5 +316,23 @@ class webScanner {
 		this.ctx.stroke();
 	}
 }
+
+const whichType = (arg = undefined) => {
+  return arg === undefined ? 'undefined'
+   : Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
+}
+// メイン処理
+window.addEventListener('DOMContentLoaded',() => {
+  console.log('webScanner test start.');
+  const ws = new webScanner(document.querySelector('body > div.scanner'));
+  ws.scanDoc((imageData) => {
+    console.log(imageData);
+    document.querySelector('img').src = imageData;
+  });
+  /*ws.scanQR((code)=>{
+    console.log(code);
+  });*/
+});
+
 </script>
 </html>
