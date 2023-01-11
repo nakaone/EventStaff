@@ -488,7 +488,7 @@ const paperForm2 = (arg) => {
 
   // データをシートから取得して更新
   const dObj = szLib.szSheet('マスタ');
-  const rv = dObj.update({application:arg.image},{key:'entryNo',value:arg.entryNo});
+  const rv = dObj.update({application:arg.application},{key:'entryNo',value:arg.entryNo});
 
   console.log('管理局.paperForm2 end. rv='+JSON.stringify(rv));
   return rv;

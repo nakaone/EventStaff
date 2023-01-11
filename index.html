@@ -134,7 +134,7 @@ h1 {
   display: none;
 }
 
-button, input[type="button"] {
+button, input {
   font-size: 1rem;
 }
 /* :: page "library" CSS section end. :::::::::::::::::::::::::::::::::::::::: */
@@ -1718,7 +1718,7 @@ class Auth {
       "Master": { // 管理局
         "level": 8,
         "key": "_WGbHipKdOeuFydHpbz2yzjBmnFNqHYuhAvyMy1QcX5BQgyLl",
-        "url": "https://script.google.com/macros/s/AKfycbyk44w7VvsMr-IDt6eVwWRte3dkPYwhi8YNDxE0cTexdQgAe4DoLfTiChIkKphikBZLnA/exec",
+        "url": "https://script.google.com/macros/s/AKfycbyFYHHirSk7CeD2WTyDy9Kj88YlvUtNBQSBEf6_YQU-tTa7TmFh1XIe0hoGILwfvT-GqQ/exec",
         "validTime": 3600000  // パスコードの有効時間。ミリ秒
       },
       "Post": {   // 郵便局
@@ -2432,6 +2432,8 @@ class PaperForm {
       parent: this.dom.step2.querySelector('.scanner'),
     });
     scanner.scanDoc((imageData)=>{
+      console.log('l.141 '+whichType(imageData),imageData);
+
       // GAS.Masterに撮影された申請用紙を登録
       const res = fetchGAS({
         to: 'Master',

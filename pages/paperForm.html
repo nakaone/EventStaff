@@ -138,6 +138,8 @@ class PaperForm {
       parent: this.dom.step2.querySelector('.scanner'),
     });
     scanner.scanDoc((imageData)=>{
+      console.log('l.141 '+whichType(imageData),imageData);
+
       // GAS.Masterに撮影された申請用紙を登録
       const res = fetchGAS({
         to: 'Master',
