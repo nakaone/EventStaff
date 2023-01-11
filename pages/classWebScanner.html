@@ -28,7 +28,7 @@
 <body class="webScanner">
   <!-- ::deploy.ignore.start:: -->
   <h1>class webScanner test</h1>
-  <p>実運用時にはjsQRの読み込み先を修正する</p>
+  <p>実運用時には script src の読み込み先を修正する</p>
   <div class="scanner"></div>
   <img src="" />
   <!-- ::deploy.ignore.end:: -->
@@ -45,7 +45,7 @@ class webScanner {
   /** constructor
    * @param {object|HTMLDivElement} arg - HTMLDivElementなら親要素のみ指定と解釈
    * @param {object} arg.parent - 親要素(DOM object)
-   * @param {number} arg.interval - 動画状態で撮像、読み込めなかった場合の時間間隔
+   * @param {number} arg.interval - 動画状態で撮像、読み込めなかった場合の間隔。ミリ秒
    * @param {object} arg.RegExp - QRコードスキャン時、内容が適切か判断
    * @param {boolean} arg.alert - 読み込み完了時に内容をalert表示するか
    * @returns {void} なし
@@ -64,12 +64,12 @@ class webScanner {
     // メンバ(既定値)の設定
     if( whichType(arg) === 'HTMLDivElement' ){
       this.parent = arg;
-      this.interval = 0.25;
+      this.interval = 250;
       this.RegExp = /.+/;
       this.alert = false;
     } else {
       this.parent = arg.parent;
-      this.interval = arg.interval || 0.25;
+      this.interval = arg.interval || 250;
       this.RegExp = arg.RegExp || /.+/;
       this.alert = arg.alert || false;
     }
