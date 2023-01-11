@@ -141,6 +141,23 @@ button, input[type="button"] {
 
 
 /* :: page "classWebScanner" CSS section start. :::::::::::::::::::::::::::::::::::::: */
+.webScanner {
+  display: flex;
+  display: -webkit-flex;
+  flex-direction: column;
+}
+.webScanner .hide {
+  display: none;
+}
+.webScanner .buttons {
+  padding: 1rem;
+  flex-direction: row;
+  -webkit-justify-content: space-around;
+  justify-content: space-around;
+}
+.webScanner .buttons input {
+  font-size: 2rem;
+}
 /* :: page "classWebScanner" CSS section end. :::::::::::::::::::::::::::::::::::::::: */
 
 
@@ -1223,6 +1240,9 @@ class webScanner {
     this.RegExp = arg.RegExp || /.+/;
     this.alert = arg.alert || false;
     this.onGoing = false; // カメラ動作中はtrue
+
+    // 親要素をwebScannerクラスとして指定
+    this.parent.classList.add('webScanner');
     console.log('webScanner.constructor end.');
   }
 
@@ -1268,26 +1288,19 @@ class webScanner {
 
     // 親要素にカメラやファインダ等の作業用DIVを追加
     this.parent.innerHTML
-    = '<video autoplay></video>'
+    = '<video autoplay class="hide"></video>'
     + '<canvas></canvas>'  // 撮影結果
-    + '<div class="buttons">'  // カメラ操作ボタン
+    + '<div class="buttons hide">'  // カメラ操作ボタン
     + '<input type="button" name="undo" value="◀" />'
     + '<input type="button" name="shutter" value="[ ● ]" />'
     + '<input type="button" name="adopt" value="▶" />'
     + '</div>';
-    this.parent.style.flexDirection = 'column';
     this.video = this.parent.querySelector('video');
-    //this.video.style.display = 'none';
-    this.video.classList.add('hide');
     this.canvas = this.parent.querySelector('canvas');
-    //this.canvas.style.display = 'block';
     this.ctx = this.canvas.getContext('2d');
 
     // カメラ操作ボタン関係の定義
     this.buttons = this.parent.querySelector('div.buttons');
-    this.buttons.style.flexDirection = 'row';
-    //this.buttons.style.display = 'none'; //最初は全部隠蔽
-    //this.buttons.classList.add('hide');
     this.undo = this.buttons.querySelector('input[name="undo"]');
     this.undo.disabled = true;  // 再撮影
     this.shutter = this.buttons.querySelector('input[name="shutter"]');
