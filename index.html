@@ -750,7 +750,7 @@ const config = {};
  * 呼び出す前に`config.scanCode = true`を実行しておくこと。<br>
  * 参考：[jsQRであっさりQRコードリーダ/メーカ](@link https://zenn.dev/sdkfz181tiger/articles/096dfb74d485db)
  */
- class webScanner {
+class webScanner {
   /** constructor
    * @param {object} arg
    * @param {object} arg.parent - 親要素(DOM object)
@@ -784,12 +784,6 @@ const config = {};
    */
   start(){
     console.log('webScanner start start.');
-
-    // カメラやファインダ等の作業用DIVを追加
-    this.parent.innerHTML = '<canvas></canvas>';
-    this.video = document.createElement('video');
-    this.canvas = this.parent.querySelector('canvas');
-    this.ctx = this.canvas.getContext('2d');
 
     // 動画撮影用Webカメラを起動
     navigator.mediaDevices.getUserMedia({
@@ -828,20 +822,24 @@ const config = {};
     this.parent.innerHTML
     = '<video autoplay></video>'
     + '<canvas></canvas>'  // 撮影結果
-    + '<div>'  // カメラ操作ボタン
+    + '<div class="buttons">'  // カメラ操作ボタン
     + '<input type="button" name="undo" value="◀" />'
     + '<input type="button" name="shutter" value="[ ● ]" />'
     + '<input type="button" name="adopt" value="▶" />'
     + '</div>';
+    this.parent.style.flexDirection = 'column';
     this.video = this.parent.querySelector('video');
-    this.video.style.display = 'block';
+    //this.video.style.display = 'none';
+    this.video.classList.add('hide');
     this.canvas = this.parent.querySelector('canvas');
-    this.canvas.style.display = 'none';
+    //this.canvas.style.display = 'block';
     this.ctx = this.canvas.getContext('2d');
 
     // カメラ操作ボタン関係の定義
-    this.buttons = this.parent.querySelector('div');
-    this.buttons.style.display = 'none'; //最初は全部隠蔽
+    this.buttons = this.parent.querySelector('div.buttons');
+    this.buttons.style.flexDirection = 'row';
+    //this.buttons.style.display = 'none'; //最初は全部隠蔽
+    //this.buttons.classList.add('hide');
     this.undo = this.buttons.querySelector('input[name="undo"]');
     this.undo.disabled = true;  // 再撮影
     this.shutter = this.buttons.querySelector('input[name="shutter"]');
@@ -852,8 +850,8 @@ const config = {};
     // 1. スキャナのボタン操作時の定義
     // (1) 再撮影ボタンクリック時
     this.undo.addEventListener('click',() => {
-      this.video.style.display = 'block';
-      this.canvas.style.display = 'none';
+      //this.video.style.display = 'block';
+      //this.canvas.style.display = 'none';
       this.undo.disabled = true;
       this.shutter.disabled = false;
       this.adopt.disabled = true;
@@ -861,8 +859,8 @@ const config = {};
     // (2) シャッタークリック時
     this.shutter.addEventListener('click',() => {
       this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
-      this.video.style.display = 'none';
-      this.canvas.style.display = 'block';
+      //this.video.style.display = 'none';
+      //this.canvas.style.display = 'block';
       this.undo.disabled = false;
       this.shutter.disabled = true;
       this.adopt.disabled = false;
@@ -902,7 +900,8 @@ const config = {};
     })
 
     // 2. カメラ操作ボタンを表示してカメラを起動
-    this.buttons.style.display = 'flex';
+    //this.buttons.style.display = 'flex';
+    this.buttons.classList.remove('hide');
     this.start(()=>{console.log('Camera getting started!')});
   }
 
@@ -920,6 +919,12 @@ const config = {};
     this.RegExp = opt.RegExp || this.RegExp;
     this.alert = opt.alert || this.alert;
     this.callback = callback; // 後続処理をメンバとして保存
+
+    // カメラやファインダ等の作業用DIVを追加
+    this.parent.innerHTML = '<canvas></canvas>';
+    this.video = document.createElement('video');
+    this.canvas = this.parent.querySelector('canvas');
+    this.ctx = this.canvas.getContext('2d');
 
     // 動画撮影用Webカメラを起動
     this.start();
