@@ -46,6 +46,7 @@ class webScanner {
    * @param {object} arg.parent - 親要素(DOM object)
    * @param {number} arg.interval - 動画状態で撮像、読み込めなかった場合の間隔。ミリ秒
    * @param {object} arg.RegExp - QRコードスキャン時、内容が適切か判断
+   * @param {number} arg.lifeTime - 一定時間操作がない場合の停止までのミリ秒。既定値60000
    * @param {boolean} arg.alert - 読み込み完了時に内容をalert表示するか
    * @returns {void} なし
    */
@@ -72,7 +73,8 @@ class webScanner {
       this.RegExp = arg.RegExp || /.+/;
       this.alert = arg.alert || false;
     }
-    this.onGoing = false; // カメラ動作中はtrue
+    this.lastGoing = 0;   // 前回カメラ起動した時刻(Date.now())
+    this.lifeTime = arg.lifeTime || 60000;
     this.scanned = null;  // 画像を1フレーム読み込んだ際の処理
     this.callback = null; // 適切な画像が選択された際、それを使用して行う後続処理
 
@@ -98,7 +100,7 @@ class webScanner {
       this.video.srcObject = stream;
       this.video.setAttribute("playsinline", true);
       this.video.play();
-      this.onGoing = true;  // カメラ動作中フラグを立てる
+      this.onGoing(true);  // カメラ動作中フラグを立てる
       this.drawFinder();  // キャンパスへの描画をスタート
     }).catch(e => {
       alert('カメラを使用できません\n'+e.message);
@@ -115,9 +117,32 @@ class webScanner {
       track.stop();
     });
     this.parent.innerHTML = ''; // 作業用DIVを除去
-    this.onGoing = false;
+    this.lastGoing = 0;
   }
 
+  /** onGoing: カメラの起動・停止の制御と状態参照
+   * @param {boolean} - true:起動、false:停止、undefind:状態参照
+   * @returns {boolean} true:起動中、false:停止中
+   */
+  onGoing(arg){
+    let rv = null;
+    const now = Date.now();
+    if( arg ){  // 引数あり ⇒ 状態制御
+      this.lastGoing = arg ? now : 0;
+      rv = arg;
+    } else {    // 引数無し ⇒ 状態参照
+      if( (now - this.lastGoing) < this.lifeTime ){
+        // 指定時間(lifeTime)内ならtrue
+        rv = true;
+      } else {
+        // 指定時間を超えていたらfalse
+        rv = false;
+        alert((this.lifeTime/1000)+'秒以上操作がなかったためカメラを停止しました');
+        this.stop();
+      }
+    }
+    return rv;
+  }
   /** scanDoc: 文書のスキャン
    * @param {function} callback - 後続処理
    * @param {object} opt - オプション指定。scanQRに合わせただけで、指定不要
@@ -154,7 +179,7 @@ class webScanner {
     // (1) 再撮影ボタンクリック時
     this.undo.addEventListener('click',() => {
       console.log('webScanner.scanDoc undo clicked.');
-      this.onGoing = true;  // カメラ動作中フラグを立てる
+      this.onGoing(true);  // カメラ動作中フラグを立てる
       this.drawFinder();  // キャンパスへの描画をスタート
       this.undo.disabled = true;
       this.shutter.disabled = false;
@@ -163,7 +188,7 @@ class webScanner {
     // (2) シャッタークリック時
     this.shutter.addEventListener('click',() => {
       console.log('webScanner.scanDoc shutter clicked.');
-      this.onGoing = false;  // カメラを一時停止
+      this.onGoing(false);  // カメラを一時停止
       this.undo.disabled = false;
       this.shutter.disabled = true;
       this.adopt.disabled = false;
@@ -255,32 +280,34 @@ class webScanner {
     console.log('webScanner.drawFinder start.',this.video);
 
     // スキャン実行フラグが立っていなかったら終了
-    if( !this.onGoing )  return;
+    if( this.onGoing() ){
+      if(this.video.readyState === this.video.HAVE_ENOUGH_DATA){
 
-    if(this.video.readyState === this.video.HAVE_ENOUGH_DATA){
+        // 親要素の横幅に合わせて表示する
+        const ratio = this.parent.clientWidth / this.video.videoWidth;
+        //console.log('l.196 this.parent.clientWidth='+this.parent.clientWidth+', this.video.videoWidth='+this.video.videoWidth+' -> ratio='+ratio);
+        const w = this.video.videoWidth * ratio;
+        const h = this.video.videoHeight * ratio;
+        //console.log('l.199 w ='+w+', h='+h);
+        this.video.width = this.canvas.width = w;
+        this.video.height = this.canvas.height = h;
 
-      // 親要素の横幅に合わせて表示する
-      const ratio = this.parent.clientWidth / this.video.videoWidth;
-      //console.log('l.196 this.parent.clientWidth='+this.parent.clientWidth+', this.video.videoWidth='+this.video.videoWidth+' -> ratio='+ratio);
-      const w = this.video.videoWidth * ratio;
-      const h = this.video.videoHeight * ratio;
-      //console.log('l.199 w ='+w+', h='+h);
-      this.video.width = this.canvas.width = w;
-      this.video.height = this.canvas.height = h;
-
-      this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
-      let img;
-      try { // canvasを含む要素が削除済の場合にエラーとなるので回避
-        img = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-      } catch(e) {
-        console.log(e.message);
-        this.stop();
-        return;
+        this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+        let img;
+        try { // canvasを含む要素が削除済の場合にエラーとなるので回避
+          img = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+        } catch(e) {
+          console.log(e.message);
+          this.stop();
+          return;
+        }
+        this.scanned(img);  // 1フレーム読み込み時の処理を実行
+        //console.log('l.306');
+        //setTimeout(()=>this.drawFinder(), this.interval);
       }
-      this.scanned(img);  // 1フレーム読み込み時の処理を実行
+      console.log('l.309');
       setTimeout(()=>this.drawFinder(), this.interval);
     }
-    setTimeout(()=>this.drawFinder(), this.interval);
   }
 
   drawRect(location){  // ファインダ上のQRコードに枠を表示
