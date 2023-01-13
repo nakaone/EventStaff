@@ -2225,7 +2225,7 @@ class Reception {
         const o = document.createElement('div');
         o.innerText = arg[i]['申請者氏名'] + '(' + arg[i]['申請者氏名読み'] + ')';
         o.addEventListener('click',() => {
-          editParticipant(arg[i]);  // 選択後編集画面へ
+          this.editParticipant(arg[i]);  // 選択後編集画面へ
         });
         editArea.appendChild(o);
       }
