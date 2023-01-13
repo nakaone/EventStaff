@@ -88,13 +88,13 @@
     <!-- 該当者検索 -->
     <div class="inputKey">
       <input type="text" placeholder="&#x1F50D受付番号または氏名読み(最初の数文字)" />
-      <button onclick="config.reception.search()">検索</button>
+      <button onclick="config.reception.searchKey()">検索</button>
     </div>
     <div class="scanner"></div><!-- QRコードスキャナ -->
   </div>
 
   <!-- 返信待ち -->
-  <div class="area searching">
+  <div class="area loading">
     <img src="img/loading.gif" />
   </div>
 
@@ -271,9 +271,10 @@ class Reception {
    * <li>result {object[]} - 検索キーにマッチした申込の配列。[{項目名:値,..},{..},..]形式
    * </ul>
   */
-  searchKey(arg=''){
-    console.log('reception.search start. arg='+JSON.stringify(arg));
-    config.menu.changeArea('reception','searching');
+  searchKey(arg){
+    arg = arg || this.dom.main.querySelector('.inputKey input').value;
+    console.log('reception.searchKey start. arg='+JSON.stringify(arg));
+    config.menu.changeArea('reception','loading');
 
     /* fetchGAS
     * @param {object}   arg          - 引数
