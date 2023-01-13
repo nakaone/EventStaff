@@ -212,6 +212,9 @@
           <option value="無し">無し</option>
         </select></div>
       </div>
+      <div class="paperForm hide">
+        <img width="80%" />
+      </div>
       <div class="tr">
         <button name="cancel">取消</button>
         <button name="update">更新</button>
@@ -423,6 +426,15 @@ class Reception {
       result.querySelector('button').addEventListener('click',() => {
         this.display();
       });
+
+      // 05.紙申請の場合、イメージを表示
+      if( arg.application.length > 0 ){
+        // 申込フォーム誘導のQRコードを消去
+        this.dom.edit.querySelector('.details .qrcode').innerText = '';
+        // 申込書イメージを表示
+        this.dom.edit.querySelector('.paperForm img').src = arg.application;
+        this.dom.edit.querySelector('.paperForm').classList.remove('hide');
+      }
 
       console.log('editParticipant end.');
 
