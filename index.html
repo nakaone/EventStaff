@@ -2223,7 +2223,7 @@ class Reception {
       editArea.innerHTML = '<p>検索結果が複数あります。選択してください。</p>';
       for( let i=0 ; i<arg.length ; i++ ){
         const o = document.createElement('div');
-        o.innerText = arg[i]['氏名'] + '(' + arg[i]['読み'] + ')';
+        o.innerText = arg[i]['申請者氏名'] + '(' + arg[i]['申請者氏名読み'] + ')';
         o.addEventListener('click',() => {
           editParticipant(arg[i]);  // 選択後編集画面へ
         });
