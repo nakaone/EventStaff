@@ -594,14 +594,14 @@ div.system div {
 
 <div class="screen paperForm"><!-- :: page "paperForm" HTML section start. ::::::::::: -->
   <div class="area step1 flex">
-    <div><p>申込者の属性を入力してください</p></div>
+    <div><p>申込者の所属を入力してください</p></div>
     <!-- 【入力欄作成時の注意事項】
       1.「(空欄)」文字列はGAS側で入力チェックに使用するので変更不可
       2.人数は「申込者」を除くフォームの参加者数と一致させる。
       3.オプションの値はフォームでの設定値と一致させる。
     -->
     <div><table>
-      <tr><th>No</th><th>属性</th></tr>
+      <tr><th>No</th><th>所属</th></tr>
       <tr><td>①</td><td><select name="n01">
         <option value="(空欄)">(空欄)</option>
         <option value="未就学児">未就学児</option>
@@ -650,6 +650,39 @@ div.system div {
     <h1>受付番号：</h1>
     <p>申込用紙に上の受付番号を記入の上、用紙を撮影してください</p>
     <div class="scanner flex"></div>
+  </div>
+
+  <div class="area step3 hide">
+    <p>以下のように登録を受け付けました。</p>
+    <table>
+      <tr><th>項目</th><th>所属</th><th>状態</th><th>参加費</th></tr>
+      <tr><th>受付番号</th><td name="entryNo" colspan="3"></td></tr>
+      <tr><th>登録日時</th><td name="タイムスタンプ" colspan="3"></td></tr>
+      <tr><th>登録担当</th><td name="PIC" colspan="3"></td></tr>
+      <tr>
+        <th>①</th>
+        <td name="参加者①所属"></td>
+        <td name="status01"></td>
+        <td name="fee01"></td>
+      </tr>
+      <tr>
+        <th>②</th>
+        <td name="参加者②所属"></td>
+        <td name="status02"></td>
+        <td name="fee02"></td>
+      </tr>
+      <tr>
+        <th>③</th>
+        <td name="参加者③所属"></td>
+        <td name="status03"></td>
+        <td name="fee03"></td>
+      </tr>
+    </table>
+    <img width="70%" />
+    <div>
+      <button name="reception">受付へ戻る</button>
+      <button name="paperForm">新規紙申請</button>
+    </div>
   </div>
 </div><!-- page "paperForm" HTML section end. ::::::::::::::::::::::::::::::::: -->
 
@@ -722,7 +755,6 @@ div.system div {
 </body>
 <script src="lib/qrcode.min.js" defer></script><!-- QRコード生成 -->
 <script src="lib/jsQR.js" defer></script><!-- QRコード検出 -->
-<script src="lib/browser-image-compression.js" defer></script><!-- jpeg/png圧縮 -->
 <script type="text/javascript">
 const config = {};
 
@@ -1303,26 +1335,19 @@ class webScanner {
     // (3) 採用ボタンクリック時
     this.adopt.addEventListener('click',() => {
       console.log('webScanner.scanDoc adopt clicked.');
-      imageCompression(this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height),{
-        maxSizeMB:0.03,
-        maxWidthOrHeight:1280,
-      }).then(data => {
-        this.ctx.putImageData(data,0,0,this.canvas.width,this.canvas.height);
-        const imageData = this.canvas.toDataURL('image/png',0.7);
-        console.log('l.181'+whichType(imageData)+'\n',imageData);
-      });
-      /*
       // canvasからイメージをBASE64で取得
-      const imageData = this.canvas.toDataURL('image/png',0.7);
+      // なお圧縮はpng不可なので、jpegとする
+      let imageData = '';
+      for( let i=0.7 ; i>0 ; i -= 0.1 ){
+        imageData = this.canvas.toDataURL('image/jpeg',i);
+        if( imageData.length < 50000 ){  // Google Spreadで最大50KB/セル
+          //document.querySelector('img').src = imageData;
+          i = -1;
+        }
+      }
+      //console.log('l.181\n'+imageData);
       this.callback(imageData);  // base64化したpngを後続処理に渡す
-      */
       this.stop();  // スキャナを停止
-      // 以下は圧縮検討時のメモ。削除可
-      // browser-image-compression
-      // https://www.npmjs.com/package/browser-image-compression
-      //const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-      //imageCompression(imageData,{maxSizeMB:1,maxWidthOrHeight:1280}).then(data => {
-      //  this.ctx.putImageData(data,0,0,this.canvas.width,this.canvas.height);
     })
 
     // 4.画像を1フレーム読み込んだ際の処理を定義
@@ -2383,18 +2408,27 @@ class PaperForm {
     this.dom = {
       step1: document.querySelector('.paperForm .step1'),
       step2: document.querySelector('.paperForm .step2'),
+      step3: document.querySelector('.paperForm .step3'),
     }
     this.dom.step1.querySelector('button').addEventListener('click', ()=>{
       config.menu.changeArea('paperForm','loading');
       this.getEntryNo();
     });
+    this.result = {}; // 登録結果保存用オブジェクト
+    this.dom.step3.querySelector('[name="reception"]').addEventListener('click',()=>{
+      config.menu.changeScreen('reception');
+    });
+    this.dom.step3.querySelector('[name="paperForm"]').addEventListener('click',()=>{
+      config.menu.changeScreen('paperForm');
+    });
   }
 
+  /** display: 初期画面表示 */
   display(){
     config.menu.changeArea('paperForm','step1');
   }
 
-  /** 受付番号を取得してスキャン画面を表示する
+  /** getEntryNo: 受付番号を取得してスキャン画面を表示する
    * @param {void} - なし
    * @returns {void} なし
    */
@@ -2423,6 +2457,8 @@ class PaperForm {
         if( r.isErr ){
           alert(r.message);
         } else {
+          this.result.step1 = r.obj;  // 登録結果を保存
+          config.menu.changeArea('paperForm','loading');
           this.scanForm(r.obj.entryNo);
         }
         console.log('PaperForm.getEntryNo end');
@@ -2450,7 +2486,9 @@ class PaperForm {
       parent: this.dom.step2.querySelector('.scanner'),
     });
     scanner.scanDoc((imageData)=>{
-      console.log('l.141 '+whichType(imageData),imageData);
+      config.menu.changeArea('paperForm','loading');
+      //console.log('l.141 '+whichType(imageData),imageData);
+      this.result.step2 = imageData;  // スキャン結果を保存
 
       // GAS.Masterに撮影された申請用紙を登録
       const res = fetchGAS({
@@ -2461,8 +2499,18 @@ class PaperForm {
           application: imageData,
         },
         callback: (r) => {
-          alert(JSON.stringify(r));
-          console.log('l.150',r);
+          ['entryNo','タイムスタンプ','PIC',
+          '参加者①所属','status01','fee01',
+          '参加者②所属','status02','fee02',
+          '参加者③所属','status03','fee03'].forEach(x => {
+            if( this.result.step1[x] ){
+              this.dom.step3.querySelector('[name="'+x+'"]')
+              .innerText = this.result.step1[x];
+            }
+          });
+          this.dom.step3.querySelector('img').src = this.result.step2;
+          config.menu.changeArea('paperForm','step3');
+          console.log('l.170',this.result);
           console.log('PaperForm.scanForm end');
         },
       })
